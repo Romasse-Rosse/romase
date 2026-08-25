@@ -18,18 +18,37 @@ export function normalize(text: string): string {
     .trim()
 }
 
+const ENTIDADES: Record<string, string> = {
+  '&nbsp;': ' ',
+  '&amp;': '&',
+  '&quot;': '"',
+  '&lt;': '<',
+  '&gt;': '>',
+  '&#215;': '×',
+  '&#8211;': '–',
+  '&#8212;': '—',
+  '&#8220;': '"',
+  '&#8221;': '"',
+  '&#8216;': "'",
+  '&#8217;': "'",
+  '&#039;': "'",
+}
+
+/**
+ * Decodifica las entidades HTML que WooCommerce deja escapadas.
+ * Aparecen incluso en los nombres de producto: hay medidas cargadas como
+ * "32,5&#215;17,6" que sin esto se muestran tal cual.
+ */
+export function decodeEntities(text: string | null | undefined): string {
+  if (!text) return ''
+  return text
+    .replace(/&nbsp;|&amp;|&quot;|&lt;|&gt;|&#\d+;/g, (m) => ENTIDADES[m] ?? m)
+}
+
 /** Convierte el HTML que viene de WooCommerce en texto plano. */
 export function stripHtml(html: string | null | undefined): string {
   if (!html) return ''
-  return html
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#8220;|&#8221;/g, '"')
-    .replace(/&#8217;|&#039;|&#8216;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
+  return decodeEntities(html.replace(/<[^>]+>/g, ' '))
     .replace(/\s+/g, ' ')
     .trim()
 }
@@ -43,28 +62,47 @@ export function truncate(text: string, max: number): string {
 const SIGLAS = new Set([
   'INOX', 'PVC', 'LED', 'GN', 'RPM', 'AC', 'DC', 'HP', 'CV',
   'KG', 'GR', 'LT', 'ML', 'CC', 'CM', 'MM', 'MT', 'W', 'V', 'A', 'HZ',
+  'ITA', // marca de depósitos gastronómicos, se escribe en mayúsculas
 ])
+
+/**
+ * Marcas presentes en el catálogo. Se escriben como nombre propio en vez de
+ * quedar en minúscula: "Batidora planetaria 20 LTS pareti kitchenette" está mal.
+ */
+const MARCAS = new Set([
+  'VENTUS', 'ECOBECK', 'BLANIK', 'PARETI', 'KITCHENETTE',
+  'ARCOS', 'COUSIÑO', 'HERCULES',
+])
+
+const capitalizar = (palabra: string) =>
+  palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
 
 /**
  * Los nombres del catálogo vienen en MAYÚSCULA SOSTENIDA desde WooCommerce
  * ("MOLDE CUADRADO TEFLÓN 24 CMS"). Se pasan a mayúscula de oración, que es
  * lo correcto en español —no Title Case, que es una convención del inglés—,
- * respetando siglas, unidades y códigos de modelo.
+ * respetando siglas, unidades, códigos de modelo y marcas.
  */
 export function titleCase(text: string): string {
   if (!text) return ''
+  const limpio = decodeEntities(text)
   // Si ya viene con mayúsculas y minúsculas mezcladas, se respeta tal cual.
-  if (text !== text.toUpperCase()) return text
+  if (limpio !== limpio.toUpperCase()) return limpio
 
-  const resultado = text
+  const resultado = limpio
     .toLowerCase()
     .split(/(\s+)/)
     .map((token) => {
       if (!token.trim()) return token
-      const letras = token.toUpperCase().replace(/[^A-Z]/g, '')
+      const letras = token.toUpperCase().replace(/[^A-ZÁÉÍÓÚÑ]/g, '')
       // Unidades y siglas: "CMS" y "CM" comparten raíz, por eso se prueba sin la S final.
       if (SIGLAS.has(letras) || (letras.endsWith('S') && SIGLAS.has(letras.slice(0, -1)))) {
         return token.toUpperCase()
+      }
+      // Marcas, incluidas las compuestas con guion ("PARETI-KITCHENETTE").
+      const partes = token.split('-')
+      if (partes.some((p) => MARCAS.has(p.toUpperCase()))) {
+        return partes.map(capitalizar).join('-')
       }
       // Medidas y códigos de modelo: "1/2", "R-134A", "GN1/1".
       if (/\d/.test(token)) return token.toUpperCase()

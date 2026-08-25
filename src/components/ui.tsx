@@ -13,18 +13,18 @@ export function Container({
 }
 
 const buttonStyles = {
-  base: 'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:pointer-events-none disabled:opacity-50',
+  base: 'inline-flex items-center justify-center gap-2 rounded-sm font-medium tracking-[0.01em] transition-colors duration-200 disabled:pointer-events-none disabled:opacity-50',
   variant: {
     primary: 'bg-brand-500 text-white hover:bg-brand-600',
-    secondary: 'bg-ink-900 text-white hover:bg-ink-800',
-    outline: 'border border-ink-300 bg-white text-ink-900 hover:border-ink-400 hover:bg-ink-50',
-    ghost: 'text-ink-700 hover:bg-ink-100 hover:text-ink-900',
+    secondary: 'bg-ink-950 text-white hover:bg-ink-800',
+    outline: 'border border-ink-300 bg-transparent text-ink-900 hover:border-ink-950 hover:bg-ink-950 hover:text-white',
+    ghost: 'text-ink-700 hover:bg-ink-100 hover:text-ink-950',
     whatsapp: 'bg-[#25D366] text-white hover:bg-[#1eb855]',
   },
   size: {
-    sm: 'h-9 px-3 text-sm',
-    md: 'h-11 px-5 text-sm',
-    lg: 'h-13 px-7 text-base',
+    sm: 'h-9 px-4 text-[13px]',
+    md: 'h-11 px-6 text-sm',
+    lg: 'h-13 px-8 text-[15px]',
   },
 } as const
 
@@ -103,18 +103,37 @@ export function SectionHeading({
   action?: ReactNode
 }) {
   return (
-    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
       <div className="max-w-2xl">
         {eyebrow && (
-          <p className="mb-2 text-xs font-semibold tracking-[0.14em] text-brand-600 uppercase">
+          <p className="mb-3 text-[11px] font-medium tracking-[0.18em] text-brand-600 uppercase">
             {eyebrow}
           </p>
         )}
-        <h2 className="text-2xl font-semibold tracking-tight text-ink-950 sm:text-3xl">{title}</h2>
-        {description && <p className="mt-3 text-ink-600">{description}</p>}
+        <h2 className="text-[26px] leading-[1.15] font-medium text-ink-950 sm:text-[34px]">
+          {title}
+        </h2>
+        {description && (
+          <p className="mt-3 leading-relaxed text-ink-600">{description}</p>
+        )}
       </div>
       {action}
     </div>
+  )
+}
+
+/** Enlace discreto de "ver más", con la línea que aparece al pasar por encima. */
+export function TextLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="group inline-flex items-center gap-1.5 border-b border-ink-300 pb-0.5 text-sm text-ink-800 transition-colors hover:border-brand-500 hover:text-brand-600"
+    >
+      {children}
+      <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">
+        →
+      </span>
+    </Link>
   )
 }
 

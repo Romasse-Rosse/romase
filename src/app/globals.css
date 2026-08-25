@@ -21,9 +21,9 @@
   --color-brand-800: #862e19;
   --color-brand-900: #6f2a19;
 
-  --color-ink-50: #f7f4f1;
-  --color-ink-100: #ece7e2;
-  --color-ink-200: #ddd5cd;
+  --color-ink-50: #faf8f6;
+  --color-ink-100: #f1ece8;
+  --color-ink-200: #e5dfd9;
   --color-ink-300: #c9c0b9;
   --color-ink-400: #a1958c;
   --color-ink-500: #7a6d64;
@@ -33,8 +33,18 @@
   --color-ink-900: #241d18;
   --color-ink-950: #17120f;
 
-  --shadow-card: 0 1px 2px rgb(23 18 15 / 0.04), 0 8px 24px -12px rgb(23 18 15 / 0.12);
-  --shadow-lift: 0 2px 4px rgb(23 18 15 / 0.06), 0 16px 40px -16px rgb(23 18 15 / 0.2);
+  /* Radios contenidos. El estilo que buscamos es plano y sobrio: las
+     esquinas muy redondeadas leen como app, no como catálogo de equipamiento. */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+  --radius-2xl: 8px;
+
+  /* Sombras casi imperceptibles: la jerarquía la dan los bordes de un pelo
+     y el espacio en blanco, no las capas flotando. */
+  --shadow-card: 0 1px 2px rgb(23 18 15 / 0.04);
+  --shadow-lift: 0 4px 16px -6px rgb(23 18 15 / 0.12);
 }
 
 @layer base {
@@ -46,6 +56,15 @@
     background-color: white;
     color: var(--color-ink-900);
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* Los títulos grandes se ven más finos con el interletrado apretado
+     y sin llegar al negrita: es lo que da la sensación de sobriedad. */
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
+    text-wrap: balance;
   }
 
   /* El foco visible se mantiene siempre: mucha gente compra con teclado. */

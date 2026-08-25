@@ -8,6 +8,7 @@ import { ChevronDown, Mail, MapPin, Menu, Phone, Truck, X } from 'lucide-react'
 import type { CategoryNode } from '@/lib/catalog'
 import { site, whatsappUrl } from '@/lib/site'
 import { titleCase } from '@/lib/format'
+import { nombreCortoCategoria } from '@/content/nombres-categorias'
 import { cn } from '@/lib/cn'
 import { SearchBox } from './search-box'
 import { Container } from './ui'
@@ -21,6 +22,8 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
   const pathname = usePathname()
   const [openCategory, setOpenCategory] = useState<number | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  const openCategoryNode = categories.find((c) => c.id === openCategory) ?? null
 
   // Cualquier navegación cierra lo que esté abierto.
   useEffect(() => {
@@ -118,15 +121,17 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
       {/* Categorías */}
       <nav
         aria-label="Categorías de productos"
-        className="relative hidden border-b border-ink-200 bg-white shadow-sm lg:block"
+        className="relative hidden border-b border-ink-200 bg-white lg:block"
         onMouseLeave={() => setOpenCategory(null)}
       >
         <Container>
-          <ul className="flex items-stretch gap-1">
+          {/* Son diez entradas y no siempre entran: en pantallas angostas la
+              barra se desplaza en horizontal en vez de recortar categorías. */}
+          <ul className="flex items-stretch gap-4 overflow-x-auto no-scrollbar xl:gap-6">
             <li>
               <Link
                 href="/productos"
-                className="flex h-12 items-center px-3 text-sm font-semibold text-brand-700 hover:bg-brand-50"
+                className="flex h-12 items-center text-[13px] font-medium whitespace-nowrap text-brand-600 transition-colors hover:text-brand-700"
               >
                 Todos los productos
               </Link>
@@ -137,18 +142,21 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
               const hasChildren = category.children.length > 0
 
               return (
-                <li key={category.id} className="static">
+                <li key={category.id}>
                   <Link
                     href={`/categorias/${category.slug}`}
                     aria-expanded={hasChildren ? isOpen : undefined}
                     onMouseEnter={() => setOpenCategory(hasChildren ? category.id : null)}
                     onFocus={() => setOpenCategory(hasChildren ? category.id : null)}
                     className={cn(
-                      'flex h-12 items-center gap-1 px-3 text-sm font-medium whitespace-nowrap transition-colors',
-                      isOpen ? 'bg-ink-50 text-brand-700' : 'text-ink-700 hover:text-brand-700',
+                      'relative flex h-12 items-center gap-1 text-[13px] whitespace-nowrap transition-colors',
+                      'after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-brand-500 after:transition-transform',
+                      isOpen
+                        ? 'text-ink-950 after:scale-x-100'
+                        : 'text-ink-600 after:scale-x-0 hover:text-ink-950',
                     )}
                   >
-                    {titleCase(category.name)}
+                    {nombreCortoCategoria(category.slug, titleCase(category.name))}
                     {hasChildren && (
                       <ChevronDown
                         aria-hidden="true"
@@ -156,44 +164,46 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
                       />
                     )}
                   </Link>
-
-                  {hasChildren && isOpen && (
-                    <div className="absolute inset-x-0 top-full z-40 border-b border-ink-200 bg-white shadow-lift">
-                      <Container>
-                        <div className="py-6">
-                          <div className="mb-4 flex items-baseline justify-between">
-                            <p className="text-sm font-semibold text-ink-950">
-                              {titleCase(category.name)}
-                            </p>
-                            <Link
-                              href={`/categorias/${category.slug}`}
-                              className="text-sm font-medium text-brand-600 hover:underline"
-                            >
-                              Ver los {category.productCount} productos →
-                            </Link>
-                          </div>
-                          <ul className="grid grid-cols-4 gap-x-8 gap-y-1">
-                            {category.children.map((child) => (
-                              <li key={child.id}>
-                                <Link
-                                  href={`/categorias/${child.slug}`}
-                                  className="flex items-baseline justify-between gap-2 rounded-md px-2 py-1.5 text-sm text-ink-600 hover:bg-brand-50 hover:text-brand-700"
-                                >
-                                  <span>{titleCase(child.name)}</span>
-                                  <span className="text-xs text-ink-400">{child.productCount}</span>
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </Container>
-                    </div>
-                  )}
                 </li>
               )
             })}
           </ul>
         </Container>
+
+        {/* El panel vive fuera de la lista: si estuviera dentro, el scroll
+            horizontal de la barra lo recortaría. */}
+        {openCategoryNode && openCategoryNode.children.length > 0 && (
+          <div className="absolute inset-x-0 top-full z-40 border-b border-ink-200 bg-white shadow-lift">
+            <Container>
+              <div className="py-8">
+                <div className="mb-5 flex items-baseline justify-between border-b border-ink-100 pb-3">
+                  <p className="text-[11px] font-medium tracking-[0.18em] text-ink-400 uppercase">
+                    {titleCase(openCategoryNode.name)}
+                  </p>
+                  <Link
+                    href={`/categorias/${openCategoryNode.slug}`}
+                    className="text-sm text-brand-600 hover:text-brand-700"
+                  >
+                    Ver los {openCategoryNode.productCount} productos →
+                  </Link>
+                </div>
+                <ul className="grid grid-cols-4 gap-x-10 gap-y-0.5">
+                  {openCategoryNode.children.map((child) => (
+                    <li key={child.id}>
+                      <Link
+                        href={`/categorias/${child.slug}`}
+                        className="flex items-baseline justify-between gap-2 py-1.5 text-sm text-ink-600 transition-colors hover:text-brand-600"
+                      >
+                        <span>{titleCase(child.name)}</span>
+                        <span className="text-xs text-ink-300">{child.productCount}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Container>
+          </div>
+        )}
       </nav>
 
       {mobileOpen && (

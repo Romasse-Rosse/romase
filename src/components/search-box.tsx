@@ -144,7 +144,7 @@ export function SearchBox({
           }}
           onFocus={() => items.length && setOpen(true)}
           onKeyDown={onKeyDown}
-          className="h-11 w-full rounded-lg border border-ink-200 bg-ink-50 pr-10 pl-11 text-sm text-ink-900 placeholder:text-ink-400 focus:border-brand-400 focus:bg-white focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+          className="h-12 w-full rounded-sm border border-ink-200 bg-white pr-10 pl-11 text-sm text-ink-900 transition-colors placeholder:text-ink-400 focus:border-ink-950 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
         />
         {loading ? (
           <Loader2
@@ -173,7 +173,7 @@ export function SearchBox({
         <div
           id={listId}
           role="listbox"
-          className="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-xl border border-ink-200 bg-white shadow-lift"
+          className="absolute top-full right-0 left-0 z-50 mt-1 overflow-hidden rounded-sm border border-ink-200 bg-white shadow-lift"
         >
           {items.length === 0 && !loading ? (
             <p className="px-4 py-6 text-center text-sm text-ink-500">
@@ -195,11 +195,11 @@ export function SearchBox({
                       onMouseEnter={() => setHighlighted(index)}
                       onClick={() => goToProduct(item.slug)}
                       className={cn(
-                        'flex w-full items-center gap-3 px-3 py-2.5 text-left',
-                        index === highlighted ? 'bg-brand-50' : 'hover:bg-ink-50',
+                        'flex w-full items-center gap-3 px-3 py-3 text-left transition-colors',
+                        index === highlighted ? 'bg-ink-50' : 'hover:bg-ink-50',
                       )}
                     >
-                      <span className="relative size-12 shrink-0 overflow-hidden rounded-md bg-ink-50">
+                      <span className="relative size-12 shrink-0 overflow-hidden border border-ink-100 bg-white">
                         {item.image && (
                           <Image
                             src={item.image}
@@ -225,7 +225,7 @@ export function SearchBox({
               <button
                 type="button"
                 onClick={goToResults}
-                className="w-full border-t border-ink-100 bg-ink-50 px-4 py-2.5 text-center text-sm font-medium text-brand-700 hover:bg-ink-100"
+                className="w-full border-t border-ink-100 px-4 py-3 text-center text-sm text-brand-600 transition-colors hover:bg-ink-50"
               >
                 Ver los {total} resultados
               </button>

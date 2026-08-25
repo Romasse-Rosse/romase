@@ -1,14 +1,12 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, BadgeCheck, Headset, ShieldCheck, Truck } from 'lucide-react'
-import {
-  getCategoryTree,
-  getFeaturedProducts,
-  queryProducts,
-} from '@/lib/catalog'
+import { getCategoryTree, getFeaturedProducts, queryProducts } from '@/lib/catalog'
 import { site, trustPoints, whatsappUrl } from '@/lib/site'
-import { Container, SectionHeading, ButtonLink } from '@/components/ui'
+import { ButtonLink, Container, SectionHeading, TextLink } from '@/components/ui'
 import { ProductGrid } from '@/components/product-card'
 import { CategoryCard } from '@/components/category-card'
+import { FeaturedTabs, type FeaturedGroup } from '@/components/featured-tabs'
 import { SearchBox } from '@/components/search-box'
 import { Faqs, homeFaqs } from '@/components/faqs'
 
@@ -18,44 +16,47 @@ export const revalidate = 3600
 const trustIcons = [BadgeCheck, Truck, Headset, ShieldCheck]
 
 export default async function HomePage() {
-  const [categories, featured, novedades] = await Promise.all([
-    getCategoryTree(),
-    getFeaturedProducts(8),
+  const categories = await getCategoryTree()
+  const destacadas = categories.slice(0, 6)
+
+  const [featured, novedades, ...porCategoria] = await Promise.all([
+    getFeaturedProducts(3),
     queryProducts({ sort: 'novedades', perPage: 4 }),
+    ...destacadas.map((c) => queryProducts({ categorySlug: c.slug, perPage: 4 })),
   ])
 
+  const grupos: FeaturedGroup[] = destacadas.map((c, index) => ({
+    slug: c.slug,
+    name: c.name,
+    products: porCategoria[index].items,
+  }))
+
   const totalProductos = categories.reduce((sum, c) => sum + c.productCount, 0)
+  const [heroPrincipal, ...heroSecundarios] = featured
 
   return (
     <>
       {/* ---------------------------------------------------------------
           Portada
       --------------------------------------------------------------- */}
-      <section className="relative overflow-hidden bg-ink-950 text-white">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-[radial-gradient(60rem_40rem_at_15%_-10%,rgba(221,83,48,0.35),transparent)]"
-        />
-        <Container className="relative">
-          <div className="grid items-center gap-10 py-16 lg:grid-cols-[1.1fr_0.9fr] lg:py-24">
+      <section className="border-b border-ink-200 bg-ink-50">
+        <Container>
+          <div className="grid items-center gap-12 py-16 lg:grid-cols-2 lg:gap-16 lg:py-24">
             <div>
-              <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium tracking-wide">
-                <span className="size-1.5 rounded-full bg-brand-500" />
-                {site.yearsInBusiness} años equipando cocinas en el sur de Chile
+              <p className="mb-6 text-[11px] font-medium tracking-[0.2em] text-brand-600 uppercase">
+                Desde 2001 en {site.contact.city}
               </p>
 
-              <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-                Maquinaria para <span className="text-brand-400">panadería</span>, pastelería y{' '}
-                <span className="text-brand-400">gastronomía</span>
+              <h1 className="text-[38px] leading-[1.08] font-medium text-ink-950 sm:text-[52px] lg:text-[58px]">
+                Equipos que sostienen la producción de cada día.
               </h1>
 
-              <p className="mt-5 max-w-xl text-lg leading-relaxed text-ink-200">
-                Hornos, amasadoras, vitrinas, mobiliario en acero inoxidable y repuestos.
-                {totalProductos} productos con despacho a todo Chile y asesoría técnica
-                antes de que compres.
+              <p className="mt-7 max-w-lg text-lg leading-relaxed text-ink-600">
+                Maquinaria para panadería, pastelería y gastronomía. {totalProductos} productos con
+                despacho a todo Chile, repuestos en stock y asesoría antes de que compres.
               </p>
 
-              <div className="mt-8 max-w-xl">
+              <div className="mt-9 max-w-lg">
                 <SearchBox placeholder="¿Qué equipo estás buscando?" />
               </div>
 
@@ -68,25 +69,51 @@ export default async function HomePage() {
                   href={whatsappUrl('Hola ROMASE, necesito una cotización.')}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex h-13 items-center justify-center gap-2 rounded-lg border border-white/20 px-7 text-base font-medium text-white transition-colors hover:bg-white/10"
+                  className="inline-flex h-13 items-center justify-center rounded-sm border border-ink-300 px-8 text-[15px] font-medium text-ink-900 transition-colors hover:border-ink-950 hover:bg-ink-950 hover:text-white"
                 >
                   Pedir cotización
                 </a>
               </div>
             </div>
 
-            {/* Accesos directos a las categorías más grandes */}
-            <div className="grid grid-cols-2 gap-3">
-              {categories.slice(0, 6).map((category) => (
+            {/* La composición se arma con el propio catálogo: no hay fotos
+                de ambiente, y una portada con producto real es más honesta
+                que una imagen de banco. */}
+            <div className="grid grid-cols-2 gap-3 lg:gap-4">
+              {heroPrincipal?.images[0] && (
                 <Link
-                  key={category.id}
-                  href={`/categorias/${category.slug}`}
-                  className="rounded-xl border border-white/10 bg-white/5 p-4 transition-colors hover:border-brand-500/60 hover:bg-white/10"
+                  href={`/productos/${heroPrincipal.slug}`}
+                  className="group relative col-span-2 aspect-16/10 overflow-hidden border border-ink-200 bg-white"
                 >
-                  <p className="text-sm font-medium capitalize">{category.name.toLowerCase()}</p>
-                  <p className="mt-1 text-xs text-ink-300">{category.productCount} productos</p>
+                  <Image
+                    src={heroPrincipal.images[0].src}
+                    alt={heroPrincipal.name}
+                    fill
+                    priority
+                    sizes="(min-width: 1024px) 45vw, 100vw"
+                    className="object-contain p-10 transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                  />
                 </Link>
-              ))}
+              )}
+
+              {heroSecundarios.slice(0, 2).map(
+                (producto) =>
+                  producto.images[0] && (
+                    <Link
+                      key={producto.id}
+                      href={`/productos/${producto.slug}`}
+                      className="group relative aspect-square overflow-hidden border border-ink-200 bg-white"
+                    >
+                      <Image
+                        src={producto.images[0].src}
+                        alt={producto.name}
+                        fill
+                        sizes="(min-width: 1024px) 22vw, 45vw"
+                        className="object-contain p-7 transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                      />
+                    </Link>
+                  ),
+              )}
             </div>
           </div>
         </Container>
@@ -95,17 +122,20 @@ export default async function HomePage() {
       {/* ---------------------------------------------------------------
           Motivos para comprar acá
       --------------------------------------------------------------- */}
-      <section className="border-b border-ink-200 bg-ink-50">
+      <section className="border-b border-ink-200">
         <Container>
-          <ul className="grid gap-6 py-10 sm:grid-cols-2 lg:grid-cols-4">
+          <ul className="grid sm:grid-cols-2 sm:divide-x sm:divide-ink-200 lg:grid-cols-4">
             {trustPoints.map((point, index) => {
               const Icon = trustIcons[index]
               return (
-                <li key={point.title} className="flex gap-3">
-                  <Icon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand-600" />
+                <li
+                  key={point.title}
+                  className="flex gap-3.5 border-b border-ink-200 py-7 sm:border-b-0 sm:px-7 sm:first:pl-0 sm:last:pr-0"
+                >
+                  <Icon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand-500" />
                   <div>
-                    <p className="text-sm font-semibold text-ink-950">{point.title}</p>
-                    <p className="mt-1 text-sm text-ink-600">{point.detail}</p>
+                    <p className="text-sm font-medium text-ink-950">{point.title}</p>
+                    <p className="mt-1.5 text-[13px] leading-relaxed text-ink-500">{point.detail}</p>
                   </div>
                 </li>
               )
@@ -117,20 +147,13 @@ export default async function HomePage() {
       {/* ---------------------------------------------------------------
           Categorías
       --------------------------------------------------------------- */}
-      <section className="py-16">
+      <section className="py-20">
         <Container>
           <SectionHeading
             eyebrow="Catálogo"
             title="Compra por categoría"
-            description="Todo el equipamiento organizado por rubro, para que llegues rápido a lo que necesitas."
-            action={
-              <Link
-                href="/productos"
-                className="text-sm font-medium text-brand-600 hover:underline"
-              >
-                Ver todo el catálogo →
-              </Link>
-            }
+            description="Todo el equipamiento organizado por rubro, para llegar rápido a lo que necesitas."
+            action={<TextLink href="/productos">Ver todo el catálogo</TextLink>}
           />
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -142,21 +165,56 @@ export default async function HomePage() {
       </section>
 
       {/* ---------------------------------------------------------------
-          Destacados
+          Destacados, agrupados por categoría
       --------------------------------------------------------------- */}
-      <section className="bg-ink-50 py-16">
+      <section className="border-y border-ink-200 bg-ink-50 py-20">
         <Container>
           <SectionHeading
             eyebrow="Lo más pedido"
             title="Productos destacados"
             description="Los equipos que más nos consultan panaderías, cafeterías y restaurantes."
-            action={
-              <Link href="/productos" className="text-sm font-medium text-brand-600 hover:underline">
-                Ver más →
-              </Link>
-            }
           />
-          <ProductGrid products={featured} />
+          <FeaturedTabs groups={grupos} />
+        </Container>
+      </section>
+
+      {/* ---------------------------------------------------------------
+          Asesoría
+      --------------------------------------------------------------- */}
+      <section className="bg-ink-950 py-20 text-white">
+        <Container>
+          <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-end">
+            <div>
+              <p className="mb-6 text-[11px] font-medium tracking-[0.2em] text-brand-400 uppercase">
+                Asesoría técnica
+              </p>
+              <h2 className="text-[30px] leading-[1.15] font-medium sm:text-[40px]">
+                El equipo correcto no es el más caro. Es el que rinde para tu producción.
+              </h2>
+              <p className="mt-6 max-w-xl leading-relaxed text-ink-300">
+                Dinos cuántos kilos o cubiertos produces por día, qué espacio tienes y con qué
+                instalación cuentas. Con eso armamos una propuesta concreta, no un listado de
+                precios.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3 lg:justify-end">
+              <a
+                href={whatsappUrl('Hola ROMASE, quiero asesoría para equipar mi local.')}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-13 items-center justify-center rounded-sm bg-brand-500 px-8 text-[15px] font-medium text-white transition-colors hover:bg-brand-600"
+              >
+                Hablar por WhatsApp
+              </a>
+              <Link
+                href="/contacto"
+                className="inline-flex h-13 items-center justify-center rounded-sm border border-white/25 px-8 text-[15px] font-medium transition-colors hover:bg-white hover:text-ink-950"
+              >
+                Enviar un mensaje
+              </Link>
+            </div>
+          </div>
         </Container>
       </section>
 
@@ -164,20 +222,12 @@ export default async function HomePage() {
           Novedades
       --------------------------------------------------------------- */}
       {novedades.items.length > 0 && (
-        <section className="py-16">
+        <section className="py-20">
           <Container>
             <SectionHeading
               eyebrow="Recién llegados"
               title="Últimas incorporaciones"
-              description="Lo más nuevo que sumamos al catálogo."
-              action={
-                <Link
-                  href="/productos?orden=novedades"
-                  className="text-sm font-medium text-brand-600 hover:underline"
-                >
-                  Ver novedades →
-                </Link>
-              }
+              action={<TextLink href="/productos?orden=novedades">Ver novedades</TextLink>}
             />
             <ProductGrid products={novedades.items} />
           </Container>
@@ -187,11 +237,11 @@ export default async function HomePage() {
       {/* ---------------------------------------------------------------
           Contenido para posicionamiento
       --------------------------------------------------------------- */}
-      <section className="border-t border-ink-200 py-16">
+      <section className="border-t border-ink-200 py-20">
         <Container>
-          <div className="grid gap-12 lg:grid-cols-[1.5fr_1fr]">
+          <div className="grid gap-14 lg:grid-cols-[1.5fr_1fr]">
             <div className="rich-text max-w-3xl">
-              <h2 className="!mt-0 text-2xl font-semibold tracking-tight text-ink-950 sm:text-3xl">
+              <h2 className="!mt-0 text-[26px] leading-[1.15] font-medium text-ink-950 sm:text-[34px]">
                 Equipamiento gastronómico e industrial para panaderías y cocinas profesionales
               </h2>
 
@@ -257,10 +307,10 @@ export default async function HomePage() {
               <h3>Asesoría antes de comprar</h3>
 
               <p>
-                Si estás armando un local desde cero o ampliando el que tienes, conviene que hablemos
-                antes de que compres. Necesitamos saber tres cosas: cuántos kilos o cubiertos
-                produces por día, qué superficie y qué instalación eléctrica y de gas tienes
-                disponible, y en qué plazo necesitas estar operando. Con eso te armamos una
+                Si estás armando un local desde cero o ampliando el que tienes, conviene que
+                hablemos antes de que compres. Necesitamos saber tres cosas: cuántos kilos o
+                cubiertos produces por día, qué superficie y qué instalación eléctrica y de gas
+                tienes disponible, y en qué plazo necesitas estar operando. Con eso te armamos una
                 propuesta concreta, no un listado de precios.
               </p>
 
@@ -290,38 +340,6 @@ export default async function HomePage() {
 
             <div>
               <Faqs items={homeFaqs} />
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      {/* ---------------------------------------------------------------
-          Cierre
-      --------------------------------------------------------------- */}
-      <section className="bg-brand-700 py-14 text-white">
-        <Container>
-          <div className="flex flex-wrap items-center justify-between gap-6">
-            <div className="max-w-xl">
-              <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                ¿No encuentras lo que buscas?
-              </h2>
-              <p className="mt-2 text-brand-100">
-                Tenemos acceso a más equipos de los que están publicados. Cuéntanos qué necesitas y
-                te cotizamos.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <ButtonLink href="/contacto" variant="outline" size="lg" className="border-white/30 bg-white text-brand-700 hover:bg-brand-50">
-                Escríbenos
-              </ButtonLink>
-              <a
-                href={whatsappUrl('Hola ROMASE, estoy buscando un equipo que no vi en la web.')}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-13 items-center justify-center rounded-lg border border-white/40 px-7 text-base font-medium hover:bg-white/10"
-              >
-                WhatsApp
-              </a>
             </div>
           </div>
         </Container>

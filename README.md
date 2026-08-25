@@ -107,6 +107,27 @@ productos quedan enlazados desde una sola URL indexable. El orden y los filtros 
 
 ---
 
+## Diseño
+
+La referencia acordada es [groner.cl](https://groner.cl): limpio y sobrio. Lo que define ese
+estilo no es el color sino la **planitud** — casi sin sombras, radios de 2 a 6 px, bordes de
+un pelo y mucho espacio en blanco. La paleta es la de ROMASE: la terracota `#dd5330` del
+logo, usada con moderación (botones, badges, acentos) sobre neutros cálidos.
+
+Los tokens viven en `src/app/globals.css` y gobiernan todo el sitio: cambiar `--radius-*` o
+`--shadow-*` ahí reestila cada componente de una vez.
+
+Piezas propias del rediseño:
+
+- **Portada clara**, armada con producto real del catálogo en vez de una foto de banco.
+- **Destacados con pestañas por categoría** (`featured-tabs.tsx`), para que se vea el
+  alcance del catálogo sin entrar a cada sección.
+- **Tarjetas planas**: el marco rodea solo la foto, el texto respira fuera.
+- **Menú con etiquetas cortas.** Con los nombres completos, las diez entradas no entran en
+  1280 px. Los nombres largos se siguen usando en títulos y migas de pan.
+
+---
+
 ## Correcciones de datos aplicadas en la migración
 
 Dos parches viven en `src/content/` porque el origen tiene errores. Lo correcto es
