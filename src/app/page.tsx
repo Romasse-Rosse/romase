@@ -1,6 +1,7 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, BadgeCheck, Headset, ShieldCheck, Truck } from 'lucide-react'
-import { getCarouselProducts, getCategoryTree, queryProducts } from '@/lib/catalog'
+import { getCarouselProducts, getCategoryCovers, getCategoryTree, queryProducts } from '@/lib/catalog'
 import { site, trustPoints } from '@/lib/site'
 import { titleCase } from '@/lib/format'
 import { Container, SectionHeading } from '@/components/ui'
@@ -20,9 +21,10 @@ const trustIcons = [BadgeCheck, Truck, Headset, ShieldCheck]
 export default async function HomePage() {
   const categories = await getCategoryTree()
 
-  const [destacados, novedades] = await Promise.all([
+  const [destacados, novedades, portadas] = await Promise.all([
     getCarouselProducts(12),
     queryProducts({ sort: 'novedades', perPage: 12 }),
+    getCategoryCovers(),
   ])
 
   const archivosBanner = manifiestoBanner as Record<string, string>
@@ -100,23 +102,49 @@ export default async function HomePage() {
             description="Todo el equipamiento organizado por rubro."
           />
 
+          {/* Cada tarjeta muestra un producto real de la categoría, no un
+              icono: lo que se vende es el catálogo. La foto viene recortada
+              sobre blanco, así que la tarjeta también es blanca y el objeto
+              queda flotando. */}
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {categories.map((category) => (
-              <li key={category.id}>
-                <Link
-                  href={`/categorias/${category.slug}`}
-                  className="group flex h-full flex-col justify-between gap-6 border border-ink-200 bg-white p-5 transition-colors hover:border-ink-950"
-                >
-                  <span className="text-sm leading-snug font-medium text-ink-950">
-                    {titleCase(category.name)}
-                  </span>
-                  <ArrowRight
-                    aria-hidden="true"
-                    className="size-4 text-ink-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-600"
-                  />
-                </Link>
-              </li>
-            ))}
+            {categories.map((category) => {
+              const portada = portadas[category.slug]
+
+              return (
+                <li key={category.id}>
+                  <Link
+                    href={`/categorias/${category.slug}`}
+                    className="group flex h-full flex-col border border-ink-200 bg-white transition-colors hover:border-ink-950"
+                  >
+                    <span className="relative block aspect-square overflow-hidden">
+                      {portada ? (
+                        <Image
+                          src={portada.src}
+                          alt=""
+                          fill
+                          sizes="(min-width: 1024px) 18vw, (min-width: 640px) 30vw, 45vw"
+                          className="object-contain p-5 transition-transform duration-500 ease-out group-hover:scale-[1.06]"
+                        />
+                      ) : (
+                        <span className="flex h-full items-center justify-center text-xs text-ink-300">
+                          Sin foto
+                        </span>
+                      )}
+                    </span>
+
+                    <span className="flex items-center justify-between gap-2 border-t border-ink-100 px-4 py-3.5">
+                      <span className="text-[13px] leading-snug font-medium text-ink-950">
+                        {titleCase(category.name)}
+                      </span>
+                      <ArrowRight
+                        aria-hidden="true"
+                        className="size-4 shrink-0 text-ink-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand-600"
+                      />
+                    </span>
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
         </Container>
       </section>
@@ -132,8 +160,12 @@ export default async function HomePage() {
               title="Últimas incorporaciones"
               description="Lo último que sumamos al catálogo."
             />
-            <ProductCarousel products={novedades.items} />
             <ViewItemList
+              products={novedades.items}
+              listId="novedades"
+              listName="Últimas incorporaciones"
+            />
+            <ProductCarousel
               products={novedades.items}
               listId="novedades"
               listName="Últimas incorporaciones"

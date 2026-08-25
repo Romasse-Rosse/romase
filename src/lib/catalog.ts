@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 import { normalize, stripHtml } from './format'
 import { nombreCategoria } from '@/content/nombres-categorias'
 import { categoriasDeProducto } from '@/content/productos-sin-categoria'
+import { portadasCategorias } from '@/content/portadas-categorias'
 import imagenesLocales from '../../migration/data/imagenes-locales.json'
 
 // ============================================================
@@ -332,6 +333,36 @@ export const getCategoryTree = cache(async (): Promise<CategoryNode[]> => {
 })
 
 export const getRootCategories = cache(async (): Promise<CategoryNode[]> => getCategoryTree())
+
+/**
+ * Foto que ilustra cada categoría raíz en la portada.
+ *
+ * Sale de un producto real, elegido a mano en `portadas-categorias.ts`. Si ese
+ * producto ya no está —se descatalogó, cambió de slug—, la categoría cae al
+ * primer producto de su rama que tenga foto: la tarjeta nunca queda vacía.
+ */
+export const getCategoryCovers = cache(async (): Promise<Record<string, ProductImage>> => {
+  const [{ products }, arbol] = await Promise.all([getCatalog(), getCategoryTree()])
+  const porSlug = new Map(products.map((p) => [p.slug, p]))
+
+  const portadas: Record<string, ProductImage> = {}
+
+  for (const raiz of arbol) {
+    const elegido = porSlug.get(portadasCategorias[raiz.slug] ?? '')
+    if (elegido?.images[0]) {
+      portadas[raiz.slug] = elegido.images[0]
+      continue
+    }
+
+    const ids = new Set(await getCategoryBranchIds(raiz.id))
+    const respaldo = products.find(
+      (p) => p.images.length > 0 && p.categoryIds.some((id) => ids.has(id)),
+    )
+    if (respaldo) portadas[raiz.slug] = respaldo.images[0]
+  }
+
+  return portadas
+})
 
 export const getCategoryBySlug = cache(async (slug: string): Promise<Category | null> => {
   const { categories } = await getCatalog()

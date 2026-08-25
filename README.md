@@ -374,6 +374,27 @@ exactamente estos.
 
 ---
 
+## Calidad de los datos que llegaron del WordPress
+
+**75 de los 214 productos tienen como foto principal una imagen generada por IA.** El nombre
+del archivo lo dice sin ambigüedad: 70 son `Gemini_Generated_Image_*.jpg` y 5 son
+`ChatGPT-Image-*.png`. No es una sospecha por el aspecto: es el archivo que está subido en
+`romase.cl/wp-content`.
+
+Se concentran en los artículos chicos —moldes, cortadores, depósitos gastronómicos—. En
+artículos de pastelería es casi toda la rama: el único producto con foto real es la caja de
+balines para sifón.
+
+Esto importa por dos razones. La legal: una foto generada no muestra el producto que se
+despacha, y en una ficha con precio eso es una descripción del producto. La comercial: se
+notan, tienen fondos grises y proporciones que no calzan con el resto del catálogo.
+
+No se tocó ninguna —son las que el cliente subió—, pero sí se excluyeron de las portadas de
+categoría en la home: ahí van solo fotos reales. Lo que corresponde es reemplazarlas por
+fotos del producto, aunque sean del taller y con el celular.
+
+---
+
 ## Memoria y rendimiento
 
 El servicio devolvía 502 de forma intermitente: la instancia se reiniciaba por falta de
