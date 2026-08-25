@@ -26,6 +26,7 @@ y para que el build de Render nunca dependa de un servicio externo.
 | `yarn start` | Sirve el build (toma el puerto de `PORT`) |
 | `yarn catalog:fetch` | Vuelve a bajar el catálogo desde romase.cl |
 | `yarn catalog:seed` | Carga el catálogo en Supabase |
+| `yarn favicons` | Regenera los favicons desde el logo |
 
 ---
 
@@ -68,6 +69,8 @@ migration/          Migración desde WooCommerce
   seed-supabase.mjs   lo carga en Supabase
   schema.sql          esquema completo (catálogo, pedidos, consultas)
   data/               snapshot versionado — lo necesita el build
+scripts/
+  generate-favicons.mjs  favicons a partir del logo
 src/
   app/                rutas
   components/         componentes
@@ -149,6 +152,20 @@ Piezas propias del rediseño:
 - **Menú con etiquetas cortas.** Con los nombres completos, las diez entradas no entran en
   1280 px. Los nombres largos se siguen usando en títulos y migas de pan.
 
+### Favicon
+
+El logo es un wordmark horizontal: entero en un favicon queda ilegible a 16 px. Lo único que
+se reconoce a ese tamaño es la **R**, así que se recorta esa letra del logo y se cala en
+blanco sobre un cuadrado terracota.
+
+`node scripts/generate-favicons.mjs` regenera `icon.png` (512), `apple-icon.png` (180) y
+`favicon.ico` (16, 32 y 48) en `src/app/`, de donde Next los toma por convención. Si cambia
+el logo hay que revisar `CAJA_R` en ese script: son las coordenadas de la letra dentro de
+`public/brand/logo.png`.
+
+El logo se sirve desde el original de 764×280 en vez de la miniatura de 150×55 que estaba en
+el sitio anterior, así se ve nítido en pantallas retina.
+
 ---
 
 ## Correcciones de datos aplicadas en la migración
@@ -211,5 +228,6 @@ ninguno de los dos avisa en pantalla y ofrece WhatsApp.
 - **Contenido de subcategorías.** Las 55 subcategorías heredan el texto del padre.
 - **Envíos.** WooCommerce no tiene métodos de envío configurados; hay que definir zonas y
   tarifas antes de vender en línea.
-- **Favicon.** `src/app/favicon.ico` es todavía el que trae Next por defecto. Hay que
-  reemplazarlo por uno derivado del logo de ROMASE.
+- **Versión compacta del logo.** El lockup incluye la bajada «Distribuidor equipamiento
+  integral para el comercio», que a la altura del encabezado (36–44 px) es ilegible. Convendría
+  pedir una variante sin bajada para usar ahí.

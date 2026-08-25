@@ -23,8 +23,8 @@ export async function SiteFooter() {
             <Image
               src="/brand/logo.png"
               alt={site.name}
-              width={150}
-              height={55}
+              width={764}
+              height={280}
               className="h-10 w-auto brightness-0 invert"
             />
             <p className="mt-4 text-sm leading-relaxed">{site.description}</p>

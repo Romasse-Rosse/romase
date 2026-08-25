@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "catalog:fetch": "node migration/fetch-catalog.mjs",
-    "catalog:seed": "node migration/seed-supabase.mjs"
+    "catalog:seed": "node migration/seed-supabase.mjs",
+    "favicons": "node scripts/generate-favicons.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",

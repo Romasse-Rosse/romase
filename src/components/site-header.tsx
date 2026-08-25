@@ -83,8 +83,8 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
               <Image
                 src="/brand/logo.png"
                 alt={site.name}
-                width={150}
-                height={55}
+                width={764}
+                height={280}
                 priority
                 className="h-9 w-auto sm:h-11"
               />
