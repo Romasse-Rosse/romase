@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Plus_Jakarta_Sans } from 'next/font/google'
 import { getCategoryTree } from '@/lib/catalog'
 import { site } from '@/lib/site'
 import { SiteHeader } from '@/components/site-header'
@@ -7,7 +7,11 @@ import { SiteFooter } from '@/components/site-footer'
 import { WhatsAppFab } from '@/components/whatsapp-fab'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' })
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-jakarta',
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -61,7 +65,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <html lang="es-CL" className={inter.variable}>
+    <html lang="es-CL" className={jakarta.variable}>
       <body className="font-sans antialiased">
         <a
           href="#contenido"

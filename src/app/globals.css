@@ -8,7 +8,7 @@
    que un gris azulado.
    ============================================================ */
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   --color-brand-50: #fdf5f2;
   --color-brand-100: #fbe8e1;
