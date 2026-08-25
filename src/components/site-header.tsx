@@ -82,10 +82,12 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
 
             <Link href="/" className="shrink-0" aria-label={`${site.name} · Inicio`}>
               <Image
-                src="/brand/logo.png"
+                src="/brand/logo-web.webp"
                 alt={site.name}
-                width={764}
-                height={280}
+                width={400}
+                height={147}
+                /* Ya viene al tamaño de uso: no hace falta el optimizador. */
+                unoptimized
                 priority
                 className="h-9 w-auto sm:h-11"
               />

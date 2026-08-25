@@ -21,10 +21,12 @@ export async function SiteFooter() {
         <div className="grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <Image
-              src="/brand/logo.png"
+              src="/brand/logo-web.webp"
               alt={site.name}
-              width={764}
-              height={280}
+              width={400}
+              height={147}
+              /* Ya viene al tamaño de uso: no hace falta el optimizador. */
+              unoptimized
               className="h-10 w-auto brightness-0 invert"
             />
             <p className="mt-4 text-sm leading-relaxed">{site.description}</p>

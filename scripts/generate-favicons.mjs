@@ -100,6 +100,15 @@ const ico = empaquetarIco(
 )
 await writeFile(path.join(APP, 'favicon.ico'), ico)
 
+// El logo del encabezado y del pie se muestra a unos 44 px de alto. Se
+// genera una versión a ese tamaño (con margen para pantallas retina) y se
+// sirve tal cual, sin pasar por el optimizador de imágenes: ya viene listo.
+const LOGO_WEB_ANCHO = 400
+await sharp(LOGO)
+  .resize({ width: LOGO_WEB_ANCHO })
+  .webp({ quality: 90 })
+  .toFile(path.join(RAIZ, 'public', 'brand', 'logo-web.webp'))
+
 console.log('Generados en src/app/:')
 console.log('  icon.png        512x512')
 console.log('  apple-icon.png  180x180')

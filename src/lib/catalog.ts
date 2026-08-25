@@ -202,14 +202,7 @@ async function loadFromSnapshot(): Promise<Catalog> {
   }
 }
 
-/**
- * Carga el catálogo sin memoización.
- *
- * cache() de React es un memo por render, y una acción de servidor no corre
- * dentro de un render: llamar a getCatalog() desde ahí falla. Las acciones
- * tienen que usar esta función.
- */
-export async function loadCatalog(): Promise<Catalog> {
+async function construirCatalogo(): Promise<Catalog> {
   let catalog: Catalog | null = null
 
   if (supabaseConfigured) {
@@ -237,7 +230,45 @@ export async function loadCatalog(): Promise<Catalog> {
   }
 }
 
-/** Versión memoizada, para usar durante el render de las páginas. */
+// ------------------------------------------------------------
+// El catálogo se guarda a nivel de módulo, compartido entre peticiones.
+//
+// cache() de React deduplica dentro de un mismo render, no entre requests:
+// sin esto, cada visita a /productos y cada tecleo en el buscador volvía a
+// leer y parsear 1,1 MB de JSON y a reconstruir los 214 productos. La memoria
+// crecía pedido a pedido hasta que la instancia se reiniciaba y devolvía 502.
+// ------------------------------------------------------------
+const VIGENCIA = 60 * 60 * 1000 // una hora, igual que el revalidate de las páginas
+
+let enMemoria: { datos: Catalog; expira: number } | null = null
+let cargaEnCurso: Promise<Catalog> | null = null
+
+/**
+ * Devuelve el catálogo, reutilizándolo entre peticiones.
+ *
+ * Las acciones de servidor tienen que usar esta función y no getCatalog():
+ * cache() de React necesita el contexto de un render, y una acción no corre
+ * dentro de uno.
+ */
+export async function loadCatalog(): Promise<Catalog> {
+  if (enMemoria && enMemoria.expira > Date.now()) return enMemoria.datos
+
+  // Si llegan varias peticiones a la vez comparten la misma carga en lugar de
+  // dispararla cada una por su cuenta, que era lo que reventaba el arranque en
+  // frío.
+  cargaEnCurso ??= construirCatalogo()
+    .then((datos) => {
+      enMemoria = { datos, expira: Date.now() + VIGENCIA }
+      return datos
+    })
+    .finally(() => {
+      cargaEnCurso = null
+    })
+
+  return cargaEnCurso
+}
+
+/** Deduplica además dentro de un mismo render. */
 export const getCatalog = cache(loadCatalog)
 
 // ============================================================

@@ -283,6 +283,40 @@ exactamente estos.
 
 ---
 
+## Memoria y rendimiento
+
+El servicio devolvía 502 de forma intermitente: la instancia se reiniciaba por falta de
+memoria. Dos causas, las dos medidas:
+
+**1. El catálogo se rearmaba en cada petición.** `cache()` de React deduplica dentro de un
+render, no entre requests, así que cada visita a `/productos` y cada tecleo en el buscador
+volvía a leer y parsear 1,1 MB de JSON y a reconstruir los 214 productos. Ahora se guarda a
+nivel de módulo, compartido entre peticiones, con una hora de vigencia y deduplicación de
+cargas simultáneas.
+
+| | Antes | Después |
+| --- | --- | --- |
+| En reposo | 93,7 MB | 86,0 MB |
+| Tras 40 búsquedas | 117,3 MB | 99,0 MB |
+| Tras 15 cargas de `/productos` | 136,8 MB | 103,7 MB |
+
+La latencia de `/api/buscar` bajó de 183 ms a unos 30 ms a partir de la segunda llamada.
+
+**2. AVIF costaba más de lo que daba.** Medido sobre una foto del catálogo: 739 ms y 39 KB
+contra 198 ms y 29 KB de WebP. Más lento, más memoria y un archivo más grande, así que se
+dejó solo WebP. También se recortaron los `deviceSizes` —cada ancho distinto es una variante
+más que el servidor puede tener que generar— y el caché de variantes pasó a un mes.
+
+El logo se sirve con `unoptimized` desde `logo-web.webp` (400 px, 27 KB, generado por
+`yarn favicons`): se muestra a 44 px de alto, no tiene sentido que el servidor lo procese en
+cada arranque en frío.
+
+> **Peso del proyecto.** La carpeta local pesa unos 600 MB, pero son `node_modules` (386 MB)
+> y `.next` (237 MB): generados, ignorados por git y no se despliegan como fuente. El
+> proyecto versionado son **2,1 MB en 73 archivos**.
+
+---
+
 ## Despliegue en Render
 
 `render.yaml` documenta la configuración esperada:

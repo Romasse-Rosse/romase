@@ -9,7 +9,19 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'romase.cl', pathname: '/wp-content/uploads/**' },
       { protocol: 'https', hostname: '**.supabase.co', pathname: '/storage/v1/object/public/**' },
     ],
-    formats: ['image/avif', 'image/webp'],
+    // Solo WebP. Medido sobre una foto del catálogo, AVIF tarda 739 ms contra
+    // 198 ms de WebP y devuelve un archivo más grande (39 KB contra 29 KB):
+    // en una instancia chica es memoria y CPU a cambio de nada.
+    formats: ['image/webp'],
+
+    // Menos variantes posibles: cada ancho distinto es una imagen más que el
+    // servidor puede tener que generar y guardar. 3840 no aporta con fuentes
+    // de 2000 px de ancho.
+    deviceSizes: [640, 828, 1080, 1440, 1920],
+    imageSizes: [64, 96, 128, 256, 384],
+
+    // Un mes de caché en las variantes ya generadas.
+    minimumCacheTTL: 60 * 60 * 24 * 30,
   },
 
   async redirects() {
