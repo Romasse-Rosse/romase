@@ -204,18 +204,18 @@ segundo:
 
 > **Fotos del banner.** Las de panadería, equipos complementarios y vitrinas son de Pexels
 > (uso comercial libre, sin atribución obligatoria) y las eligió el cliente. La de gastronomía
-> es CC0. La procedencia y licencia de cada una queda en .
+> es CC0. La procedencia y licencia de cada una queda en `public/banner/creditos.json`.
 >
 > **La de repuestos está sin licencia verificada:** se tomó del sitio de otra empresa
-> (odisaequipa.com.mx). Conviene reemplazarla por una de Pexels antes de publicar, o
-> confirmar que hay permiso de uso.
+> (odisaequipa.com.mx), no de un banco de imágenes. Conviene reemplazarla por una de Pexels
+> antes de publicar, o confirmar que hay permiso de uso.
 
-Las fotos se sirven desde , no enlazadas de un tercero: se recortan a 2000×900
+Las fotos se sirven desde `public/banner/`, no enlazadas de un tercero: se recortan a 2000×900
 buscando la zona de interés y se guardan en WebP. Para cambiar una, editar su URL en
- y correr .
+`scripts/banner-fuentes.json` y correr `yarn banner:fetch`.
 
 > **Al reemplazar una foto hay que limpiar la caché de imágenes.** Next guarda las variantes
-> optimizadas en  indexadas por URL, y el nombre del archivo no cambia:
+> optimizadas en `.next/cache/images` indexadas por URL, y el nombre del archivo no cambia:
 > sin borrar esa carpeta se sigue viendo la foto anterior. En un despliegue limpio de Render
 > no aplica, pero en local sí.
 
