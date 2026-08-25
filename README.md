@@ -107,6 +107,29 @@ productos quedan enlazados desde una sola URL indexable. El orden y los filtros 
 
 ---
 
+## Formulario de contacto
+
+Cada consulta va a dos lugares con roles distintos:
+
+1. **Supabase** (tabla `leads`) — el registro durable, para no depender de que
+   nadie borre un correo.
+2. **Resend** — el aviso a la bandeja, para que alguien lo lea el mismo día.
+
+Se intentan los dos en paralelo y **basta con que uno funcione** para dar la consulta por
+recibida. Si fallan los dos, el formulario lo dice y ofrece WhatsApp: nunca simula haber
+enviado algo que se perdió. El correo llega con `reply_to` del cliente, así se le responde
+directo desde la bandeja.
+
+Variables: `RESEND_API_KEY`, `RESEND_FROM`, `LEADS_EMAIL` (ver `.env.example`).
+
+> **Dependencia a resolver.** Resend exige que el remitente sea de un dominio verificado,
+> lo que implica cargar registros SPF y DKIM en el DNS de romase.cl — y ese DNS está en
+> Entel, donde todavía no tenemos acceso. Hasta que lo tengamos se puede probar con el
+> dominio compartido de Resend (`onboarding@resend.dev`), que solo permite enviar al correo
+> dueño de la cuenta: alcanza para verificar el flujo, no para producción.
+
+---
+
 ## Diseño
 
 La referencia acordada es [groner.cl](https://groner.cl): limpio y sobrio. Lo que define ese
@@ -163,11 +186,14 @@ Variables de entorno a cargar en el panel de Render:
 | `NEXT_PUBLIC_SITE_URL` | sí | URLs canónicas y sitemap |
 | `NEXT_PUBLIC_SUPABASE_URL` | no | catálogo desde Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | no | ídem |
-| `SUPABASE_SERVICE_ROLE_KEY` | no | formulario de contacto y seed |
+| `SUPABASE_SERVICE_ROLE_KEY` | no | guardar consultas y seed |
+| `RESEND_API_KEY` | no | aviso por correo de las consultas |
+| `RESEND_FROM` | no | remitente (dominio verificado en Resend) |
+| `LEADS_EMAIL` | no | a dónde llegan las consultas |
 
-Sin las de Supabase el sitio funciona igual, con el snapshot. Lo único que deja de andar es
-el formulario de contacto, que avisa en pantalla y ofrece WhatsApp: nunca simula haber
-enviado una consulta que no guardó.
+Sin las de Supabase el sitio funciona igual, con el snapshot. Lo que queda a medias es el
+formulario: con Resend configurado sigue avisando por correo aunque Supabase no esté, y sin
+ninguno de los dos avisa en pantalla y ofrece WhatsApp.
 
 ---
 
