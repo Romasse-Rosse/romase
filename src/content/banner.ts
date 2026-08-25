@@ -6,11 +6,12 @@
  * scripts/fetch-banner-images.mjs; la procedencia y la licencia de cada una
  * quedan en public/banner/creditos.json.
  *
- * El orden es el que se ve al rotar. Para sacar o sumar una sección basta
- * editar esta lista: el conteo de productos y el enlace salen del catálogo.
+ * Son tres a propósito: un banner que rota cinco veces cansa antes de que
+ * alguien llegue a la tercera. El orden es el que se ve al rotar, y para
+ * cambiar la selección basta editar esta lista.
  */
 export type BannerSlide = {
-  /** Slug de la categoría: de ahí salen el nombre, el enlace y el conteo. */
+  /** Slug de la categoría: de ahí sale el enlace de la diapositiva. */
   slug: string
   /** Archivo en public/banner/, sin extensión. */
   imagen: string
@@ -39,19 +40,5 @@ export const bannerSlides: BannerSlide[] = [
     titular: 'Equipos que amplían tu carta',
     bajada:
       'Máquinas de café, balanzas, licuadoras, waffleras y selladoras. Poca inversión, producto nuevo.',
-  },
-  {
-    slug: 'vitrinas',
-    imagen: 'vitrinas',
-    titular: 'Vitrinas que venden solas',
-    bajada:
-      'Frías y calientes. Una buena exhibición decide si tu producto se vende o se queda en el mostrador.',
-  },
-  {
-    slug: 'repuestos',
-    imagen: 'repuestos',
-    titular: 'Repuestos con stock en Chile',
-    bajada:
-      'Una máquina detenida cuesta más que la pieza que le falta. Por eso mantenemos el repuesto acá.',
   },
 ]

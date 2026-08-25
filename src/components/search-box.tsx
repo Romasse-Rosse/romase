@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Loader2, Search, X } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import { search } from '@/lib/analytics'
 
 type Suggestion = {
   slug: string
@@ -85,12 +86,15 @@ export function SearchBox({
   const goToResults = () => {
     const query = term.trim()
     if (!query) return
+    search(query)
     setOpen(false)
     onNavigate?.()
-    router.push(`/productos?q=${encodeURIComponent(query)}`)
+    router.push(`/buscar?q=${encodeURIComponent(query)}`)
   }
 
   const goToProduct = (slug: string) => {
+    // Entrar directo a un producto desde el panel también es una búsqueda.
+    if (term.trim()) search(term.trim())
     setOpen(false)
     onNavigate?.()
     router.push(`/productos/${slug}`)

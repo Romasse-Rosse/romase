@@ -12,7 +12,8 @@
     "catalog:fetch": "node migration/fetch-catalog.mjs",
     "catalog:seed": "node migration/seed-supabase.mjs",
     "favicons": "node scripts/generate-favicons.mjs",
-    "banner:fetch": "node scripts/fetch-banner-images.mjs"
+    "banner:fetch": "node scripts/fetch-banner-images.mjs",
+    "productos:imagenes": "node scripts/localize-product-images.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",

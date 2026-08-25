@@ -2,9 +2,10 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react'
-import { useCart } from '@/lib/cart'
+import { aItemDeCarrito, useCart } from '@/lib/cart'
+import { viewCart } from '@/lib/analytics'
 import { formatPrice } from '@/lib/format'
 
 /** Icono del encabezado con el contador de unidades. */
@@ -32,6 +33,15 @@ export function CartButton() {
 
 export function CartDrawer() {
   const { items, subtotal, count, open, setOpen, remove, setQuantity } = useCart()
+
+  // Abrir el panel es ver el carrito. Se lee la lista con una referencia para
+  // no reenviar el evento cada vez que cambia una cantidad con el panel abierto.
+  const enPantalla = useRef(items)
+  enPantalla.current = items
+  useEffect(() => {
+    if (!open || enPantalla.current.length === 0) return
+    viewCart(enPantalla.current.map((i) => aItemDeCarrito(i, i.quantity)))
+  }, [open])
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
@@ -74,14 +84,14 @@ export function CartDrawer() {
             <ShoppingBag aria-hidden="true" className="size-10 text-ink-300" />
             <p className="mt-4 font-medium text-ink-900">Tu carrito está vacío</p>
             <p className="mt-1.5 text-sm text-ink-500">
-              Agrega equipos desde el catálogo y aparecen acá.
+              Agrega equipos desde cualquier categoría y aparecen acá.
             </p>
             <Link
-              href="/productos"
+              href="/#categorias"
               onClick={() => setOpen(false)}
               className="mt-6 inline-flex h-11 items-center justify-center rounded-sm bg-brand-500 px-6 text-sm font-medium text-white transition-colors hover:bg-brand-600"
             >
-              Ver el catálogo
+              Ver las categorías
             </Link>
           </div>
         ) : (

@@ -19,7 +19,16 @@ const AUTOPLAY = 5000
  * el teclado funcionan sin reimplementarlos, y el avance automático es un
  * scrollTo sobre la misma pista.
  */
-export function ProductCarousel({ products }: { products: Product[] }) {
+export function ProductCarousel({
+  products,
+  listId,
+  listName,
+}: {
+  products: Product[]
+  /** Lista a la que pertenece el carrusel, para select_item. */
+  listId?: string
+  listName?: string
+}) {
   const pista = useRef<HTMLUListElement>(null)
   const [pagina, setPagina] = useState(0)
   const [paginas, setPaginas] = useState(1)
@@ -87,7 +96,7 @@ export function ProductCarousel({ products }: { products: Product[] }) {
             /* Una tarjeta y media en móvil: el recorte del borde avisa que hay más. */
             className="flex w-[68%] shrink-0 snap-start sm:w-[calc(50%-0.75rem)] lg:w-[calc(25%-1.125rem)]"
           >
-            <ProductCard product={product} />
+            <ProductCard product={product} listId={listId} listName={listName} />
           </li>
         ))}
       </ul>

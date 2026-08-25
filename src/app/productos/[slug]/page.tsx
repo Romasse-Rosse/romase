@@ -12,6 +12,8 @@ import {
 import { formatPrice, stripHtml, titleCase, truncate } from '@/lib/format'
 import { site, whatsappUrl } from '@/lib/site'
 import { Badge, Breadcrumbs, Container, SectionHeading } from '@/components/ui'
+import { Faqs, faqsProducto } from '@/components/faqs'
+import { ViewItem, ViewItemList } from '@/components/analytics'
 import { ProductGallery } from '@/components/product-gallery'
 import { ProductGrid } from '@/components/product-card'
 import { WhatsAppIcon } from '@/components/site-header'
@@ -74,8 +76,10 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
       ? Math.round((1 - product.price / product.regularPrice) * 100)
       : 0
 
-  const consulta = whatsappUrl(
-    `Hola ROMASE, quiero consultar por: ${name}` +
+  // Única cotización por WhatsApp del sitio. El mensaje sale con el nombre
+  // del equipo ya escrito, así quien atiende sabe de qué ficha viene.
+  const cotizacion = whatsappUrl(
+    `Hola ROMASE, quiero cotizar: ${name}` +
       (product.sku ? ` (SKU ${product.sku})` : '') +
       `\n${site.url}/productos/${product.slug}`,
   )
@@ -106,7 +110,6 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
         <Breadcrumbs
           items={[
             { label: 'Inicio', href: '/' },
-            { label: 'Productos', href: '/productos' },
             ...categoryPath.map((c) => ({
               label: titleCase(c.name),
               href: `/categorias/${c.slug}`,
@@ -179,17 +182,15 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
               />
             </div>
 
-            {/* WhatsApp sigue disponible como canal secundario: buena parte de
-                las ventas todavía entra por ahí. */}
             <div className="mt-3 flex flex-col gap-3 sm:flex-row">
               <a
-                href={consulta}
+                href={cotizacion}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-sm border border-ink-300 px-5 text-sm font-medium text-ink-900 transition-colors hover:border-ink-950"
               >
                 <WhatsAppIcon className="size-4" />
-                Consultar por WhatsApp
+                Cotizar por WhatsApp
               </a>
               <a
                 href={site.contact.phoneHref}
@@ -208,33 +209,38 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
               O escríbenos a {site.contact.email}
             </a>
 
-            <ul className="mt-8 space-y-3 rounded-xl border border-ink-200 bg-ink-50 p-5 text-sm">
-              <li className="flex gap-3">
-                <Truck aria-hidden="true" className="mt-0.5 size-4.5 shrink-0 text-brand-600" />
-                <span className="text-ink-700">
-                  <strong className="font-medium text-ink-900">Despacho a todo Chile.</strong>{' '}
-                  Entrega sin costo en {site.contact.city}; a regiones cotizamos el flete según
-                  volumen y destino.
-                </span>
+            {/* El detalle de despacho y garantía vive en las preguntas
+                frecuentes: acá van solo los dos rótulos. */}
+            <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 border-t border-ink-200 pt-5 text-sm text-ink-700">
+              <li className="flex items-center gap-2">
+                <Truck aria-hidden="true" className="size-4.5 shrink-0 text-brand-600" />
+                Despacho a todo Chile
               </li>
-              <li className="flex gap-3">
-                <Wrench aria-hidden="true" className="mt-0.5 size-4.5 shrink-0 text-brand-600" />
-                <span className="text-ink-700">
-                  <strong className="font-medium text-ink-900">Garantía y repuestos.</strong>{' '}
-                  Equipo con garantía del fabricante y respaldo de repuestos.
-                </span>
+              <li className="flex items-center gap-2">
+                <Wrench aria-hidden="true" className="size-4.5 shrink-0 text-brand-600" />
+                Garantía y repuestos
               </li>
             </ul>
           </div>
         </div>
 
-        {description && (
-          <section className="mt-14 max-w-3xl">
-            <h2 className="mb-4 text-xl font-semibold tracking-tight text-ink-950">
-              Descripción del producto
-            </h2>
-            <div className="rich-text" dangerouslySetInnerHTML={{ __html: description }} />
-          </section>
+        {/* Sin descripción no se arma la grilla: dejaría media página vacía
+            al lado de las preguntas. */}
+        {description ? (
+          <div className="mt-14 grid gap-10 lg:grid-cols-[1.5fr_1fr] lg:gap-14">
+            <section>
+              <h2 className="mb-4 text-xl font-semibold tracking-tight text-ink-950">
+                Descripción del producto
+              </h2>
+              <div className="rich-text" dangerouslySetInnerHTML={{ __html: description }} />
+            </section>
+
+            <Faqs items={faqsProducto(name, product.inStock)} title="Compra, despacho y garantía" />
+          </div>
+        ) : (
+          <div className="mt-14 max-w-2xl">
+            <Faqs items={faqsProducto(name, product.inStock)} title="Compra, despacho y garantía" />
+          </div>
         )}
 
         {own.length > 0 && (
@@ -260,10 +266,21 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
         <section className="mt-16 bg-ink-50 py-14">
           <Container>
             <SectionHeading title="También te puede servir" />
-            <ProductGrid products={related} />
+            <ViewItemList
+              products={related}
+              listId="relacionados"
+              listName="También te puede servir"
+            />
+            <ProductGrid
+              products={related}
+              listId="relacionados"
+              listName="También te puede servir"
+            />
           </Container>
         </section>
       )}
+
+      <ViewItem product={product} categoria={deepest ? titleCase(deepest.name) : undefined} />
 
       <script
         type="application/ld+json"

@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { Container } from './ui'
@@ -13,21 +13,22 @@ export type HeroSlide = {
   categoria: string
   titular: string
   bajada: string
-  productos: number
 }
 
 const INTERVALO = 5500
 
 /**
- * Banner de portada: fotografía a todo el ancho, una sección del catálogo por
- * diapositiva.
- *
- * Las diapositivas se cruzan por opacidad y la foto activa hace un zoom muy
- * lento. Es lo que hace que se lea como carrusel de verdad y no como una
- * imagen fija: en la referencia acordada el banner es una franja fotográfica,
- * no un producto recortado sobre fondo blanco.
+ * Banner de portada: una sección del catálogo por diapositiva, a todo el
+ * ancho, con la franja de beneficios dentro del mismo bloque para que se vea
+ * sin desplazarse.
  */
-export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
+export function HeroCarousel({
+  slides,
+  beneficios,
+}: {
+  slides: HeroSlide[]
+  beneficios?: ReactNode
+}) {
   const [actual, setActual] = useState(0)
   const [pausado, setPausado] = useState(false)
 
@@ -46,7 +47,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   if (slides.length === 0) return null
 
   const flecha =
-    'absolute top-1/2 z-30 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-ink-950/30 text-white backdrop-blur-sm transition-colors hover:border-white hover:bg-white hover:text-ink-950 sm:flex'
+    'absolute top-[38%] z-30 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-ink-950/30 text-white backdrop-blur-sm transition-colors hover:border-white hover:bg-white hover:text-ink-950 sm:flex'
 
   return (
     <section
@@ -58,7 +59,6 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
       onFocusCapture={() => setPausado(true)}
       onBlurCapture={() => setPausado(false)}
     >
-      {/* Las fotos se apilan y se cruzan por opacidad. */}
       {slides.map((slide, i) => (
         <div
           key={slide.slug}
@@ -85,41 +85,48 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
       {/* Velo para que el texto se lea sobre cualquier foto. */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-r from-ink-950/90 via-ink-950/70 to-ink-950/25"
+        className="absolute inset-0 bg-gradient-to-r from-ink-950/92 via-ink-950/72 to-ink-950/30"
       />
 
       <Container className="relative z-20">
-        <div className="flex min-h-[26rem] flex-col justify-center py-16 sm:min-h-[30rem] lg:min-h-[34rem]">
-          <div className="max-w-xl">
-            <p className="mb-4 text-[11px] font-medium tracking-[0.2em] text-brand-400 uppercase">
-              {slides[actual].categoria} · {slides[actual].productos} productos
-            </p>
-
-            <h2 className="text-[32px] leading-[1.08] font-medium text-white sm:text-[44px] lg:text-[52px]">
-              {slides[actual].titular}
-            </h2>
-
-            <p className="mt-5 text-lg leading-relaxed text-ink-200">{slides[actual].bajada}</p>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href={`/categorias/${slides[actual].slug}`}
-                className="inline-flex h-13 items-center justify-center gap-2 rounded-sm bg-brand-500 px-8 text-[15px] font-medium text-white transition-colors hover:bg-brand-600"
+        <div className="flex min-h-[21rem] flex-col justify-center py-12 sm:min-h-[24rem] lg:min-h-[26rem]">
+          {/* Los textos van apilados en la misma celda y se cruzan con la
+              misma duración que las fotos: si el texto cambiara de golpe se
+              vería la bajada nueva sobre la foto vieja. */}
+          <div className="grid">
+            {slides.map((slide, i) => (
+              <div
+                key={slide.slug}
+                inert={i !== actual}
+                aria-hidden={i !== actual}
+                className={cn(
+                  'col-start-1 row-start-1 max-w-xl self-center transition-opacity duration-700 ease-out',
+                  i === actual ? 'opacity-100' : 'opacity-0',
+                )}
               >
-                Ver {slides[actual].categoria.toLowerCase()}
-                <ArrowRight className="size-4" />
-              </Link>
-              <Link
-                href="/productos"
-                className="inline-flex h-13 items-center justify-center rounded-sm border border-white/30 px-8 text-[15px] font-medium text-white transition-colors hover:bg-white hover:text-ink-950"
-              >
-                Todo el catálogo
-              </Link>
-            </div>
+                <p className="mb-4 text-[11px] font-medium tracking-[0.2em] text-brand-400 uppercase">
+                  {slide.categoria}
+                </p>
+
+                <h2 className="text-[30px] leading-[1.08] font-medium text-white sm:text-[40px] lg:text-[46px]">
+                  {slide.titular}
+                </h2>
+
+                <p className="mt-4 leading-relaxed text-ink-200 sm:text-lg">{slide.bajada}</p>
+
+                <Link
+                  href={`/categorias/${slide.slug}`}
+                  className="mt-7 inline-flex h-13 items-center justify-center gap-2 rounded-sm bg-brand-500 px-8 text-[15px] font-medium text-white transition-colors hover:bg-brand-600"
+                >
+                  Ver {slide.categoria.toLowerCase()}
+                  <ArrowRight className="size-4" />
+                </Link>
+              </div>
+            ))}
           </div>
 
           {slides.length > 1 && (
-            <div className="mt-12 flex items-center gap-2.5" role="tablist" aria-label="Secciones">
+            <div className="mt-9 flex items-center gap-2.5" role="tablist" aria-label="Secciones">
               {slides.map((s, i) => (
                 <button
                   key={s.slug}
@@ -158,6 +165,14 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
             <ChevronRight className="size-5" />
           </button>
         </>
+      )}
+
+      {/* Los beneficios cierran el bloque: entran en la misma pantalla que el
+          carrusel, sin tener que desplazarse. */}
+      {beneficios && (
+        <div className="relative z-20 border-t border-white/15 bg-ink-950/55 backdrop-blur-sm">
+          <Container>{beneficios}</Container>
+        </div>
       )}
     </section>
   )

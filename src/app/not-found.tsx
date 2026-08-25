@@ -23,7 +23,6 @@ export default async function NotFound() {
       </div>
 
       <div className="mt-6 flex flex-wrap justify-center gap-3">
-        <ButtonLink href="/productos">Ver el catálogo</ButtonLink>
         <ButtonLink href="/contacto" variant="outline">
           Contactarnos
         </ButtonLink>

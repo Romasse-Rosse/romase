@@ -6,9 +6,12 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
+import { addToCart, removeFromCart, type ItemAnalytics } from './analytics'
+import { site } from './site'
 
 /**
  * Carrito en el navegador.
@@ -51,6 +54,20 @@ const Contexto = createContext<CartContexto | null>(null)
 
 const MAX_POR_LINEA = 99
 
+/** Del carrito al formato que espera GA4. */
+export function aItemDeCarrito(
+  item: CartItem | Omit<CartItem, 'quantity'>,
+  quantity = 1,
+): ItemAnalytics {
+  return {
+    item_id: item.sku ?? String(item.id),
+    item_name: item.name,
+    price: item.price,
+    item_brand: site.name,
+    quantity,
+  }
+}
+
 function leerAlmacenado(): CartItem[] {
   try {
     const bruto = localStorage.getItem(CLAVE)
@@ -77,6 +94,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
   const [open, setOpen] = useState(false)
 
+  // Espejo del estado para poder leerlo desde los callbacks. Los eventos de
+  // analítica se disparan fuera de los actualizadores de estado: React puede
+  // ejecutarlos dos veces y se contarían doble.
+  const actuales = useRef<CartItem[]>([])
+  useEffect(() => {
+    actuales.current = items
+  }, [items])
+
   useEffect(() => {
     setItems(leerAlmacenado())
     setReady(true)
@@ -94,35 +119,49 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items, ready])
 
   const add = useCallback((item: Omit<CartItem, 'quantity'>, quantity = 1) => {
-    setItems((actuales) => {
-      const existente = actuales.find((i) => i.id === item.id)
+    addToCart([aItemDeCarrito(item, quantity)])
+
+    setItems((lista) => {
+      const existente = lista.find((i) => i.id === item.id)
       if (existente) {
-        return actuales.map((i) =>
+        return lista.map((i) =>
           i.id === item.id
             ? { ...i, quantity: Math.min(MAX_POR_LINEA, i.quantity + quantity) }
             : i,
         )
       }
-      return [...actuales, { ...item, quantity: Math.min(MAX_POR_LINEA, quantity) }]
+      return [...lista, { ...item, quantity: Math.min(MAX_POR_LINEA, quantity) }]
     })
     setOpen(true)
   }, [])
 
   const remove = useCallback((id: number) => {
-    setItems((actuales) => actuales.filter((i) => i.id !== id))
+    const fuera = actuales.current.find((i) => i.id === id)
+    if (fuera) removeFromCart([aItemDeCarrito(fuera, fuera.quantity)])
+    setItems((lista) => lista.filter((i) => i.id !== id))
   }, [])
 
-  const setQuantity = useCallback((id: number, quantity: number) => {
-    if (quantity < 1) {
-      setItems((actuales) => actuales.filter((i) => i.id !== id))
-      return
-    }
-    setItems((actuales) =>
-      actuales.map((i) =>
-        i.id === id ? { ...i, quantity: Math.min(MAX_POR_LINEA, Math.floor(quantity)) } : i,
-      ),
-    )
-  }, [])
+  const setQuantity = useCallback(
+    (id: number, quantity: number) => {
+      if (quantity < 1) {
+        remove(id)
+        return
+      }
+
+      const destino = Math.min(MAX_POR_LINEA, Math.floor(quantity))
+      const actual = actuales.current.find((i) => i.id === id)
+
+      // Subir o bajar la cantidad también cuenta en el embudo.
+      if (actual) {
+        const diferencia = destino - actual.quantity
+        if (diferencia > 0) addToCart([aItemDeCarrito(actual, diferencia)])
+        else if (diferencia < 0) removeFromCart([aItemDeCarrito(actual, -diferencia)])
+      }
+
+      setItems((lista) => lista.map((i) => (i.id === id ? { ...i, quantity: destino } : i)))
+    },
+    [remove],
+  )
 
   const clear = useCallback(() => setItems([]), [])
 

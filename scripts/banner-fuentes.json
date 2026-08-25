@@ -3,7 +3,13 @@
     "titulo": "A person mixing a batter using a wire whisk",
     "licencia": "Pexels",
     "origen": "https://www.pexels.com/photo/a-person-mixing-a-batter-using-a-wire-whisk-8477749/",
-    "url": "https://images.pexels.com/photos/8477749/pexels-photo-8477749.jpeg"
+    "url": "https://images.pexels.com/photos/8477749/pexels-photo-8477749.jpeg",
+    "recorte": {
+      "left": 0.3,
+      "top": 0.5,
+      "width": 0.68
+    },
+    "espejo": true
   },
   "gastronomia": {
     "titulo": "Chef Cook",
@@ -22,11 +28,5 @@
     "licencia": "Pexels",
     "origen": "https://www.pexels.com/photo/7405059/",
     "url": "https://images.pexels.com/photos/7405059/pexels-photo-7405059.jpeg"
-  },
-  "repuestos": {
-    "titulo": "Técnico reparando una máquina de café industrial",
-    "licencia": "SIN VERIFICAR — foto tomada del sitio de otra empresa",
-    "origen": "https://odisaequipa.com.mx/",
-    "url": "https://odisaequipa.com.mx/wp-content/uploads/2022/03/tecnicos-de-cafeteras-industriales.png"
   }
 }

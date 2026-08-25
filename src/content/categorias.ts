@@ -107,7 +107,7 @@ export const categoryContent: Record<string, CategoryContent> = {
       supera con creces el de tener la pieza disponible. Si compraste con nosotros y necesitas un
       repuesto, escríbenos con el modelo y el número de serie.</p>
 
-      <p>Si estás armando una panadería desde cero o ampliando la que tienes, escríbenos por WhatsApp
+      <p>Si estás armando una panadería desde cero o ampliando la que tienes, escríbenos
       o pasa por nuestro local en Puerto Montt. Cuéntanos cuántos kilos produces por día, qué
       superficie tienes y con qué instalación cuentas, y armamos una propuesta concreta.</p>
     
@@ -207,7 +207,7 @@ export const categoryContent: Record<string, CategoryContent> = {
       moldes apilados con separación para que no se rayen entre sí. Un juego bien tratado dura años;
       uno maltratado se reemplaza cada temporada.</p>
 
-      <p>Si tienes dudas sobre qué medidas te convienen para tu carta, escríbenos por WhatsApp con
+      <p>Si tienes dudas sobre qué medidas te convienen para tu carta, escríbenos con
       las piezas que produces y te orientamos.</p>
     
       <h3>Material del molde y transmisión de calor</h3>
@@ -921,6 +921,22 @@ export function getCategoryContent(
  * Así la página no arranca con un muro de texto pero el contenido sigue
  * completo en el HTML, que es lo que importa para posicionar.
  */
+/**
+ * Separa el primer párrafo del resto de la bajada.
+ *
+ * La página muestra solo ese párrafo como texto libre; todo lo demás baja a
+ * los desplegables. Así la categoría se lee de un vistazo sin perder el
+ * contenido que necesita para posicionar.
+ */
+export function recortarLead(lead: string): { visible: string; resto: string } {
+  const corte = lead.indexOf('</p>')
+  if (corte < 0) return { visible: lead, resto: '' }
+  return {
+    visible: lead.slice(0, corte + 4).trim(),
+    resto: lead.slice(corte + 4).trim(),
+  }
+}
+
 export function dividirContenido(html: string): {
   lead: string
   secciones: { titulo: string; html: string }[]

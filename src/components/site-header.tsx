@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { ChevronDown, Mail, MapPin, Menu, Phone, Truck, X } from 'lucide-react'
 import type { CategoryNode } from '@/lib/catalog'
-import { site, whatsappUrl } from '@/lib/site'
+import { site } from '@/lib/site'
 import { titleCase } from '@/lib/format'
 import { nombreCortoCategoria } from '@/content/nombres-categorias'
 import { cn } from '@/lib/cn'
@@ -95,22 +95,9 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
 
             <SearchBox className="mx-auto hidden max-w-xl flex-1 md:block" />
 
+            {/* Solo el carrito. Sin «Cotizar» ni «Contacto»: la acción que se
+                quiere empujar es comprar, no pedir presupuesto. */}
             <div className="ml-auto flex items-center gap-2 lg:ml-0">
-              <Link
-                href="/contacto"
-                className="hidden rounded-lg px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-100 lg:block"
-              >
-                Contacto
-              </Link>
-              <a
-                href={whatsappUrl('Hola ROMASE, quiero hacer una consulta sobre sus equipos.')}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#25D366] px-4 text-sm font-medium text-white hover:bg-[#1eb855]"
-              >
-                <WhatsAppIcon className="size-4.5" />
-                <span className="hidden sm:inline">Cotizar</span>
-              </a>
               <CartButton />
             </div>
           </div>
@@ -179,7 +166,7 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
                     href={`/categorias/${openCategoryNode.slug}`}
                     className="text-sm text-brand-600 hover:text-brand-700"
                   >
-                    Ver los {openCategoryNode.productCount} productos →
+                    Ver {titleCase(openCategoryNode.name).toLowerCase()} →
                   </Link>
                 </div>
                 <ul className="grid grid-cols-4 gap-x-10 gap-y-0.5">
@@ -190,7 +177,6 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
                         className="flex items-baseline justify-between gap-2 py-1.5 text-sm text-ink-600 transition-colors hover:text-brand-600"
                       >
                         <span>{titleCase(child.name)}</span>
-                        <span className="text-xs text-ink-300">{child.productCount}</span>
                       </Link>
                     </li>
                   ))}
@@ -244,7 +230,6 @@ function MobileMenu({
                   onClick={onClose}
                 >
                   {titleCase(category.name)}
-                  <span className="ml-2 text-xs text-ink-400">{category.productCount}</span>
                 </Link>
                 {category.children.length > 0 && (
                   <button
@@ -274,7 +259,6 @@ function MobileMenu({
                         onClick={onClose}
                       >
                         {titleCase(child.name)}
-                        <span className="text-xs text-ink-400">{child.productCount}</span>
                       </Link>
                     </li>
                   ))}

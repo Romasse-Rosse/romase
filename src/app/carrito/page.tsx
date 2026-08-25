@@ -3,13 +3,25 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2, Truck } from 'lucide-react'
-import { useCart } from '@/lib/cart'
+import { aItemDeCarrito, useCart } from '@/lib/cart'
+import { viewCart } from '@/lib/analytics'
 import { formatPrice } from '@/lib/format'
 import { site } from '@/lib/site'
 import { Breadcrumbs, Container } from '@/components/ui'
+import { useEffect, useRef } from 'react'
 
 export default function CarritoPage() {
   const { items, subtotal, count, ready, remove, setQuantity } = useCart()
+
+  // view_cart se manda una sola vez, cuando ya se leyó el almacenamiento.
+  const enviado = useRef(false)
+  const lista = useRef(items)
+  lista.current = items
+  useEffect(() => {
+    if (!ready || enviado.current || lista.current.length === 0) return
+    enviado.current = true
+    viewCart(lista.current.map((i) => aItemDeCarrito(i, i.quantity)))
+  }, [ready])
 
   return (
     <Container className="py-8 lg:py-12">
@@ -28,15 +40,15 @@ export default function CarritoPage() {
           <ShoppingBag aria-hidden="true" className="mx-auto size-10 text-ink-300" />
           <h2 className="mt-4 text-lg font-medium text-ink-900">Todavía no agregaste nada</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-ink-600">
-            Explora el catálogo y suma los equipos que necesitas. Si no encuentras algo,
+            Entra por una categoría y suma los equipos que necesitas. Si no encuentras algo,
             escríbenos y lo cotizamos.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
-              href="/productos"
+              href="/#categorias"
               className="inline-flex h-11 items-center justify-center rounded-sm bg-brand-500 px-6 text-sm font-medium text-white transition-colors hover:bg-brand-600"
             >
-              Ver el catálogo
+              Ver las categorías
             </Link>
             <Link
               href="/contacto"
@@ -138,7 +150,7 @@ export default function CarritoPage() {
             </ul>
 
             <Link
-              href="/productos"
+              href="/#categorias"
               className="mt-6 inline-flex items-center gap-2 text-sm text-ink-600 transition-colors hover:text-brand-600"
             >
               <ArrowLeft className="size-4" />

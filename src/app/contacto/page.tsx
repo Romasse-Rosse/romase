@@ -1,9 +1,8 @@
 import type { Metadata } from 'next'
 import { Clock, Mail, MapPin, Phone } from 'lucide-react'
-import { site, whatsappUrl } from '@/lib/site'
+import { site } from '@/lib/site'
 import { Breadcrumbs, Container } from '@/components/ui'
 import { ContactForm } from '@/components/contact-form'
-import { WhatsAppIcon } from '@/components/site-header'
 
 export const metadata: Metadata = {
   title: 'Contacto y cotizaciones',
@@ -23,8 +22,8 @@ export default function ContactoPage() {
           Hablemos de tu proyecto
         </h1>
         <p className="mt-4 text-lg text-ink-600">
-          Cuéntanos qué necesitas equipar y te armamos una propuesta concreta. Si es urgente,
-          WhatsApp es el canal más rápido: respondemos en horario comercial.
+          Cuéntanos qué necesitas equipar y te armamos una propuesta concreta. Respondemos en
+          horario comercial, el mismo día hábil.
         </p>
       </header>
 
@@ -35,23 +34,6 @@ export default function ContactoPage() {
         </div>
 
         <div className="space-y-4">
-          <a
-            href={whatsappUrl('Hola ROMASE, quiero hacer una consulta.')}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-4 rounded-xl border border-[#25D366]/30 bg-[#25D366]/5 p-5 transition-colors hover:bg-[#25D366]/10"
-          >
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white">
-              <WhatsAppIcon className="size-6" />
-            </span>
-            <span>
-              <span className="block font-medium text-ink-950">WhatsApp</span>
-              <span className="text-sm text-ink-600">
-                La vía más rápida · {site.contact.phone}
-              </span>
-            </span>
-          </a>
-
           <ContactRow icon={Phone} label="Teléfono" href={site.contact.phoneHref}>
             {site.contact.phone}
           </ContactRow>

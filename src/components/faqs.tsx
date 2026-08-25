@@ -20,7 +20,7 @@ export function Faqs({ items, title = 'Preguntas frecuentes' }: { items: Faq[]; 
   }
 
   return (
-    <section className="rounded-xl border border-ink-200 bg-ink-50 p-6">
+    <section className="border border-ink-200 bg-ink-50 p-6">
       <h2 className="mb-4 text-lg font-semibold tracking-tight text-ink-950">{title}</h2>
 
       <div className="divide-y divide-ink-200">
@@ -46,6 +46,49 @@ export function Faqs({ items, title = 'Preguntas frecuentes' }: { items: Faq[]; 
       />
     </section>
   )
+}
+
+/**
+ * Preguntas de la ficha de producto.
+ *
+ * Se arman con el nombre del equipo para que cada ficha tenga su propio
+ * bloque: es el lugar donde va el detalle de despacho, garantía y pago, en vez
+ * de repetirlo como texto suelto a lo largo de la página.
+ */
+export function faqsProducto(nombre: string, enStock: boolean): Faq[] {
+  return [
+    {
+      pregunta: '¿En cuánto tiempo llega el pedido?',
+      respuesta: enStock
+        ? `${nombre} está disponible en bodega: despachamos entre 24 y 72 horas hábiles desde ` +
+          `que se confirma el pedido. En ${site.contact.city} la entrega es sin costo; a ` +
+          `regiones sale por empresa de transporte y el flete se cotiza según volumen y destino.`
+        : `${nombre} se trae bajo pedido. Al confirmar la compra te damos el plazo exacto, que ` +
+          `habitualmente va de 10 a 25 días hábiles según el fabricante. Despachamos a todo ` +
+          `Chile y en ${site.contact.city} la entrega es sin costo.`,
+    },
+    {
+      pregunta: '¿Qué garantía tiene y hay repuestos disponibles?',
+      respuesta:
+        'Viene con garantía del fabricante, indicada en la boleta o factura de compra. ' +
+        'Mantenemos stock de repuestos de las marcas que representamos, así que una falla no ' +
+        'deja el equipo parado esperando una importación.',
+    },
+    {
+      pregunta: '¿Cómo puedo pagar y emiten factura?',
+      respuesta:
+        'Puedes pagar con transferencia, tarjeta de débito o crédito por Webpay, o en efectivo ' +
+        'en el local. Emitimos boleta y factura electrónica: si necesitas factura, indica el RUT ' +
+        'y la razón social al momento de la compra.',
+    },
+    {
+      pregunta: '¿Puedo verlo antes de comprar?',
+      respuesta:
+        `Sí. Te esperamos en ${site.contact.address}, ${site.contact.city}, de lunes a viernes ` +
+        `de 9:00 a 18:30 y sábados de 10:00 a 14:00. Avísanos antes de venir por este equipo en ` +
+        `particular para asegurarnos de tenerlo en sala.`,
+    },
+  ]
 }
 
 export const homeFaqs: Faq[] = [

@@ -68,18 +68,13 @@ export async function SiteFooter() {
             <h2 className="mb-4 text-sm font-semibold text-white">La empresa</h2>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/productos" className="hover:text-brand-400">
-                  Todos los productos
-                </Link>
-              </li>
-              <li>
                 <Link href="/nosotros" className="hover:text-brand-400">
                   Sobre nosotros
                 </Link>
               </li>
               <li>
                 <Link href="/contacto" className="hover:text-brand-400">
-                  Contacto y cotizaciones
+                  Contacto
                 </Link>
               </li>
               <li>

@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       // Los resultados de búsqueda y las combinaciones de filtros generan
       // infinitas URLs sin contenido propio: no aportan al índice.
-      disallow: ['/api/', '/productos?'],
+      disallow: ['/api/', '/buscar'],
     },
     sitemap: `${site.url}/sitemap.xml`,
   }

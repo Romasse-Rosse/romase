@@ -1,11 +1,22 @@
 import Image from 'next/image'
-import Link from 'next/link'
 import type { Product } from '@/lib/catalog'
 import { formatPrice, titleCase } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { AddToCartCompact } from './add-to-cart'
+import { SelectItemLink } from './analytics'
 
-export function ProductCard({ product, className }: { product: Product; className?: string }) {
+export function ProductCard({
+  product,
+  className,
+  listId,
+  listName,
+}: {
+  product: Product
+  className?: string
+  /** Lista de la que viene la tarjeta, para el evento select_item. */
+  listId?: string
+  listName?: string
+}) {
   const image = product.images[0]
   const discount =
     product.onSale && product.regularPrice && product.regularPrice > product.price
@@ -46,12 +57,14 @@ export function ProductCard({ product, className }: { product: Product; classNam
       <div className="flex flex-1 flex-col pt-4">
         <h3 className="text-[13px] leading-snug text-ink-800">
           {/* El enlace cubre toda la tarjeta, así el área de click es grande. */}
-          <Link
-            href={`/productos/${product.slug}`}
+          <SelectItemLink
+            product={product}
+            listId={listId}
+            listName={listName}
             className="transition-colors before:absolute before:inset-0 group-hover:text-brand-600"
           >
             {titleCase(product.name)}
-          </Link>
+          </SelectItemLink>
         </h3>
 
         <div className="mt-auto pt-3">
@@ -84,11 +97,19 @@ export function ProductCard({ product, className }: { product: Product; classNam
   )
 }
 
-export function ProductGrid({ products }: { products: Product[] }) {
+export function ProductGrid({
+  products,
+  listId,
+  listName,
+}: {
+  products: Product[]
+  listId?: string
+  listName?: string
+}) {
   return (
     <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:gap-x-6 lg:grid-cols-4">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard key={product.id} product={product} listId={listId} listName={listName} />
       ))}
     </div>
   )

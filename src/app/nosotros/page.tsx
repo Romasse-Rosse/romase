@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { getCategoryTree } from '@/lib/catalog'
-import { site, trustPoints, whatsappUrl } from '@/lib/site'
+import { site, trustPoints } from '@/lib/site'
 import { titleCase } from '@/lib/format'
 import { Breadcrumbs, ButtonLink, Container } from '@/components/ui'
 
@@ -102,17 +102,16 @@ export default async function NosotrosPage() {
               </ul>
             </div>
 
-            <div className="rounded-xl border border-ink-200 p-6">
+            <div className="border border-ink-200 p-6">
               <h2 className="text-base font-semibold text-ink-950">Qué vendemos</h2>
               <ul className="mt-3 space-y-1.5 text-sm">
                 {categories.map((category) => (
                   <li key={category.id}>
                     <a
                       href={`/categorias/${category.slug}`}
-                      className="flex justify-between gap-2 text-ink-600 hover:text-brand-600"
+                      className="block text-ink-600 hover:text-brand-600"
                     >
                       {titleCase(category.name)}
-                      <span className="text-xs text-ink-400">{category.productCount}</span>
                     </a>
                   </li>
                 ))}
@@ -142,14 +141,14 @@ export default async function NosotrosPage() {
               >
                 Hablemos
               </ButtonLink>
-              <a
-                href={whatsappUrl('Hola ROMASE, estoy equipando un local y quiero asesoría.')}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-13 items-center justify-center rounded-lg border border-white/40 px-7 text-base font-medium hover:bg-white/10"
+              <ButtonLink
+                href="/#categorias"
+                size="lg"
+                variant="outline"
+                className="border-white/40 text-white hover:bg-white/10"
               >
-                WhatsApp
-              </a>
+                Ver las categorías
+              </ButtonLink>
             </div>
           </div>
         </Container>

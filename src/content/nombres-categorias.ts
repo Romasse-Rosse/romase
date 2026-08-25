@@ -49,8 +49,8 @@ export function nombreCategoria(slug: string, original: string): string {
 /**
  * Etiquetas cortas para la barra de navegación.
  *
- * Son nueve categorías más el enlace al catálogo completo, y con los nombres
- * largos no entran en una pantalla de 1280 px. En un menú conviene la etiqueta
+ * Son nueve categorías y con los nombres largos no entran en una pantalla de
+ * 1280 px. En un menú conviene la etiqueta
  * corta igual: se recorre de un vistazo. El nombre completo se sigue usando en
  * el título de la página, las migas de pan y el resto del sitio.
  */

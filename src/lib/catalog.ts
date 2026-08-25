@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js'
 import { normalize, stripHtml } from './format'
 import { nombreCategoria } from '@/content/nombres-categorias'
 import { categoriasDeProducto } from '@/content/productos-sin-categoria'
+import imagenesLocales from '../../migration/data/imagenes-locales.json'
 
 // ============================================================
 // Fuente de datos del catálogo.
@@ -202,6 +203,8 @@ async function loadFromSnapshot(): Promise<Catalog> {
   }
 }
 
+const local = imagenesLocales as Record<string, string>
+
 async function construirCatalogo(): Promise<Catalog> {
   let catalog: Catalog | null = null
 
@@ -226,6 +229,11 @@ async function construirCatalogo(): Promise<Catalog> {
     products: catalog.products.map((p) => ({
       ...p,
       categoryIds: categoriasDeProducto(p.sku, p.categoryIds),
+      // Las fotos se sirven desde el propio sitio: ya bajadas y
+      // redimensionadas por scripts/localize-product-images.mjs. Antes venían
+      // de romase.cl pesando cientos de KB y se optimizaban en cada arranque
+      // en frío, que era lo que hacía esperar segundos a la primera carga.
+      images: p.images.map((i) => ({ ...i, src: local[i.src] ?? i.src })),
     })),
   }
 }

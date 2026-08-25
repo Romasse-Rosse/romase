@@ -2,15 +2,15 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useActionState, useEffect, useState } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { AlertCircle, CheckCircle2, Lock, ShoppingBag, Store, Truck } from 'lucide-react'
 import { submitCheckout, type CheckoutState } from '@/app/checkout/actions'
-import { useCart } from '@/lib/cart'
+import { addPaymentInfo, addShippingInfo, beginCheckout, purchase } from '@/lib/analytics'
+import { aItemDeCarrito, useCart } from '@/lib/cart'
 import { formatPrice } from '@/lib/format'
-import { regionesChile, site, whatsappUrl } from '@/lib/site'
+import { regionesChile, site } from '@/lib/site'
 import { cn } from '@/lib/cn'
-import { WhatsAppIcon } from './site-header'
 
 const estadoInicial: CheckoutState = { status: 'idle' }
 
@@ -49,12 +49,43 @@ export function CheckoutForm() {
   // Copia para poder mostrar el resumen en la confirmación, ya vaciado el carrito.
   const [confirmado, setConfirmado] = useState<{ total: number; unidades: number } | null>(null)
 
+  // ------------------------------------------------------------
+  // Embudo de analítica
+  //
+  // Las líneas se leen desde una referencia: los eventos se disparan por un
+  // cambio de paso, no cada vez que se vuelve a dibujar el formulario.
+  // ------------------------------------------------------------
+  const lineas = useRef(items)
+  lineas.current = items
+  const enGa4 = () => lineas.current.map((i) => aItemDeCarrito(i, i.quantity))
+
+  const inicioEnviado = useRef(false)
+  useEffect(() => {
+    if (!ready || inicioEnviado.current || lineas.current.length === 0) return
+    inicioEnviado.current = true
+    beginCheckout(enGa4())
+  }, [ready])
+
+  useEffect(() => {
+    if (!ready || lineas.current.length === 0) return
+    const modo =
+      entrega === 'retiro'
+        ? 'Retiro en tienda'
+        : transportista
+          ? `Despacho · ${transportista}`
+          : 'Despacho a domicilio'
+    addShippingInfo(enGa4(), modo)
+  }, [ready, entrega, transportista])
+
   useEffect(() => {
     if (state.status === 'ok' && !confirmado) {
+      purchase(enGa4(), {
+        transactionId: state.orderNumber ? String(state.orderNumber) : 'sin-numero',
+      })
       setConfirmado({ total: subtotal, unidades: count })
       clear()
     }
-  }, [state.status, confirmado, subtotal, count, clear])
+  }, [state.status, state.orderNumber, confirmado, subtotal, count, clear])
 
   if (state.status === 'ok' && confirmado) {
     return <Confirmacion state={state} resumen={confirmado} />
@@ -71,24 +102,23 @@ export function CheckoutForm() {
           Agrega productos al carrito para poder finalizar un pedido.
         </p>
         <Link
-          href="/productos"
+          href="/#categorias"
           className="mt-6 inline-flex h-11 items-center justify-center rounded-sm bg-brand-500 px-6 text-sm font-medium text-white transition-colors hover:bg-brand-600"
         >
-          Ver el catálogo
+          Ver las categorías
         </Link>
       </div>
     )
   }
 
-  const detalleWhatsApp =
-    `Hola ROMASE, quiero hacer este pedido:\n\n` +
-    items
-      .map((i) => `· ${i.quantity} × ${i.name} — ${formatPrice(i.price * i.quantity)}`)
-      .join('\n') +
-    `\n\nTotal: ${formatPrice(subtotal)}`
-
   return (
-    <form action={formAction} className="grid gap-10 lg:grid-cols-[1fr_22rem] lg:gap-14" noValidate>
+    <form
+      action={formAction}
+      // El medio de pago hoy es uno solo: el evento se manda al enviar.
+      onSubmit={() => addPaymentInfo(enGa4(), 'Webpay Plus')}
+      className="grid gap-10 lg:grid-cols-[1fr_22rem] lg:gap-14"
+      noValidate
+    >
       {/* Las líneas viajan como ids y cantidades: el precio lo pone el servidor. */}
       <input
         type="hidden"
@@ -107,23 +137,7 @@ export function CheckoutForm() {
             className="flex items-start gap-2.5 border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"
           >
             <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-            <span>
-              {state.message}
-              {!state.fieldErrors && (
-                <>
-                  {' '}
-                  <a
-                    href={whatsappUrl(detalleWhatsApp)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium underline"
-                  >
-                    Enviar el pedido por WhatsApp
-                  </a>
-                  .
-                </>
-              )}
-            </span>
+            <span>{state.message}</span>
           </p>
         )}
 
@@ -424,16 +438,6 @@ export function CheckoutForm() {
             <Lock aria-hidden="true" className="size-3.5" />
             Conexión segura
           </p>
-
-          <a
-            href={whatsappUrl(detalleWhatsApp)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 flex h-11 items-center justify-center gap-2 rounded-sm border border-ink-300 text-sm font-medium text-ink-900 transition-colors hover:border-ink-950"
-          >
-            <WhatsAppIcon className="size-4" />
-            Prefiero pedirlo por WhatsApp
-          </a>
         </div>
       </aside>
     </form>
@@ -494,22 +498,17 @@ function Confirmacion({
 
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Link
-          href="/productos"
+          href="/#categorias"
           className="inline-flex h-11 items-center justify-center rounded-sm bg-brand-500 px-6 text-sm font-medium text-white transition-colors hover:bg-brand-600"
         >
           Seguir comprando
         </Link>
-        <a
-          href={whatsappUrl(
-            `Hola ROMASE, consulto por mi pedido${state.orderNumber ? ` #${state.orderNumber}` : ''}.`,
-          )}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-sm border border-ink-300 px-6 text-sm font-medium text-ink-900 transition-colors hover:border-ink-950"
+        <Link
+          href="/contacto"
+          className="inline-flex h-11 items-center justify-center rounded-sm border border-ink-300 px-6 text-sm font-medium text-ink-900 transition-colors hover:border-ink-950"
         >
-          <WhatsAppIcon className="size-4" />
-          Escribir por WhatsApp
-        </a>
+          Consultar por el pedido
+        </Link>
       </div>
     </div>
   )

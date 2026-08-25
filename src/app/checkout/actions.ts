@@ -241,8 +241,8 @@ export async function submitCheckout(
   return {
     status: 'error',
     message:
-      'No pudimos registrar tu pedido en este momento. Escríbenos por WhatsApp con el detalle ' +
-      'y lo tomamos de inmediato.',
+      `No pudimos registrar tu pedido en este momento. Llámanos al ${site.contact.phone} o ` +
+      `escríbenos a ${site.contact.email} con el detalle y lo tomamos de inmediato.`,
   }
 }
 

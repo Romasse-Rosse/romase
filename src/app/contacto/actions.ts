@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { sendLeadNotification, type Lead } from '@/lib/email'
+import { site } from '@/lib/site'
 
 export type ContactState = {
   status: 'idle' | 'ok' | 'error'
@@ -78,8 +79,8 @@ export async function submitContact(
   return {
     status: 'error',
     message:
-      'No pudimos registrar tu consulta en este momento. Escríbenos por WhatsApp o al correo ' +
-      'y te respondemos igual de rápido.',
+      `No pudimos registrar tu consulta en este momento. Llámanos al ${site.contact.phone} o ` +
+      `escríbenos a ${site.contact.email} y te respondemos igual de rápido.`,
   }
 }
 

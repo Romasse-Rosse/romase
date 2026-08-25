@@ -32,3 +32,6 @@ services:
         sync: false
       - key: LEADS_EMAIL
         sync: false
+      # Contenedor de Google Tag Manager (GTM-XXXXXXX).
+      - key: NEXT_PUBLIC_GTM_ID
+        sync: false

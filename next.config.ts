@@ -33,6 +33,8 @@ const nextConfig: NextConfig = {
       { source: '/tienda/:path*', destination: '/productos/:path*', permanent: true },
       { source: '/producto/:slug', destination: '/productos/:slug', permanent: true },
       { source: '/categoria-producto/:slug', destination: '/categorias/:slug', permanent: true },
+      // Ya no hay página de catálogo completo: la navegación es por categoría.
+      { source: '/productos', destination: '/', permanent: false },
     ]
   },
 }

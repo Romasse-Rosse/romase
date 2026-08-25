@@ -28,6 +28,7 @@ y para que el build de Render nunca dependa de un servicio externo.
 | `yarn catalog:seed` | Carga el catálogo en Supabase |
 | `yarn favicons` | Regenera los favicons desde el logo |
 | `yarn banner:fetch` | Vuelve a bajar las fotos del banner |
+| `yarn productos:imagenes` | Baja y optimiza las fotos de producto a `public/productos/` |
 
 ---
 
@@ -71,7 +72,9 @@ migration/          Migración desde WooCommerce
   schema.sql          esquema completo (catálogo, pedidos, consultas)
   data/               snapshot versionado — lo necesita el build
 scripts/
-  generate-favicons.mjs  favicons a partir del logo
+  generate-favicons.mjs      favicons a partir del logo
+  fetch-banner-images.mjs    fotos del banner (recorte y espejo)
+  localize-product-images.mjs fotos de producto a public/productos/
 src/
   app/                rutas
   components/         componentes
@@ -84,18 +87,21 @@ src/
 | Ruta | Render | Notas |
 | --- | --- | --- |
 | `/` | estática | home e-commerce |
-| `/productos` | dinámica | catálogo con buscador y filtros |
 | `/productos/[slug]` | estática (214) | ficha de producto |
 | `/categorias/[slug]` | estática (64) | página SEO de categoría |
+| `/buscar` | dinámica | resultados de búsqueda; fuera del índice |
 | `/contacto`, `/nosotros`, `/politica-de-privacidad` | estáticas | |
 | `/carrito` | cliente | carrito, en localStorage |
 | `/checkout` | cliente | pedido; fuera del índice |
 | `/api/buscar` | dinámica | sugerencias del buscador |
 
+**No hay página de «todo el catálogo».** La navegación es por categoría, y `/buscar` es la
+única vista que mezcla productos de varias categorías —solo cuando alguien busca algo—.
+`/productos` redirige a la portada para no dejar roto lo que ya estuviera enlazado.
+
 Las páginas de categoría se mantienen **estáticas a propósito**: son el activo SEO del
 sitio. Por eso listan el catálogo completo de la categoría en vez de paginar, así todos los
-productos quedan enlazados desde una sola URL indexable. El orden y los filtros viven en
-`/productos?categoria=slug`, que sí es dinámica y está excluida del índice en `robots.ts`.
+productos quedan enlazados desde una sola URL indexable.
 
 ---
 
@@ -122,7 +128,8 @@ falta es cobrar en línea: ahí entra Webpay.
   El contador del encabezado aparece recién cuando se leyó el almacenamiento, para que el
   servidor y el cliente rendericen lo mismo.
 - **Botones** — «Agregar» en cada tarjeta de la grilla, y selector de cantidad + «Agregar al
-  carrito» en la ficha. WhatsApp bajó a acción secundaria.
+  carrito» en la ficha. La única salida a WhatsApp del sitio es «Cotizar por WhatsApp» dentro
+  de la ficha, con el nombre del equipo en el mensaje.
 - **Panel lateral** — se abre solo al agregar algo, con cantidades y subtotal.
 - **`/carrito`** — línea por línea, cantidades, subtotal.
 - **`/checkout`** — sigue el flujo del sitio actual: detalles de facturación (nombre y
@@ -133,7 +140,7 @@ falta es cobrar en línea: ahí entra Webpay.
 
 Al confirmar, el pedido se guarda en `orders` y `order_items` y se avisa por correo, con la
 misma regla que el formulario de contacto: basta con que uno de los dos canales funcione. Si
-fallan los dos, se ofrece enviar el pedido por WhatsApp con el detalle ya armado.
+fallan los dos, el formulario lo dice en pantalla y no da el pedido por tomado.
 
 > **El precio nunca se toma del navegador.** Del cliente solo se acepta qué producto y cuántas
 > unidades; el nombre y el precio se releen del catálogo en el servidor al confirmar. Un
@@ -152,6 +159,42 @@ y confirmar el pedido contra el resultado.
 
 ---
 
+## Analítica: el embudo de e-commerce
+
+`src/lib/analytics.ts` empuja los eventos nativos de e-commerce a `window.dataLayer`, con la
+nomenclatura que espera GA4. `src/components/analytics.tsx` tiene las piezas de cliente que
+los disparan.
+
+| Evento | Dónde se dispara |
+| --- | --- |
+| `view_item_list` | portada (destacados y novedades), categoría y resultados de búsqueda, cuando la lista entra en pantalla |
+| `select_item` | click en el nombre de una tarjeta, con la lista de la que viene |
+| `view_item` | ficha de producto |
+| `add_to_cart` | «Agregar» de la tarjeta y de la ficha, y al subir la cantidad |
+| `remove_from_cart` | eliminar una línea o bajar la cantidad |
+| `view_cart` | al abrir el panel lateral y al entrar a `/carrito` |
+| `begin_checkout` | al cargar `/checkout` con productos |
+| `add_shipping_info` | al elegir retiro o despacho (y la empresa despachadora) |
+| `add_payment_info` | al enviar el pedido |
+| `purchase` | pedido confirmado, con `transaction_id` |
+| `search` | búsqueda desde el encabezado |
+
+Tres detalles que importan:
+
+- Antes de cada evento se empuja `{ ecommerce: null }`. Sin eso GTM **fusiona** el objeto
+  `ecommerce` anterior con el nuevo y llegan productos de eventos viejos.
+- Los eventos se disparan **fuera** de los actualizadores de estado de React. Dentro, React
+  puede ejecutarlos dos veces en desarrollo y cada compra se contaría doble.
+- `view_item_list` se dispara con `IntersectionObserver`, no al cargar la página: en la
+  portada hay dos carruseles y uno está bien abajo, así que anunciarlos juntos falsearía el
+  dato.
+
+El contenedor se conecta con `NEXT_PUBLIC_GTM_ID` (formato `GTM-XXXXXXX`). **Sin esa variable
+no se carga ningún script**, pero los eventos igual se acumulan en `window.dataLayer`: el día
+que se cargue el contenedor aparecen todos sin tocar una línea de código.
+
+---
+
 ## Formulario de contacto
 
 Cada consulta va a dos lugares con roles distintos:
@@ -161,8 +204,8 @@ Cada consulta va a dos lugares con roles distintos:
 2. **Resend** — el aviso a la bandeja, para que alguien lo lea el mismo día.
 
 Se intentan los dos en paralelo y **basta con que uno funcione** para dar la consulta por
-recibida. Si fallan los dos, el formulario lo dice y ofrece WhatsApp: nunca simula haber
-enviado algo que se perdió. El correo llega con `reply_to` del cliente, así se le responde
+recibida. Si fallan los dos, el formulario lo dice y deja el teléfono y el correo: nunca
+simula haber enviado algo que se perdió. El correo llega con `reply_to` del cliente, así se le responde
 directo desde la bandeja.
 
 Variables: `RESEND_API_KEY`, `RESEND_FROM`, `LEADS_EMAIL` (ver `.env.example`).
@@ -180,14 +223,19 @@ Variables: `RESEND_API_KEY`, `RESEND_FROM`, `LEADS_EMAIL` (ver `.env.example`).
 La portada está armada para que se vea qué se vende y a qué precio desde el primer
 segundo:
 
-- **Banner fotográfico a todo el ancho.** Cinco diapositivas, una por sección del catálogo
-  —panadería, gastronomía, equipos complementarios, vitrinas y repuestos—, con foto de
-  ambiente, titular, conteo de productos y enlace a la categoría. Se cruzan por opacidad con
-  un zoom lento sobre la foto activa.
+- **Banner fotográfico a todo el ancho.** Tres diapositivas, una por sección del catálogo
+  —panadería, gastronomía y equipos complementarios—, con foto de ambiente, titular y botón
+  a la categoría. La foto y el texto se cruzan por opacidad con la misma duración: si el
+  texto cambiara de golpe se vería la bajada nueva sobre la foto vieja. La franja de
+  beneficios va dentro del mismo bloque, así el banner y los beneficios entran en la misma
+  pantalla sin desplazarse.
 
-  Antes el banner mostraba productos recortados sobre panel blanco y no se leía como
-  carrusel. El texto de cada diapositiva está en `src/content/banner.ts` y las fotos las baja
-  `yarn banner:fetch`.
+  El texto de cada diapositiva está en `src/content/banner.ts` y las fotos las baja
+  `yarn banner:fetch` según `scripts/banner-fuentes.json`, que admite dos ajustes por foto:
+  `recorte` (región en proporciones de 0 a 1) y `espejo`. El espejo existe porque el texto
+  ocupa la mitad izquierda: en la foto de panadería el bol y el batidor estaban a la
+  izquierda y quedaban tapados por el titular, así que se voltea para que la acción quede al
+  aire.
 - **Sin buscador en el banner.** El buscador vive en el encabezado, presente en todo el
   sitio.
 - **Carruseles en vez de grilla de categorías.** «Productos destacados» y «Últimas
@@ -196,19 +244,29 @@ segundo:
   sobre la pista más viñetas por página —igual que el carrusel de groner.cl, que usa Swiper
   con autoplay de 5 s, bucle infinito y flechas—. Se pausan al pasar el mouse, al enfocar con
   teclado, al tocar la pantalla y si el sistema pide menos movimiento.
-- **Menú solo por categorías.** Se quitó el enlace genérico «Todos los productos»: la
-  navegación va por las nueve categorías. `/productos` sigue existiendo con filtros y se
-  llega desde el pie y desde cada categoría.
-- **Texto en desplegables.** El contenido largo pasó a `<details>` bajo «Asesoría antes de
-  comprar» y las preguntas frecuentes.
+- **Destacados antes que categorías.** Lo primero después del banner es producto con precio;
+  la grilla de categorías viene después, sin conteo de productos en las fichas.
+- **Menú solo por categorías.** No hay enlace a «todos los productos» en ninguna parte —ni en
+  el encabezado, ni en el pie, ni en las categorías—: la navegación va por las nueve
+  categorías. Tampoco hay conteo de productos en el menú.
+- **Sin «Cotizar» ni «Contacto» en el encabezado.** El encabezado deja el buscador y el
+  carrito; el botón de cotizar por WhatsApp existe **solo dentro de cada ficha de producto**,
+  y el mensaje sale con el nombre del equipo y su enlace ya escritos.
+- **Texto en desplegables.** El contenido largo pasó a `<details>` y a las preguntas
+  frecuentes, en la portada, en cada categoría y en cada ficha de producto. En la categoría
+  solo queda a la vista el primer párrafo de la bajada; el resto baja al primer desplegable.
 
 > **Fotos del banner.** Las de panadería, equipos complementarios y vitrinas son de Pexels
 > (uso comercial libre, sin atribución obligatoria) y las eligió el cliente. La de gastronomía
 > es CC0. La procedencia y licencia de cada una queda en `public/banner/creditos.json`.
 >
-> **La de repuestos está sin licencia verificada:** se tomó del sitio de otra empresa
-> (odisaequipa.com.mx), no de un banco de imágenes. Conviene reemplazarla por una de Pexels
-> antes de publicar, o confirmar que hay permiso de uso.
+> **La de repuestos se eliminó.** Estaba tomada del sitio de otra empresa
+> (odisaequipa.com.mx), no de un banco de imágenes, así que no tenía licencia verificable.
+> Ya no se usaba —el banner quedó en tres diapositivas— y publicar una foto ajena es un
+> riesgo real, así que se sacó del repositorio. Si se quiere una diapositiva de repuestos,
+> hay que elegir una de Pexels o usar una foto propia del taller.
+>
+> `vitrinas.webp` queda disponible como repuesto: es de Pexels y no está en uso.
 
 Las fotos se sirven desde `public/banner/`, no enlazadas de un tercero: se recortan a 2000×900
 buscando la zona de interés y se guardan en WebP. Para cambiar una, editar su URL en
@@ -311,6 +369,22 @@ El logo se sirve con `unoptimized` desde `logo-web.webp` (400 px, 27 KB, generad
 `yarn favicons`): se muestra a 44 px de alto, no tiene sentido que el servidor lo procese en
 cada arranque en frío.
 
+**3. Las fotos de producto se pedían a WordPress y se optimizaban en caliente.** Cada una
+pesaba entre 400 KB y 1,3 MB en origen, viajaba desde romase.cl y recién ahí el optimizador
+de Next la reducía —con el costo de memoria y de tiempo en la primera visita de cada
+variante—. `yarn productos:imagenes` (`scripts/localize-product-images.mjs`) baja las 391
+fotos una sola vez, las reduce a 900 px WebP y las deja en `public/productos/`; el mapa
+URL → archivo queda en `migration/data/imagenes-locales.json` y `src/lib/catalog.ts` lo
+aplica al armar el catálogo.
+
+| | Antes | Después |
+| --- | --- | --- |
+| Peso medio por foto | 400 KB – 1,3 MB | 12 KB |
+| Total | ~200 MB en origen | 4,4 MB versionados |
+
+El script es idempotente: vuelve a correrse cuando se agregan productos y solo baja lo que
+falta.
+
 > **Peso del proyecto.** La carpeta local pesa unos 600 MB, pero son `node_modules` (386 MB)
 > y `.next` (237 MB): generados, ignorados por git y no se despliegan como fuente. El
 > proyecto versionado son **2,1 MB en 73 archivos**.
@@ -336,10 +410,11 @@ Variables de entorno a cargar en el panel de Render:
 | `RESEND_API_KEY` | no | aviso por correo de las consultas |
 | `RESEND_FROM` | no | remitente (dominio verificado en Resend) |
 | `LEADS_EMAIL` | no | a dónde llegan las consultas |
+| `NEXT_PUBLIC_GTM_ID` | no | contenedor de Google Tag Manager |
 
 Sin las de Supabase el sitio funciona igual, con el snapshot. Lo que queda a medias es el
 formulario: con Resend configurado sigue avisando por correo aunque Supabase no esté, y sin
-ninguno de los dos avisa en pantalla y ofrece WhatsApp.
+ninguno de los dos avisa en pantalla con el teléfono y el correo.
 
 ---
 
@@ -350,8 +425,8 @@ ninguno de los dos avisa en pantalla y ofrece WhatsApp.
   mano. El lugar donde entra está marcado en `checkout-form.tsx` (bloque «Pago») y el
   esquema ya tiene las columnas `webpay_token`, `webpay_buy_order` y `webpay_response`.
   Requiere código de comercio de Transbank.
-- **Imágenes a Supabase Storage.** Hoy se sirven desde `romase.cl/wp-content`. Hay que
-  moverlas antes de dar de baja el WordPress, o el sitio se queda sin fotos.
+- **Conectar el contenedor de GTM.** El `dataLayer` ya emite todo el embudo; falta cargar
+  `NEXT_PUBLIC_GTM_ID` y publicar las etiquetas de GA4 en el contenedor.
 - **Productos destacados.** La columna `featured` existe pero está en `false` para todos.
   Mientras no se curen, la home elige los mejor documentados.
 - **Contenido de subcategorías.** Las 55 subcategorías heredan el texto del padre.
