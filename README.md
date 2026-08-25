@@ -174,6 +174,36 @@ Variables: `RESEND_API_KEY`, `RESEND_FROM`, `LEADS_EMAIL` (ver `.env.example`).
 
 ---
 
+## Home
+
+La portada está armada para que se vea qué se vende y a qué precio desde el primer
+segundo:
+
+- **Banner con productos, no categorías.** Cuatro diapositivas, cada una con un equipo
+  concreto —su nombre técnico, no «equipos de panadería»—, precio y botón al carrito. El
+  selector elige el producto de mayor valor con buenas fotos de cada categoría raíz, así
+  varía solo si cambia el catálogo. Los marcados como `featured` en Supabase pasan primero.
+- **Sin buscador en el banner.** El buscador vive en el encabezado, presente en todo el
+  sitio.
+- **Carruseles en vez de grilla de categorías.** «Productos destacados» y «Últimas
+  incorporaciones», 12 productos cada uno, con nombre, precio y botón al carrito.
+- **Menú solo por categorías.** Se quitó el enlace genérico «Todos los productos»: la
+  navegación va por las nueve categorías. `/productos` sigue existiendo con filtros y se
+  llega desde el pie y desde cada categoría.
+- **Texto en desplegables.** El contenido largo pasó a `<details>` bajo «Asesoría antes de
+  comprar» y las preguntas frecuentes.
+
+> **Los desplegables no esconden el contenido de Google.** Un `<details>` cerrado sigue
+> teniendo su texto en el HTML, así que se indexa igual. Es lo que permite cumplir a la vez
+> las 600+ palabras por página que se acordaron para SEO y el pedido de bajar la carga
+> visual de texto: la home tiene 1.471 palabras y una categoría 1.651, sin muro de texto.
+
+Sobre «más vendidos»: no hay datos de venta, así que llamarlo así sería inventarlo. El
+carrusel ordena por lo que sí se sabe (disponible, bien fotografiado, bien descrito).
+Cuando los pedidos pasen por Supabase se puede calcular de verdad sumando `order_items`.
+
+---
+
 ## Diseño
 
 La referencia acordada es [groner.cl](https://groner.cl): limpio y sobrio. Lo que define ese
@@ -186,10 +216,8 @@ Los tokens viven en `src/app/globals.css` y gobiernan todo el sitio: cambiar `--
 
 Piezas propias del rediseño:
 
-- **Portada clara**, armada con producto real del catálogo en vez de una foto de banco.
-- **Destacados con pestañas por categoría** (`featured-tabs.tsx`), para que se vea el
-  alcance del catálogo sin entrar a cada sección.
-- **Tarjetas planas**: el marco rodea solo la foto, el texto respira fuera.
+- **Tarjetas planas**: el marco rodea solo la foto, el texto respira fuera. Se estiran a la
+  altura de la fila para que los precios y los botones queden alineados entre sí.
 - **Menú con etiquetas cortas.** Con los nombres completos, las diez entradas no entran en
   1280 px. Los nombres largos se siguen usando en títulos y migas de pan.
 

@@ -9,12 +9,13 @@ import {
   getCategoryTree,
   queryProducts,
 } from '@/lib/catalog'
-import { getCategoryContent } from '@/content/categorias'
+import { dividirContenido, getCategoryContent } from '@/content/categorias'
 import { site, whatsappUrl } from '@/lib/site'
 import { stripHtml, titleCase, truncate } from '@/lib/format'
 import { Breadcrumbs, ButtonLink, Container } from '@/components/ui'
 import { ProductGrid } from '@/components/product-card'
 import { Faqs } from '@/components/faqs'
+import { Accordion } from '@/components/accordion'
 
 export const revalidate = 3600
 
@@ -80,6 +81,11 @@ export default async function CategoriaPage({ params }: { params: Params }) {
   const subcategories = node?.children ?? []
 
   const name = titleCase(category.name)
+
+  // El contenido largo se parte en bajada + secciones desplegables.
+  const { lead, secciones } = content
+    ? dividirContenido(content.seoHtml)
+    : { lead: '', secciones: [] as { titulo: string; html: string }[] }
 
   return (
     <>
@@ -159,10 +165,22 @@ export default async function CategoriaPage({ params }: { params: Params }) {
         <section className="mt-16 border-t border-ink-200 bg-ink-50 py-14">
           <Container>
             <div className="grid gap-12 lg:grid-cols-[1.6fr_1fr]">
-              <div
-                className="rich-text max-w-3xl"
-                dangerouslySetInnerHTML={{ __html: content.seoHtml }}
-              />
+              {/* El texto largo va en desplegables: la página queda liviana y
+                  el contenido sigue en el HTML para que Google lo lea. */}
+              <div>
+                <h2 className="mb-5 text-[26px] leading-[1.15] font-medium text-ink-950 sm:text-[32px]">
+                  {name}: qué mirar antes de comprar
+                </h2>
+
+                {lead && (
+                  <div
+                    className="rich-text mb-8 max-w-3xl"
+                    dangerouslySetInnerHTML={{ __html: lead }}
+                  />
+                )}
+
+                <Accordion items={secciones.map((s) => ({ titulo: s.titulo, html: s.html }))} />
+              </div>
 
               <div className="space-y-6">
                 <Faqs items={content.faqs} title={`Preguntas frecuentes sobre ${name.toLowerCase()}`} />

@@ -912,3 +912,29 @@ export function getCategoryContent(
 ): CategoryContent | null {
   return categoryContent[slug] ?? (parentSlug ? (categoryContent[parentSlug] ?? null) : null)
 }
+
+/**
+ * Parte el contenido largo en un texto de entrada y secciones desplegables.
+ *
+ * Corta por los <h3>, que es como ya está escrito: lo que va antes del primer
+ * h3 queda visible como bajada y cada h3 pasa a ser una sección que se abre.
+ * Así la página no arranca con un muro de texto pero el contenido sigue
+ * completo en el HTML, que es lo que importa para posicionar.
+ */
+export function dividirContenido(html: string): {
+  lead: string
+  secciones: { titulo: string; html: string }[]
+} {
+  const partes = html.split(/<h3>/)
+  const lead = partes[0].replace(/<h2>[\s\S]*?<\/h2>/, '').trim()
+
+  const secciones = partes.slice(1).map((parte) => {
+    const cierre = parte.indexOf('</h3>')
+    return {
+      titulo: parte.slice(0, cierre).replace(/<[^>]+>/g, '').trim(),
+      html: parte.slice(cierre + 5).trim(),
+    }
+  })
+
+  return { lead, secciones }
+}

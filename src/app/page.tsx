@@ -1,13 +1,17 @@
-import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, BadgeCheck, Headset, ShieldCheck, Truck } from 'lucide-react'
-import { getCategoryTree, getFeaturedProducts, queryProducts } from '@/lib/catalog'
+import { BadgeCheck, Headset, ShieldCheck, Truck } from 'lucide-react'
+import {
+  getCarouselProducts,
+  getCategoryTree,
+  getHeroProducts,
+  queryProducts,
+} from '@/lib/catalog'
 import { site, trustPoints, whatsappUrl } from '@/lib/site'
-import { ButtonLink, Container, SectionHeading, TextLink } from '@/components/ui'
-import { ProductGrid } from '@/components/product-card'
-import { CategoryCard } from '@/components/category-card'
-import { FeaturedTabs, type FeaturedGroup } from '@/components/featured-tabs'
-import { SearchBox } from '@/components/search-box'
+import { stripHtml, titleCase, truncate } from '@/lib/format'
+import { Container, SectionHeading, TextLink } from '@/components/ui'
+import { HeroCarousel, type HeroSlide } from '@/components/hero-carousel'
+import { ProductCarousel } from '@/components/product-carousel'
+import { Accordion } from '@/components/accordion'
 import { Faqs, homeFaqs } from '@/components/faqs'
 
 // El catálogo cambia poco: se regenera una vez por hora.
@@ -17,107 +21,35 @@ const trustIcons = [BadgeCheck, Truck, Headset, ShieldCheck]
 
 export default async function HomePage() {
   const categories = await getCategoryTree()
-  const destacadas = categories.slice(0, 6)
 
-  const [featured, novedades, ...porCategoria] = await Promise.all([
-    getFeaturedProducts(3),
-    queryProducts({ sort: 'novedades', perPage: 4 }),
-    ...destacadas.map((c) => queryProducts({ categorySlug: c.slug, perPage: 4 })),
+  const [hero, destacados, novedades] = await Promise.all([
+    getHeroProducts(4),
+    getCarouselProducts(12),
+    queryProducts({ sort: 'novedades', perPage: 12 }),
   ])
 
-  const grupos: FeaturedGroup[] = destacadas.map((c, index) => ({
-    slug: c.slug,
-    name: c.name,
-    products: porCategoria[index].items,
+  // La categoría más específica de cada producto, para el rótulo del banner.
+  const porId = new Map(categories.flatMap((c) => [[c.id, c.name] as const]))
+  const slides: HeroSlide[] = hero.map((p) => ({
+    id: p.id,
+    slug: p.slug,
+    name: titleCase(p.name),
+    category: p.categoryIds.map((id) => porId.get(id)).find(Boolean) ?? null,
+    price: p.price,
+    image: p.images[0]?.src ?? null,
+    sku: p.sku,
+    summary: truncate(stripHtml(p.shortDescription || p.description), 150),
   }))
-
-  const totalProductos = categories.reduce((sum, c) => sum + c.productCount, 0)
-  const [heroPrincipal, ...heroSecundarios] = featured
 
   return (
     <>
-      {/* ---------------------------------------------------------------
-          Portada
-      --------------------------------------------------------------- */}
-      <section className="border-b border-ink-200 bg-ink-50">
-        <Container>
-          <div className="grid items-center gap-12 py-16 lg:grid-cols-2 lg:gap-16 lg:py-24">
-            <div>
-              <p className="mb-6 text-[11px] font-medium tracking-[0.2em] text-brand-600 uppercase">
-                Desde 2001 en {site.contact.city}
-              </p>
+      {/* Un H1 real para posicionamiento; el banner rota productos, así que
+          su título va como H2 en cada diapositiva. */}
+      <h1 className="sr-only">
+        Maquinaria y equipamiento para panadería, pastelería y gastronomía en Chile
+      </h1>
 
-              <h1 className="text-[38px] leading-[1.08] font-medium text-ink-950 sm:text-[52px] lg:text-[58px]">
-                Equipos que sostienen la producción de cada día.
-              </h1>
-
-              <p className="mt-7 max-w-lg text-lg leading-relaxed text-ink-600">
-                Maquinaria para panadería, pastelería y gastronomía. {totalProductos} productos con
-                despacho a todo Chile, repuestos en stock y asesoría antes de que compres.
-              </p>
-
-              <div className="mt-9 max-w-lg">
-                <SearchBox placeholder="¿Qué equipo estás buscando?" />
-              </div>
-
-              <div className="mt-6 flex flex-wrap gap-3">
-                <ButtonLink href="/productos" size="lg">
-                  Ver el catálogo
-                  <ArrowRight className="size-4" />
-                </ButtonLink>
-                <a
-                  href={whatsappUrl('Hola ROMASE, necesito una cotización.')}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex h-13 items-center justify-center rounded-sm border border-ink-300 px-8 text-[15px] font-medium text-ink-900 transition-colors hover:border-ink-950 hover:bg-ink-950 hover:text-white"
-                >
-                  Pedir cotización
-                </a>
-              </div>
-            </div>
-
-            {/* La composición se arma con el propio catálogo: no hay fotos
-                de ambiente, y una portada con producto real es más honesta
-                que una imagen de banco. */}
-            <div className="grid grid-cols-2 gap-3 lg:gap-4">
-              {heroPrincipal?.images[0] && (
-                <Link
-                  href={`/productos/${heroPrincipal.slug}`}
-                  className="group relative col-span-2 aspect-16/10 overflow-hidden border border-ink-200 bg-white"
-                >
-                  <Image
-                    src={heroPrincipal.images[0].src}
-                    alt={heroPrincipal.name}
-                    fill
-                    priority
-                    sizes="(min-width: 1024px) 45vw, 100vw"
-                    className="object-contain p-10 transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-                  />
-                </Link>
-              )}
-
-              {heroSecundarios.slice(0, 2).map(
-                (producto) =>
-                  producto.images[0] && (
-                    <Link
-                      key={producto.id}
-                      href={`/productos/${producto.slug}`}
-                      className="group relative aspect-square overflow-hidden border border-ink-200 bg-white"
-                    >
-                      <Image
-                        src={producto.images[0].src}
-                        alt={producto.name}
-                        fill
-                        sizes="(min-width: 1024px) 22vw, 45vw"
-                        className="object-contain p-7 transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-                      />
-                    </Link>
-                  ),
-              )}
-            </div>
-          </div>
-        </Container>
-      </section>
+      <HeroCarousel slides={slides} />
 
       {/* ---------------------------------------------------------------
           Motivos para comprar acá
@@ -145,43 +77,41 @@ export default async function HomePage() {
       </section>
 
       {/* ---------------------------------------------------------------
-          Categorías
+          Destacados
       --------------------------------------------------------------- */}
-      <section className="py-20">
-        <Container>
-          <SectionHeading
-            eyebrow="Catálogo"
-            title="Compra por categoría"
-            description="Todo el equipamiento organizado por rubro, para llegar rápido a lo que necesitas."
-            action={<TextLink href="/productos">Ver todo el catálogo</TextLink>}
-          />
-
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {categories.map((category) => (
-              <CategoryCard key={category.id} category={category} />
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      {/* ---------------------------------------------------------------
-          Destacados, agrupados por categoría
-      --------------------------------------------------------------- */}
-      <section className="border-y border-ink-200 bg-ink-50 py-20">
+      <section className="py-16 lg:py-20">
         <Container>
           <SectionHeading
             eyebrow="Lo más pedido"
             title="Productos destacados"
             description="Los equipos que más nos consultan panaderías, cafeterías y restaurantes."
+            action={<TextLink href="/productos">Ver el catálogo completo</TextLink>}
           />
-          <FeaturedTabs groups={grupos} />
+          <ProductCarousel products={destacados} />
         </Container>
       </section>
 
       {/* ---------------------------------------------------------------
+          Novedades
+      --------------------------------------------------------------- */}
+      {novedades.items.length > 0 && (
+        <section className="border-y border-ink-200 bg-ink-50 py-16 lg:py-20">
+          <Container>
+            <SectionHeading
+              eyebrow="Recién llegados"
+              title="Últimas incorporaciones"
+              description="Lo último que sumamos al catálogo."
+              action={<TextLink href="/productos?orden=novedades">Ver novedades</TextLink>}
+            />
+            <ProductCarousel products={novedades.items} />
+          </Container>
+        </section>
+      )}
+
+      {/* ---------------------------------------------------------------
           Asesoría
       --------------------------------------------------------------- */}
-      <section className="bg-ink-950 py-20 text-white">
+      <section className="bg-ink-950 py-16 text-white lg:py-20">
         <Container>
           <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-end">
             <div>
@@ -219,123 +149,127 @@ export default async function HomePage() {
       </section>
 
       {/* ---------------------------------------------------------------
-          Novedades
+          Contenido en desplegables.
+          El texto de posicionamiento sigue completo en el HTML —Google lo
+          indexa igual con el <details> cerrado—, pero la página no arranca
+          con un muro de texto.
       --------------------------------------------------------------- */}
-      {novedades.items.length > 0 && (
-        <section className="py-20">
-          <Container>
-            <SectionHeading
-              eyebrow="Recién llegados"
-              title="Últimas incorporaciones"
-              action={<TextLink href="/productos?orden=novedades">Ver novedades</TextLink>}
-            />
-            <ProductGrid products={novedades.items} />
-          </Container>
-        </section>
-      )}
-
-      {/* ---------------------------------------------------------------
-          Contenido para posicionamiento
-      --------------------------------------------------------------- */}
-      <section className="border-t border-ink-200 py-20">
+      <section className="py-16 lg:py-20">
         <Container>
           <div className="grid gap-14 lg:grid-cols-[1.5fr_1fr]">
-            <div className="rich-text max-w-3xl">
-              <h2 className="!mt-0 text-[26px] leading-[1.15] font-medium text-ink-950 sm:text-[34px]">
-                Equipamiento gastronómico e industrial para panaderías y cocinas profesionales
-              </h2>
+            <div>
+              <SectionHeading
+                eyebrow="Antes de comprar"
+                title="Asesoría para elegir bien"
+                description="Lo que conviene revisar antes de decidir, según el rubro."
+              />
 
-              <p>
-                En <strong>ROMASE</strong> llevamos más de {site.yearsInBusiness} años vendiendo
-                maquinaria y equipamiento para <strong>panaderías, pastelerías, hoteles,
-                restaurantes, casinos y supermercados</strong>. Trabajamos desde{' '}
-                {site.contact.city}, en la Región de {site.contact.region}, y despachamos a todo
-                Chile. En ese tiempo aprendimos algo que no siempre se dice: el equipo más caro no
-                es necesariamente el que te conviene. Lo que te conviene es el que rinde para tu
-                volumen de producción real, entra en el espacio que tienes y se puede reparar sin
-                esperar tres meses un repuesto importado.
-              </p>
+              <Accordion
+                abrirPrimero
+                items={[
+                  {
+                    titulo: 'Cómo dimensionar el equipo para tu producción',
+                    html: `
+                      <p>Antes de decidir, revisa cuatro cosas. La <strong>producción diaria
+                      real</strong>, no la que te gustaría tener: dimensionar para hoy con algo de
+                      holgura es más sano que comprar para un escenario hipotético. La
+                      <strong>instalación eléctrica</strong>: mucha maquinaria de panadería es
+                      trifásica, y si tu local es monofásico el costo de adecuar la instalación
+                      puede superar al del equipo. El <strong>espacio y la circulación</strong>:
+                      una máquina que entra pero bloquea el paso al horno complica la operación
+                      todos los días. Y el <strong>respaldo de repuestos</strong>: preguntá siempre
+                      si hay piezas en Chile, porque un equipo detenido esperando una importación
+                      deja de ser un ahorro.</p>
 
-              <h3>Qué vas a encontrar en el catálogo</h3>
+                      <p>Si nos escribes con esos cuatro datos, te decimos qué modelo corresponde y
+                      qué no te conviene, aunque sea más caro.</p>
+                    `,
+                  },
+                  {
+                    titulo: 'Qué vas a encontrar en el catálogo',
+                    html: `
+                      <p>La línea de <a href="/categorias/panaderia">panadería</a> cubre el proceso
+                      completo: amasadoras y sobadoras para el trabajo de masa, estiradoras,
+                      divisoras y cortadoras para la porción. A eso se suman los
+                      <a href="/categorias/articulos-de-pasteleria">artículos de pastelería</a>
+                      —moldes de bizcocho, moldes de kuchen, moldes de teflón, bandejas
+                      enlozadas—, el día a día de cualquier obrador.</p>
 
-              <p>
-                Nuestra línea de <Link href="/categorias/panaderia">panadería</Link> cubre el
-                proceso completo: amasadoras y sobadoras para el trabajo de masa, estiradoras,
-                divisoras y cortadoras para la porción, y todo el equipamiento de horneado. A eso se
-                suman los <Link href="/categorias/articulos-de-pasteleria">artículos de
-                pastelería</Link> —moldes de bizcocho, moldes de kuchen, moldes de teflón,
-                bandejas enlozadas— que son el día a día de cualquier obrador.
-              </p>
+                      <p>En <a href="/categorias/calor">línea de calor</a> están los equipos de
+                      cocción, y en <a href="/categorias/frio-2">línea de frío</a> la conservación:
+                      freezers, frigobares y refrigeración comercial. Las
+                      <a href="/categorias/vitrinas">vitrinas</a> —frías y calientes— deciden si tu
+                      producto se vende o se queda: una buena exhibición vende sola.</p>
 
-              <p>
-                En <Link href="/categorias/calor">línea de calor</Link> tenemos los equipos de
-                cocción para cocinas profesionales, y en{' '}
-                <Link href="/categorias/frio-2">línea de frío</Link> la conservación:
-                freezers, frigobares y refrigeración comercial. Las{' '}
-                <Link href="/categorias/vitrinas">vitrinas</Link> —frías y calientes— son
-                lo que decide si tu producto se vende o se queda: una buena exhibición vende
-                sola.
-              </p>
+                      <p>La categoría de <a href="/categorias/acero">acero inoxidable</a> reúne el
+                      mobiliario y los utensilios que sostienen la operación: mesones, carros,
+                      bandejas, depósitos gastronómicos, fondos, sartenes, coladores y poruñas. En
+                      una cocina profesional el acero no es un lujo: es lo que hace posible la
+                      limpieza y lo que evita problemas con la autoridad sanitaria.</p>
 
-              <p>
-                La categoría de <Link href="/categorias/acero">acero inoxidable</Link> reúne el
-                mobiliario y los utensilios que sostienen la operación: mesones, carros, bandejas,
-                depósitos gastronómicos, fondos, sartenes, coladores y poruñas. El acero inoxidable
-                no es un lujo en una cocina profesional, es lo que hace que la limpieza sea posible
-                y que la autoridad sanitaria no te ponga problemas.
-              </p>
+                      <p>En <a href="/categorias/complementarios">equipos complementarios</a> está
+                      todo lo que suma a la carta sin cambiar la cocina entera: balanzas,
+                      licuadoras, hervidores, waffleras, creperas, máquinas de café, exprimidores
+                      de cítricos, selladoras al vacío, moledoras de carne, embutidoras, cortadoras
+                      de cecinas y procesadores de alimentos y de vegetales. Son máquinas que se
+                      pagan solas cuando habilitan un producto nuevo.</p>
+                    `,
+                  },
+                  {
+                    titulo: 'Repuestos y servicio postventa',
+                    html: `
+                      <p>Mantenemos una línea de <a href="/categorias/repuestos">repuestos</a> para
+                      los equipos que vendemos. Es deliberado: una máquina detenida en plena
+                      producción cuesta mucho más que el repuesto. Preferimos tener el stock y
+                      resolverte en días en vez de dejarte esperando.</p>
 
-              <p>
-                En <Link href="/categorias/complementarios">equipos complementarios</Link> está
-                todo lo que suma a la carta sin cambiar la cocina entera: balanzas, licuadoras,
-                hervidores, waffleras, creperas, máquinas de café, exprimidores de cítricos,
-                selladoras al vacío, moledoras de carne, embutidoras, cortadoras de cecinas,
-                procesadores de alimentos y de vegetales. Son máquinas que se pagan solas cuando
-                habilitan un producto nuevo.
-              </p>
+                      <p>Si tienes un equipo comprado con nosotros y necesitas una pieza, escríbenos
+                      con el modelo y el número de serie —está en la placa trasera o inferior— y,
+                      si puedes, una foto de la pieza. Con eso confirmamos disponibilidad y precio
+                      el mismo día.</p>
 
-              <h3>Repuestos y servicio postventa</h3>
+                      <p>Los componentes de desgaste son los que más se piden: correas y
+                      rodamientos en equipos con transmisión, resistencias y termostatos en línea
+                      de calor, gomas de puerta y componentes de refrigeración en línea de frío,
+                      cuchillas y discos en equipos de corte. No son fallas: son piezas que se
+                      reemplazan según horas de uso, y conviene tener las de tus equipos críticos
+                      en bodega.</p>
+                    `,
+                  },
+                  {
+                    titulo: 'Despacho y entrega',
+                    html: `
+                      <p>Despachamos a todo Chile. En ${site.contact.city} la entrega es sin costo.
+                      A regiones coordinamos con BLUExpress, Chilexpress o Cruz del Sur según lo
+                      que prefieras, y el flete se cotiza por volumen y destino: preferimos decirte
+                      el número real antes y no sorprenderte después.</p>
 
-              <p>
-                Mantenemos una línea de <Link href="/categorias/repuestos">repuestos</Link> para los
-                equipos que vendemos. Esto es deliberado: una máquina detenida en plena producción
-                cuesta mucho más que el repuesto. Preferimos tener el stock y resolverte en días en
-                vez de dejarte esperando. Si tienes un equipo comprado con nosotros y necesitas una
-                pieza, escríbenos con el modelo y el número de serie y lo buscamos.
-              </p>
+                      <p>También puedes retirar en el local, en ${site.contact.address},
+                      ${site.contact.city}, de lunes a viernes de 9:00 a 18:30 y sábados de 10:00 a
+                      14:00. Si vas por un equipo puntual, avísanos antes para asegurarnos de
+                      tenerlo disponible.</p>
+                    `,
+                  },
+                  {
+                    titulo: `Sobre ROMASE`,
+                    html: `
+                      <p>Llevamos más de ${site.yearsInBusiness} años vendiendo maquinaria y
+                      equipamiento para <strong>panaderías, pastelerías, hoteles, restaurantes,
+                      casinos y supermercados</strong>. Trabajamos desde ${site.contact.city}, en la
+                      Región de ${site.contact.region}, y despachamos a todo el país.</p>
 
-              <h3>Asesoría antes de comprar</h3>
+                      <p>En ese tiempo aprendimos algo que no siempre se dice: el equipo más caro no
+                      es necesariamente el que te conviene. Lo que te conviene es el que rinde para
+                      tu volumen de producción real, entra en el espacio que tienes y se puede
+                      reparar sin esperar tres meses un repuesto importado.</p>
 
-              <p>
-                Si estás armando un local desde cero o ampliando el que tienes, conviene que
-                hablemos antes de que compres. Necesitamos saber tres cosas: cuántos kilos o
-                cubiertos produces por día, qué superficie y qué instalación eléctrica y de gas
-                tienes disponible, y en qué plazo necesitas estar operando. Con eso te armamos una
-                propuesta concreta, no un listado de precios.
-              </p>
-
-              <p>
-                Puedes escribirnos por{' '}
-                <a
-                  href={whatsappUrl('Hola ROMASE, quiero asesoría para equipar mi local.')}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  WhatsApp
-                </a>
-                , llamarnos al {site.contact.phone} o pasar por nuestro local en{' '}
-                {site.contact.address}, {site.contact.city}. Atendemos de lunes a viernes de 9:00 a
-                18:30 y los sábados de 10:00 a 14:00.
-              </p>
-
-              <h3>Despacho a todo Chile</h3>
-
-              <p>
-                Coordinamos envíos a regiones con empresas de transporte para equipos grandes y
-                encomienda para artículos menores. En {site.contact.city} entregamos sin costo. El
-                costo del flete depende del volumen y del destino, así que lo confirmamos al momento
-                de cotizar: preferimos decirte el número real antes y no sorprenderte después.
-              </p>
+                      <p>Conocemos el territorio: sabemos cómo se comporta un equipo en el clima del
+                      sur, qué implica despachar a zonas apartadas y qué exige la fiscalización
+                      sanitaria en la práctica.</p>
+                    `,
+                  },
+                ]}
+              />
             </div>
 
             <div>

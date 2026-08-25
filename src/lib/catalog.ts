@@ -465,6 +465,67 @@ export const getFeaturedProducts = cache(async (limit = 8): Promise<Product[]> =
   return [...curated, ...fallback].slice(0, limit)
 })
 
+/**
+ * Productos para el banner de portada.
+ *
+ * Se acordó destacar productos concretos —una amasadora, no «equipos de
+ * panadería»—, así que se elige el equipo de mayor valor con buenas fotos de
+ * cada categoría raíz. Sale variado y se adapta solo si cambia el catálogo.
+ * Los marcados como featured en Supabase pasan primero.
+ */
+export const getHeroProducts = cache(async (limit = 4): Promise<Product[]> => {
+  const { products } = await getCatalog()
+  const raices = await getCategoryTree()
+
+  const elegidos: Product[] = products.filter((p) => p.featured && p.inStock && p.images.length > 0)
+  const yaEstan = new Set(elegidos.map((p) => p.id))
+
+  for (const raiz of raices) {
+    if (elegidos.length >= limit) break
+    const rama = new Set(await getCategoryBranchIds(raiz.id))
+    const mejor = products
+      .filter(
+        (p) =>
+          !yaEstan.has(p.id) &&
+          p.inStock &&
+          p.images.length >= 2 &&
+          p.categoryIds.some((id) => rama.has(id)),
+      )
+      .sort((a, b) => b.price - a.price)[0]
+
+    if (mejor) {
+      elegidos.push(mejor)
+      yaEstan.add(mejor.id)
+    }
+  }
+
+  return elegidos.slice(0, limit)
+})
+
+/**
+ * Destacados para el carrusel. Sin datos de venta no se puede hablar de «más
+ * vendidos» sin inventarlo, así que se ordena por lo que sí se sabe: que esté
+ * disponible, bien fotografiado y bien descrito.
+ *
+ * Cuando los pedidos empiecen a pasar por Supabase, esto se puede calcular de
+ * verdad sumando order_items.
+ */
+export const getCarouselProducts = cache(async (limit = 12): Promise<Product[]> => {
+  const { products } = await getCatalog()
+
+  const curados = products.filter((p) => p.featured && p.inStock)
+  const resto = products
+    .filter((p) => p.inStock && p.images.length > 0 && !p.featured)
+    .sort(
+      (a, b) =>
+        b.images.length - a.images.length ||
+        stripHtml(b.description).length - stripHtml(a.description).length ||
+        b.price - a.price,
+    )
+
+  return [...curados, ...resto].slice(0, limit)
+})
+
 /** Productos de la misma categoría, excluyendo el que se está viendo. */
 export const getRelatedProducts = cache(
   async (productId: number, limit = 4): Promise<Product[]> => {
@@ -479,26 +540,6 @@ export const getRelatedProducts = cache(
       .slice(0, limit)
   },
 )
-
-/**
- * Las categorías de WooCommerce vinieron sin imagen, así que se usa la foto
- * del producto mejor documentado de la rama como portada. Si más adelante se
- * carga image_url en Supabase, esa gana.
- */
-export const getCategoryCover = cache(async (slug: string): Promise<string | null> => {
-  const category = await getCategoryBySlug(slug)
-  if (!category) return null
-  if (category.imageUrl) return category.imageUrl
-
-  const branch = new Set(await getCategoryBranchIds(category.id))
-  const { products } = await getCatalog()
-
-  const best = products
-    .filter((p) => p.images.length > 0 && p.categoryIds.some((id) => branch.has(id)))
-    .sort((a, b) => Number(b.inStock) - Number(a.inStock) || b.images.length - a.images.length)[0]
-
-  return best?.images[0]?.src ?? null
-})
 
 export const getAllProductSlugs = cache(async (): Promise<string[]> => {
   const { products } = await getCatalog()

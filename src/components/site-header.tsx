@@ -130,15 +130,6 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
           {/* Son diez entradas y no siempre entran: en pantallas angostas la
               barra se desplaza en horizontal en vez de recortar categorías. */}
           <ul className="flex items-stretch gap-4 overflow-x-auto no-scrollbar xl:gap-6">
-            <li>
-              <Link
-                href="/productos"
-                className="flex h-12 items-center text-[13px] font-medium whitespace-nowrap text-brand-600 transition-colors hover:text-brand-700"
-              >
-                Todos los productos
-              </Link>
-            </li>
-
             {categories.map((category) => {
               const isOpen = openCategory === category.id
               const hasChildren = category.children.length > 0
@@ -242,14 +233,6 @@ function MobileMenu({
         </div>
 
         <nav className="flex-1 overflow-y-auto py-2">
-          <Link
-            href="/productos"
-            className="block px-4 py-3 text-sm font-semibold text-brand-700"
-            onClick={onClose}
-          >
-            Todos los productos
-          </Link>
-
           {categories.map((category) => (
             <div key={category.id} className="border-t border-ink-100">
               <div className="flex items-stretch">

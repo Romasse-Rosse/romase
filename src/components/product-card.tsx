@@ -13,7 +13,7 @@ export function ProductCard({ product, className }: { product: Product; classNam
       : 0
 
   return (
-    <article className={cn('group relative flex flex-col', className)}>
+    <article className={cn('group relative flex h-full w-full flex-col', className)}>
       {/* Marco solo alrededor de la foto: la ficha respira mejor que
           encerrando también el texto. */}
       <div className="relative aspect-square overflow-hidden border border-ink-200 bg-white transition-colors duration-200 group-hover:border-ink-300">
