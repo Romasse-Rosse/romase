@@ -6,6 +6,7 @@ import { titleCase } from '@/lib/format'
 import { Container, SectionHeading } from '@/components/ui'
 import { HeroCarousel, type HeroSlide } from '@/components/hero-carousel'
 import { bannerSlides } from '@/content/banner'
+import manifiestoBanner from '../../public/banner/manifiesto.json'
 import { ProductCarousel } from '@/components/product-carousel'
 import { Accordion } from '@/components/accordion'
 import { Faqs, homeFaqs } from '@/components/faqs'
@@ -24,14 +25,17 @@ export default async function HomePage() {
     queryProducts({ sort: 'novedades', perPage: 12 }),
   ])
 
+  const archivosBanner = manifiestoBanner as Record<string, string>
+
   const porSlug = new Map(categories.map((c) => [c.slug, c]))
   const slides: HeroSlide[] = bannerSlides.flatMap((s) => {
     const categoria = porSlug.get(s.slug)
-    if (!categoria) return []
+    const archivo = archivosBanner[s.imagen]
+    if (!categoria || !archivo) return []
     return [
       {
         slug: s.slug,
-        imagen: s.imagen,
+        imagen: `/banner/${archivo}`,
         categoria: titleCase(categoria.name),
         titular: s.titular,
         bajada: s.bajada,

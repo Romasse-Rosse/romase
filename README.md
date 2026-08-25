@@ -225,10 +225,15 @@ segundo:
 
 - **Banner fotográfico a todo el ancho.** Tres diapositivas, una por sección del catálogo
   —panadería, gastronomía y equipos complementarios—, con foto de ambiente, titular y botón
-  a la categoría. La foto y el texto se cruzan por opacidad con la misma duración: si el
-  texto cambiara de golpe se vería la bajada nueva sobre la foto vieja. La franja de
-  beneficios va dentro del mismo bloque, así el banner y los beneficios entran en la misma
-  pantalla sin desplazarse.
+  a la categoría. La franja de beneficios va dentro del mismo bloque, así el banner y los
+  beneficios entran en la misma pantalla sin desplazarse.
+
+  **La foto se cruza; el texto se releva.** La foto sí se funde con la siguiente —una foto
+  encima de otra se ve bien—, pero el texto no: cruzar dos titulares en la misma posición los
+  deja superpuestos medio segundo y no se lee ninguno. El que sale se va en 180 ms y el que
+  entra arranca a los 200, cuando el otro ya no está; el total acompaña los 700 ms de la
+  foto. Cambiar el texto de golpe tampoco servía: se veía la bajada nueva sobre la foto
+  vieja.
 
   El texto de cada diapositiva está en `src/content/banner.ts` y las fotos las baja
   `yarn banner:fetch` según `scripts/banner-fuentes.json`, que admite dos ajustes por foto:
@@ -272,10 +277,24 @@ Las fotos se sirven desde `public/banner/`, no enlazadas de un tercero: se recor
 buscando la zona de interés y se guardan en WebP. Para cambiar una, editar su URL en
 `scripts/banner-fuentes.json` y correr `yarn banner:fetch`.
 
-> **Al reemplazar una foto hay que limpiar la caché de imágenes.** Next guarda las variantes
-> optimizadas en `.next/cache/images` indexadas por URL, y el nombre del archivo no cambia:
-> sin borrar esa carpeta se sigue viendo la foto anterior. En un despliegue limpio de Render
-> no aplica, pero en local sí.
+### El nombre del archivo lleva el hash del contenido
+
+`yarn banner:fetch` guarda `panaderia-4c1885fe.webp`, borra la versión anterior y escribe
+`public/banner/manifiesto.json` con el mapa sección → archivo. La portada lee ese manifiesto
+y le pasa la ruta ya resuelta al carrusel.
+
+No es capricho: `/_next/image` se sirve con `Cache-Control: max-age=2592000`. **Con el nombre
+fijo, cambiar la foto no cambia la URL, así que el navegador que ya la vio no vuelve a
+pedirla en 30 días** —y quien reemplazó la foto la ve bien solo en incógnito—. Pasó
+exactamente eso con la de panadería: el archivo nuevo estaba desplegado y correcto, y en el
+navegador seguía apareciendo el viejo. Con el hash en el nombre, cambiar la foto cambia la
+URL y no hay caché que sobreviva.
+
+> **Las fotos de producto todavía tienen nombre fijo** (`public/productos/<slug>.webp`).
+> Están recién creadas, así que hoy no molesta, pero si alguna vez cambia la foto de un
+> producto en el origen va a pasar lo mismo. La solución es la misma: hashear el nombre en
+> `localize-product-images.mjs` y dejar que `imagenes-locales.json` haga de manifiesto —ya
+> cumple ese rol—.
 
 > **Los desplegables no esconden el contenido de Google.** Un `<details>` cerrado sigue
 > teniendo su texto en el HTML, así que se indexa igual. Es lo que permite cumplir a la vez

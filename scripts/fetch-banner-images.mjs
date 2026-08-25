@@ -15,7 +15,8 @@
 // Para cambiar una foto: reemplazar su URL en banner-fuentes.json y volver a
 // correr el script.
 // ============================================================
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { mkdir, readFile, readdir, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import sharp from 'sharp'
 
@@ -32,6 +33,8 @@ const fuentes = JSON.parse(
 
 await mkdir(DESTINO, { recursive: true })
 const creditos = []
+/** clave → nombre de archivo con hash, para que el sitio sepa qué pedir. */
+const manifiesto = {}
 
 for (const [clave, foto] of Object.entries(fuentes)) {
   const res = await fetch(foto.url)
@@ -40,7 +43,6 @@ for (const [clave, foto] of Object.entries(fuentes)) {
     continue
   }
 
-  const salida = path.join(DESTINO, `${clave}.webp`)
   let img = sharp(Buffer.from(await res.arrayBuffer()))
 
   // El texto del banner ocupa la mitad izquierda. Si lo interesante de la foto
@@ -62,20 +64,33 @@ for (const [clave, foto] of Object.entries(fuentes)) {
     })
   }
 
-  await img
+  const webp = await img
     // Sin recorte manual, 'attention' busca la zona de más interés visual.
     .resize(ANCHO, ALTO, {
       fit: 'cover',
       position: foto.recorte ? 'center' : sharp.strategy.attention,
     })
     .webp({ quality: 78 })
-    .toFile(salida)
+    .toBuffer()
 
-  const meta = await sharp(salida).metadata()
-  console.log(`  ${clave.padEnd(17)} ${ANCHO}×${ALTO}  ${Math.round((meta.size ?? 0) / 1024)} KB`)
+  // El hash va en el nombre para que cambiar la foto cambie la URL.
+  const hash = createHash('sha1').update(webp).digest('hex').slice(0, 8)
+  const archivo = `${clave}-${hash}.webp`
+  await writeFile(path.join(DESTINO, archivo), webp)
+
+  // Fuera las versiones anteriores de esta misma foto.
+  for (const viejo of await readdir(DESTINO)) {
+    if (viejo.startsWith(`${clave}-`) && viejo.endsWith('.webp') && viejo !== archivo) {
+      await unlink(path.join(DESTINO, viejo))
+      console.log(`  ${''.padEnd(17)} (se borró ${viejo})`)
+    }
+  }
+
+  manifiesto[clave] = archivo
+  console.log(`  ${clave.padEnd(17)} ${ANCHO}×${ALTO}  ${Math.round(webp.length / 1024)} KB  ${archivo}`)
 
   creditos.push({
-    archivo: `${clave}.webp`,
+    archivo,
     titulo: foto.titulo,
     licencia: foto.licencia,
     origen: foto.origen,
@@ -83,5 +98,9 @@ for (const [clave, foto] of Object.entries(fuentes)) {
   })
 }
 
-await writeFile(path.join(DESTINO, 'creditos.json'), JSON.stringify(creditos, null, 2))
+await writeFile(path.join(DESTINO, 'creditos.json'), JSON.stringify(creditos, null, 2) + '\n')
+
+// El sitio lee de acá qué archivo pedir para cada sección.
+await writeFile(path.join(DESTINO, 'manifiesto.json'), JSON.stringify(manifiesto, null, 2) + '\n')
+
 console.log(`\nListo: ${creditos.length} imágenes en public/banner/`)

@@ -9,6 +9,7 @@ import { Container } from './ui'
 
 export type HeroSlide = {
   slug: string
+  /** Ruta completa de la foto, ya resuelta contra el manifiesto. */
   imagen: string
   categoria: string
   titular: string
@@ -69,7 +70,7 @@ export function HeroCarousel({
           )}
         >
           <Image
-            src={`/banner/${slide.imagen}.webp`}
+            src={slide.imagen}
             alt=""
             fill
             priority={i === 0}
@@ -90,9 +91,14 @@ export function HeroCarousel({
 
       <Container className="relative z-20">
         <div className="flex min-h-[21rem] flex-col justify-center py-12 sm:min-h-[24rem] lg:min-h-[26rem]">
-          {/* Los textos van apilados en la misma celda y se cruzan con la
-              misma duración que las fotos: si el texto cambiara de golpe se
-              vería la bajada nueva sobre la foto vieja. */}
+          {/* Los textos van apilados en la misma celda, pero se relevan: no se
+              cruzan.
+
+              Cruzarlos por opacidad los dejaba superpuestos medio segundo —dos
+              titulares y dos botones encimados, ilegible—. Así que el que sale
+              se va en 180 ms y el que entra arranca a los 200, cuando el otro
+              ya no está. El total acompaña los 700 ms de la foto, que sí se
+              cruza porque una foto encima de otra se ve bien. */}
           <div className="grid">
             {slides.map((slide, i) => (
               <div
@@ -100,8 +106,10 @@ export function HeroCarousel({
                 inert={i !== actual}
                 aria-hidden={i !== actual}
                 className={cn(
-                  'col-start-1 row-start-1 max-w-xl self-center transition-opacity duration-700 ease-out',
-                  i === actual ? 'opacity-100' : 'opacity-0',
+                  'col-start-1 row-start-1 max-w-xl self-center transition-[opacity,translate] ease-out',
+                  i === actual
+                    ? 'translate-y-0 opacity-100 delay-200 duration-500'
+                    : 'translate-y-1 opacity-0 duration-[180ms] motion-reduce:translate-y-0',
                 )}
               >
                 <p className="mb-4 text-[11px] font-medium tracking-[0.2em] text-brand-400 uppercase">
