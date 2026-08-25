@@ -5,6 +5,8 @@ import { site } from '@/lib/site'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { WhatsAppFab } from '@/components/whatsapp-fab'
+import { CartProvider } from '@/lib/cart'
+import { CartDrawer } from '@/components/cart-drawer'
 import './globals.css'
 
 const jakarta = Plus_Jakarta_Sans({
@@ -76,10 +78,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           Saltar al contenido
         </a>
 
-        <SiteHeader categories={categories} />
-        <main id="contenido">{children}</main>
-        <SiteFooter />
-        <WhatsAppFab />
+        <CartProvider>
+          <SiteHeader categories={categories} />
+          <main id="contenido">{children}</main>
+          <SiteFooter />
+          <WhatsAppFab />
+          <CartDrawer />
+        </CartProvider>
 
         <script
           type="application/ld+json"

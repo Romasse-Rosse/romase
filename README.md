@@ -87,6 +87,8 @@ src/
 | `/productos/[slug]` | estática (214) | ficha de producto |
 | `/categorias/[slug]` | estática (64) | página SEO de categoría |
 | `/contacto`, `/nosotros`, `/politica-de-privacidad` | estáticas | |
+| `/carrito` | cliente | carrito, en localStorage |
+| `/checkout` | cliente | pedido; fuera del índice |
 | `/api/buscar` | dinámica | sugerencias del buscador |
 
 Las páginas de categoría se mantienen **estáticas a propósito**: son el activo SEO del
@@ -107,6 +109,38 @@ productos quedan enlazados desde una sola URL indexable. El orden y los filtros 
 - **URLs con nombre:** se terminaron las URLs tipo `/9-2`. `next.config.ts` redirige con 301
   las viejas (`/producto/:slug` → `/productos/:slug`, `/tienda` → `/productos`).
 - `sitemap.xml` y `robots.txt` se generan solos desde el catálogo.
+
+---
+
+## Carrito y checkout
+
+El flujo de compra está completo y **funciona de punta a punta como pedido**. Lo único que
+falta es cobrar en línea: ahí entra Webpay.
+
+- **Carrito** (`src/lib/cart.tsx`) — estado en el navegador, persistido en `localStorage`.
+  El contador del encabezado aparece recién cuando se leyó el almacenamiento, para que el
+  servidor y el cliente rendericen lo mismo.
+- **Botones** — «Agregar» en cada tarjeta de la grilla, y selector de cantidad + «Agregar al
+  carrito» en la ficha. WhatsApp bajó a acción secundaria.
+- **Panel lateral** — se abre solo al agregar algo, con cantidades y subtotal.
+- **`/carrito`** — línea por línea, cantidades, subtotal.
+- **`/checkout`** — cuatro pasos: datos, documento (boleta o factura, con RUT y razón social
+  cuando corresponde), entrega (retiro en el local o despacho, con dirección) y pago.
+
+Al confirmar, el pedido se guarda en `orders` y `order_items` y se avisa por correo, con la
+misma regla que el formulario de contacto: basta con que uno de los dos canales funcione. Si
+fallan los dos, se ofrece enviar el pedido por WhatsApp con el detalle ya armado.
+
+> **El precio nunca se toma del navegador.** Del cliente solo se acepta qué producto y cuántas
+> unidades; el nombre y el precio se releen del catálogo en el servidor al confirmar. Un
+> `localStorage` manipulado cambia lo que se ve, no lo que se cobra.
+
+### Lo que falta para cobrar en línea
+
+El esquema ya tiene las columnas `webpay_token`, `webpay_buy_order` y `webpay_response`, y el
+paso 4 del checkout tiene el bloque de Webpay marcado como «próximamente». La integración
+con Transbank Webpay Plus REST entra ahí: crear la transacción antes de confirmar, redirigir,
+y confirmar el pedido contra el resultado.
 
 ---
 
@@ -216,11 +250,11 @@ ninguno de los dos avisa en pantalla y ofrece WhatsApp.
 
 ## Pendiente
 
-- **Carrito y checkout.** El esquema ya tiene `orders` y `order_items` preparados para
-  Transbank Webpay Plus REST, que es la única pasarela del sitio actual. Hoy la acción
-  principal de la ficha de producto es cotizar por WhatsApp, que es como se vende
-  realmente. Al construir el checkout hay que reapuntar los redirects de `/9-2` y `/8-2`
-  en `next.config.ts` a `/carrito` y `/checkout`.
+- **Integrar Transbank Webpay Plus REST.** Es la única pasarela del sitio actual y el único
+  paso que falta del flujo de compra: hoy el pedido se confirma y el pago se coordina a
+  mano. El lugar donde entra está marcado en `checkout-form.tsx` (bloque «Pago») y el
+  esquema ya tiene las columnas `webpay_token`, `webpay_buy_order` y `webpay_response`.
+  Requiere código de comercio de Transbank.
 - **Imágenes a Supabase Storage.** Hoy se sirven desde `romase.cl/wp-content`. Hay que
   moverlas antes de dar de baja el WordPress, o el sitio se queda sin fotos.
 - **Productos destacados.** La columna `featured` existe pero está en `false` para todos.

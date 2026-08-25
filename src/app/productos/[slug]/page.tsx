@@ -15,6 +15,7 @@ import { Badge, Breadcrumbs, Container, SectionHeading } from '@/components/ui'
 import { ProductGallery } from '@/components/product-gallery'
 import { ProductGrid } from '@/components/product-card'
 import { WhatsAppIcon } from '@/components/site-header'
+import { AddToCartFull } from '@/components/add-to-cart'
 
 export const revalidate = 3600
 
@@ -164,30 +165,44 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
               )}
             </p>
 
-            {/* El canal principal de venta hoy es WhatsApp, así que la
-                acción primaria es cotizar y no un carrito todavía. */}
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-7">
+              <AddToCartFull
+                product={{
+                  id: product.id,
+                  slug: product.slug,
+                  name,
+                  price: product.price,
+                  image: product.images[0]?.src ?? null,
+                  sku: product.sku,
+                }}
+                inStock={product.inStock}
+              />
+            </div>
+
+            {/* WhatsApp sigue disponible como canal secundario: buena parte de
+                las ventas todavía entra por ahí. */}
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row">
               <a
                 href={consulta}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-13 flex-1 items-center justify-center gap-2 rounded-lg bg-[#25D366] px-6 text-base font-medium text-white hover:bg-[#1eb855]"
+                className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-sm border border-ink-300 px-5 text-sm font-medium text-ink-900 transition-colors hover:border-ink-950"
               >
-                <WhatsAppIcon className="size-5" />
-                Cotizar por WhatsApp
+                <WhatsAppIcon className="size-4" />
+                Consultar por WhatsApp
               </a>
               <a
                 href={site.contact.phoneHref}
-                className="inline-flex h-13 items-center justify-center gap-2 rounded-lg border border-ink-300 px-6 text-base font-medium text-ink-900 hover:bg-ink-50"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-sm border border-ink-300 px-5 text-sm font-medium text-ink-900 transition-colors hover:border-ink-950"
               >
-                <Phone aria-hidden="true" className="size-4.5" />
+                <Phone aria-hidden="true" className="size-4" />
                 Llamar
               </a>
             </div>
 
             <a
               href={`mailto:${site.contact.email}?subject=${encodeURIComponent(`Consulta: ${name}`)}`}
-              className="mt-3 inline-flex items-center gap-2 text-sm text-ink-600 hover:text-brand-600"
+              className="mt-4 inline-flex items-center gap-2 text-sm text-ink-600 transition-colors hover:text-brand-600"
             >
               <Mail aria-hidden="true" className="size-4" />
               O escríbenos a {site.contact.email}

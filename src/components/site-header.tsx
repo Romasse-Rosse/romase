@@ -12,6 +12,7 @@ import { nombreCortoCategoria } from '@/content/nombres-categorias'
 import { cn } from '@/lib/cn'
 import { SearchBox } from './search-box'
 import { Container } from './ui'
+import { CartButton } from './cart-drawer'
 
 /**
  * El menú se organiza por categorías de producto, no por secciones
@@ -108,6 +109,7 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
                 <WhatsAppIcon className="size-4.5" />
                 <span className="hidden sm:inline">Cotizar</span>
               </a>
+              <CartButton />
             </div>
           </div>
 

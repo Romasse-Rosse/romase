@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Product } from '@/lib/catalog'
 import { formatPrice, titleCase } from '@/lib/format'
 import { cn } from '@/lib/cn'
+import { AddToCartCompact } from './add-to-cart'
 
 export function ProductCard({ product, className }: { product: Product; className?: string }) {
   const image = product.images[0]
@@ -53,13 +54,30 @@ export function ProductCard({ product, className }: { product: Product; classNam
           </Link>
         </h3>
 
-        <div className="mt-auto flex items-baseline gap-2 pt-3">
-          <span className="text-[17px] font-medium text-ink-950">{formatPrice(product.price)}</span>
-          {discount > 0 && product.regularPrice && (
-            <span className="text-[13px] text-ink-400 line-through">
-              {formatPrice(product.regularPrice)}
+        <div className="mt-auto pt-3">
+          <div className="flex items-baseline gap-2">
+            <span className="text-[17px] font-medium text-ink-950">
+              {formatPrice(product.price)}
             </span>
-          )}
+            {discount > 0 && product.regularPrice && (
+              <span className="text-[13px] text-ink-400 line-through">
+                {formatPrice(product.regularPrice)}
+              </span>
+            )}
+          </div>
+
+          <div className="mt-3">
+            <AddToCartCompact
+              product={{
+                id: product.id,
+                slug: product.slug,
+                name: titleCase(product.name),
+                price: product.price,
+                image: product.images[0]?.src ?? null,
+                sku: product.sku,
+              }}
+            />
+          </div>
         </div>
       </div>
     </article>
