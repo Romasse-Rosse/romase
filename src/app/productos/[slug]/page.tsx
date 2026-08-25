@@ -251,7 +251,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
                 <li key={category.id}>
                   <Link
                     href={`/categorias/${category.slug}`}
-                    className="inline-flex rounded-full border border-ink-200 px-3 py-1.5 text-sm text-ink-700 hover:border-brand-400 hover:text-brand-700"
+                    className="inline-flex rounded-full border border-brand-200 bg-brand-50 px-3 py-1.5 text-sm text-brand-800 transition-colors hover:border-brand-500 hover:bg-brand-500 hover:text-white"
                   >
                     {titleCase(category.name)}
                   </Link>
@@ -263,7 +263,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
       </Container>
 
       {related.length > 0 && (
-        <section className="mt-16 bg-ink-50 py-14">
+        <section className="mt-16 border-t border-brand-100 bg-brand-50 py-14">
           <Container>
             <SectionHeading title="También te puede servir" />
             <ViewItemList

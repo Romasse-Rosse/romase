@@ -35,7 +35,7 @@ export default async function NotFound() {
             <li key={category.id}>
               <Link
                 href={`/categorias/${category.slug}`}
-                className="inline-flex rounded-full border border-ink-200 px-3.5 py-1.5 text-sm text-ink-700 hover:border-brand-400 hover:text-brand-700"
+                className="inline-flex rounded-full border border-brand-200 bg-brand-50 px-3.5 py-1.5 text-sm text-brand-800 transition-colors hover:border-brand-500 hover:bg-brand-500 hover:text-white"
               >
                 {titleCase(category.name)}
               </Link>

@@ -16,7 +16,7 @@ export async function SiteFooter() {
   const categories = await getCategoryTree()
 
   return (
-    <footer className="mt-20 bg-ink-950 text-ink-300">
+    <footer className="mt-20 border-t-2 border-brand-500 bg-ink-950 text-ink-300">
       <Container>
         <div className="grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
           <div>

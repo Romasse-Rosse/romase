@@ -94,7 +94,7 @@ export default async function HomePage() {
       {/* ---------------------------------------------------------------
           Categorías
       --------------------------------------------------------------- */}
-      <section id="categorias" className="border-y border-ink-200 bg-ink-50 py-16 lg:py-20">
+      <section id="categorias" className="border-y border-brand-100 bg-brand-50 py-16 lg:py-20">
         <Container>
           <SectionHeading
             eyebrow="Catálogo"
@@ -114,7 +114,7 @@ export default async function HomePage() {
                 <li key={category.id}>
                   <Link
                     href={`/categorias/${category.slug}`}
-                    className="group flex h-full flex-col border border-ink-200 bg-white transition-colors hover:border-ink-950"
+                    className="group flex h-full flex-col border border-brand-100 bg-white transition-colors hover:border-brand-500"
                   >
                     <span className="relative block aspect-square overflow-hidden">
                       {portada ? (
@@ -132,7 +132,7 @@ export default async function HomePage() {
                       )}
                     </span>
 
-                    <span className="flex items-center justify-between gap-2 border-t border-ink-100 px-4 py-3.5">
+                    <span className="flex items-center justify-between gap-2 border-t border-brand-100 px-4 py-3.5">
                       <span className="text-[13px] leading-snug font-medium text-ink-950">
                         {titleCase(category.name)}
                       </span>
@@ -202,24 +202,45 @@ export default async function HomePage() {
               <Accordion
                 items={[
                   {
-                    titulo: 'Qué hay en cada sección del catálogo',
+                    titulo: 'Cómo se arma una panadería',
                     html: `
-                      <p><a href="/categorias/panaderia">Panadería</a>: amasadoras y sobadoras para
-                      el trabajo de masa, estiradoras, divisoras y cortadoras.
-                      <a href="/categorias/articulos-de-pasteleria">Artículos de pastelería</a>:
-                      moldes de bizcocho, de kuchen, de teflón y bandejas enlozadas.</p>
+                      <p>Todo empieza por la masa. La <a href="/categorias/panaderia">amasadora</a>
+                      es la que pone el techo: cuántos kilos entran por vez decide cuánto se puede
+                      producir en un turno, y quedarse corto ahí no se arregla comprando otra cosa
+                      después. La sobadora y la estiradora vienen a continuación, y son las que
+                      definen cuánto de ese trabajo se sigue haciendo a pulso.</p>
 
-                      <p><a href="/categorias/calor">Línea de calor</a> para la cocción y
-                      <a href="/categorias/frio-2">línea de frío</a> para la conservación.
-                      <a href="/categorias/vitrinas">Vitrinas</a> frías y calientes: una buena
-                      exhibición decide si el producto se vende o se queda.</p>
+                      <p>Después está lo que se gasta y se repone: moldes, bandejas enlozadas y
+                      cortadores. Son los
+                      <a href="/categorias/articulos-de-pasteleria">artículos de pastelería</a>, que
+                      no se compran una vez sino todos los años.</p>
+                    `,
+                  },
+                  {
+                    titulo: 'Cocinar, conservar y exhibir',
+                    html: `
+                      <p>En una cocina el reparto es más simple de lo que parece: está lo que cocina
+                      y lo que conserva. Hornos, freidoras y anafes de un lado —la
+                      <a href="/categorias/calor">línea de calor</a>—; freezers y frigobares del
+                      otro —la <a href="/categorias/frio-2">línea de frío</a>—.</p>
 
-                      <p><a href="/categorias/acero">Acero inoxidable</a>: mesones, carros,
-                      bandejas, depósitos gastronómicos, fondos y sartenes.
-                      <a href="/categorias/complementarios">Equipos complementarios</a>: balanzas,
-                      licuadoras, máquinas de café, waffleras, selladoras al vacío, moledoras de
-                      carne y procesadores. Y <a href="/categorias/repuestos">repuestos</a> con
-                      stock.</p>
+                      <p>Entre las dos están las <a href="/categorias/vitrinas">vitrinas</a>, frías y
+                      calientes, y son las que más se subestiman al presupuestar. Un producto bien
+                      exhibido se vende; el mismo producto guardado atrás, no.</p>
+                    `,
+                  },
+                  {
+                    titulo: 'Lo que sostiene el servicio',
+                    html: `
+                      <p>El <a href="/categorias/acero">acero inoxidable</a> es la infraestructura:
+                      mesones, carros, depósitos gastronómicos, fondos y sartenes. No se luce, pero
+                      es lo que permite trabajar limpio y rápido cuando el local está lleno.</p>
+
+                      <p>Los <a href="/categorias/complementarios">equipos complementarios</a> son
+                      otra cosa: una máquina de café, una wafflera o una selladora al vacío amplían
+                      la carta sin obra y sin cambiar la cocina. Y aparte están los
+                      <a href="/categorias/repuestos">repuestos</a>, con stock propio. Esa es la
+                      diferencia entre un equipo parado dos días y uno parado dos meses.</p>
                     `,
                   },
                 ]}

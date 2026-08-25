@@ -42,11 +42,11 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
   return (
     <header className="sticky top-0 z-40 bg-white">
       {/* Barra de utilidad */}
-      <div className="hidden bg-ink-950 text-ink-100 lg:block">
+      <div className="hidden bg-brand-700 text-brand-100 lg:block">
         <Container>
           <div className="flex h-9 items-center justify-between text-xs">
             <p className="flex items-center gap-2">
-              <Truck aria-hidden="true" className="size-3.5 text-brand-400" />
+              <Truck aria-hidden="true" className="size-3.5 text-brand-200" />
               Despacho a todo Chile · Entrega sin costo en {site.contact.city}
             </p>
             <div className="flex items-center gap-5">
@@ -134,8 +134,8 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
                       'relative flex h-12 items-center gap-1 text-[13px] whitespace-nowrap transition-colors',
                       'after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-brand-500 after:transition-transform',
                       isOpen
-                        ? 'text-ink-950 after:scale-x-100'
-                        : 'text-ink-600 after:scale-x-0 hover:text-ink-950',
+                        ? 'text-brand-700 after:scale-x-100'
+                        : 'text-ink-600 after:scale-x-0 hover:text-brand-700',
                     )}
                   >
                     {nombreCortoCategoria(category.slug, titleCase(category.name))}

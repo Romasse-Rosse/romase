@@ -34,7 +34,7 @@ export function AddToCartCompact({
         'relative z-10 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-sm border text-[13px] font-medium transition-colors',
         agregado
           ? 'border-emerald-600 bg-emerald-600 text-white'
-          : 'border-ink-300 text-ink-900 hover:border-ink-950 hover:bg-ink-950 hover:text-white',
+          : 'border-brand-500 bg-brand-500 text-white hover:border-brand-600 hover:bg-brand-600',
         className,
       )}
     >

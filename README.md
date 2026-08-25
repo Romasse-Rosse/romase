@@ -338,6 +338,31 @@ Piezas propias del rediseño:
 - **Menú con etiquetas cortas.** Con los nombres completos, las diez entradas no entran en
   1280 px. Los nombres largos se siguen usando en títulos y migas de pan.
 
+### Dónde entra el color
+
+La primera versión era casi toda blanca: la terracota aparecía en el logo, en algún botón y
+poco más, y la página se leía fría para lo que es —un catálogo de equipamiento, no un estudio
+de arquitectura—. El color se sumó por bandas y por acción, no repintando todo:
+
+| Dónde | Qué |
+| --- | --- |
+| Franja superior del encabezado | `bg-brand-700`, la terracota oscura del logo |
+| Menú de categorías | el enlace se enciende en `brand-700` al pasar y cuando está abierto |
+| Botón «Agregar» de cada tarjeta | naranja lleno, antes era un contorno gris |
+| Sección de categorías de la portada | fondo `brand-50` |
+| Preguntas frecuentes (portada, categoría, ficha) | fondo `brand-50` |
+| Contenido editorial de categoría y relacionados | fondo `brand-50` |
+| Chips de subcategoría, búsqueda y 404 | pastilla `brand-50`, se pintan enteros al pasar |
+| Borde superior del pie | línea de 2 px en `brand-500` |
+
+Los carruseles de producto y la ficha se dejaron sobre blanco a propósito: el color separa
+las bandas, y si todas llevan tinte deja de separar nada.
+
+Un efecto secundario del botón naranja: la pista del carrusel sangraba 1 rem hacia los
+márgenes y el borde de la tarjeta anterior asomaba. Con el botón gris no se notaba; en
+naranja se leía como una astilla de color. Se quitó el sangrado —la tarjeta siguiente
+cortada a la derecha ya avisa que hay más—.
+
 ### Favicon
 
 El logo es un wordmark horizontal: entero en un favicon queda ilegible a 16 px. Lo único que

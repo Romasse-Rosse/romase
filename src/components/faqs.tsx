@@ -20,10 +20,10 @@ export function Faqs({ items, title = 'Preguntas frecuentes' }: { items: Faq[]; 
   }
 
   return (
-    <section className="border border-ink-200 bg-ink-50 p-6">
+    <section className="border border-brand-100 bg-brand-50 p-6">
       <h2 className="mb-4 text-lg font-semibold tracking-tight text-ink-950">{title}</h2>
 
-      <div className="divide-y divide-ink-200">
+      <div className="divide-y divide-brand-100">
         {items.map((faq) => (
           <details key={faq.pregunta} className="group py-3">
             <summary className="flex cursor-pointer list-none items-start justify-between gap-3 text-sm font-medium text-ink-900 marker:content-none">

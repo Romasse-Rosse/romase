@@ -88,7 +88,12 @@ export function ProductCarousel({
     >
       <ul
         ref={pista}
-        className="-mx-4 flex snap-x snap-mandatory items-stretch gap-5 overflow-x-auto px-4 pb-2 no-scrollbar sm:gap-6"
+        /* Sin sangrado lateral: la pista arranca donde arranca el contenido.
+           Con el botón en naranja, el borde de la tarjeta anterior asomando en
+           el margen se leía como una astilla de color, no como "hay más". La
+           pista igual corta la tarjeta siguiente a la derecha, que es la señal
+           que importa. */
+        className="flex snap-x snap-mandatory items-stretch gap-5 overflow-x-auto pb-2 no-scrollbar sm:gap-6"
       >
         {products.map((product) => (
           <li

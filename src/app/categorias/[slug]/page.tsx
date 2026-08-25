@@ -119,7 +119,7 @@ export default async function CategoriaPage({ params }: { params: Params }) {
                 <li key={child.id}>
                   <Link
                     href={`/categorias/${child.slug}`}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-3.5 py-1.5 text-sm text-ink-700 hover:border-brand-400 hover:text-brand-700"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-3.5 py-1.5 text-sm text-brand-800 transition-colors hover:border-brand-500 hover:bg-brand-500 hover:text-white"
                   >
                     {titleCase(child.name)}
                   </Link>
@@ -154,7 +154,7 @@ export default async function CategoriaPage({ params }: { params: Params }) {
       {/* Contenido editorial: es lo que le da a la categoría posibilidad
           real de posicionar, más allá del listado de productos. */}
       {content && (
-        <section className="mt-16 border-t border-ink-200 bg-ink-50 py-14">
+        <section className="mt-16 border-t border-brand-100 bg-brand-50 py-14">
           <Container>
             <div className="grid gap-12 lg:grid-cols-[1.6fr_1fr]">
               {/* El texto largo va en desplegables: la página queda liviana y
