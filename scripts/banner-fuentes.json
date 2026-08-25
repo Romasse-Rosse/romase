@@ -1,9 +1,9 @@
 {
   "panaderia": {
-    "titulo": "Loaves artisanal bread baguettes Venice",
-    "licencia": "CC0",
-    "origen": "https://www.rawpixel.com/image/3282923/free-photo-image-artisanal-bread-baguettes",
-    "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvdXB3azYxNjYwMjk5LXdpa2ltZWRpYS1pbWFnZS1rb3diMW16Zy5qcGc.jpg"
+    "titulo": "A person mixing a batter using a wire whisk",
+    "licencia": "Pexels",
+    "origen": "https://www.pexels.com/photo/a-person-mixing-a-batter-using-a-wire-whisk-8477749/",
+    "url": "https://images.pexels.com/photos/8477749/pexels-photo-8477749.jpeg"
   },
   "gastronomia": {
     "titulo": "Chef Cook",
@@ -12,21 +12,21 @@
     "url": "https://cdn.stocksnap.io/img-thumbs/960w/J2W0D3CO2L.jpg"
   },
   "complementarios": {
-    "titulo": "Cafe Bar",
-    "licencia": "CC0",
-    "origen": "https://stocksnap.io/photo/cafe-bar-FJXYCIFWNK",
-    "url": "https://cdn.stocksnap.io/img-thumbs/960w/FJXYCIFWNK.jpg"
+    "titulo": "Máquina de café profesional",
+    "licencia": "Pexels",
+    "origen": "https://www.pexels.com/photo/6612589/",
+    "url": "https://images.pexels.com/photos/6612589/pexels-photo-6612589.jpeg"
   },
   "vitrinas": {
-    "titulo": "Prepared food display in an Italian deli in Ro",
-    "licencia": "CC0",
-    "origen": "https://commons.wikimedia.org/w/index.php?curid=145489190",
-    "url": "https://upload.wikimedia.org/wikipedia/commons/f/f1/Prepared_food_display_in_an_Italian_deli_in_Rome.jpg"
+    "titulo": "Vitrina de pastelería",
+    "licencia": "Pexels",
+    "origen": "https://www.pexels.com/photo/7405059/",
+    "url": "https://images.pexels.com/photos/7405059/pexels-photo-7405059.jpeg"
   },
   "repuestos": {
-    "titulo": "Chain Machine",
-    "licencia": "CC0",
-    "origen": "https://stocksnap.io/photo/chain-machine-W6DBNYP27J",
-    "url": "https://cdn.stocksnap.io/img-thumbs/960w/W6DBNYP27J.jpg"
+    "titulo": "Técnico reparando una máquina de café industrial",
+    "licencia": "SIN VERIFICAR — foto tomada del sitio de otra empresa",
+    "origen": "https://odisaequipa.com.mx/",
+    "url": "https://odisaequipa.com.mx/wp-content/uploads/2022/03/tecnicos-de-cafeteras-industriales.png"
   }
 }

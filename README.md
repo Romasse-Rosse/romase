@@ -202,12 +202,22 @@ segundo:
 - **Texto en desplegables.** El contenido largo pasó a `<details>` bajo «Asesoría antes de
   comprar» y las preguntas frecuentes.
 
-> **Las fotos del banner son CC0.** Pixabay no se pudo usar: su API pide clave y la búsqueda
-> web rechaza los pedidos automatizados. Se tomaron de Openverse filtrando por CC0 —dominio
-> público equivalente, uso comercial libre y sin atribución obligatoria— y se revisó una por
-> una antes de elegirlas. Quedan servidas desde `public/banner/`, no enlazadas de un tercero,
-> y la procedencia de cada una está en `public/banner/creditos.json`. Para cambiar una: editar
-> su URL en `scripts/banner-fuentes.json` y correr `yarn banner:fetch`.
+> **Fotos del banner.** Las de panadería, equipos complementarios y vitrinas son de Pexels
+> (uso comercial libre, sin atribución obligatoria) y las eligió el cliente. La de gastronomía
+> es CC0. La procedencia y licencia de cada una queda en .
+>
+> **La de repuestos está sin licencia verificada:** se tomó del sitio de otra empresa
+> (odisaequipa.com.mx). Conviene reemplazarla por una de Pexels antes de publicar, o
+> confirmar que hay permiso de uso.
+
+Las fotos se sirven desde , no enlazadas de un tercero: se recortan a 2000×900
+buscando la zona de interés y se guardan en WebP. Para cambiar una, editar su URL en
+ y correr .
+
+> **Al reemplazar una foto hay que limpiar la caché de imágenes.** Next guarda las variantes
+> optimizadas en  indexadas por URL, y el nombre del archivo no cambia:
+> sin borrar esa carpeta se sigue viendo la foto anterior. En un despliegue limpio de Render
+> no aplica, pero en local sí.
 
 > **Los desplegables no esconden el contenido de Google.** Un `<details>` cerrado sigue
 > teniendo su texto en el HTML, así que se indexa igual. Es lo que permite cumplir a la vez
