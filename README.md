@@ -241,6 +241,20 @@ segundo:
   ocupa la mitad izquierda: en la foto de panadería el bol y el batidor estaban a la
   izquierda y quedaban tapados por el titular, así que se voltea para que la acción quede al
   aire.
+
+  **Los recortes no se eligen a ojo.** El banner recorta dos veces: primero el script a
+  2000×900, y después el navegador con `object-cover` dentro de una franja de 1425×534 que
+  además tiene un zoom del 5 %. Elegir mirando la foto entera lleva a equivocarse —así quedó
+  la de la cafetería con la taza cortada por abajo—. Hay que simular las dos etapas y mirar
+  el resultado: la de café terminó en `{left: 0.10, top: 0.20, width: 0.88}`, que es lo que
+  deja la taza completa sobre la bandeja y a la derecha del titular.
+
+> **En móvil la foto es textura, no foto.** La franja mide 390×766 —los beneficios se apilan
+> y estiran el bloque—, así que en una imagen de 2000×900 se ve apenas el 10 % central del
+> ancho: cualquier motivo queda irreconocible. `object-position` no lo arregla, se probó y no
+> cambia nada. Se arregla limitando la foto al área de la diapositiva en móvil y dejando la
+> franja de beneficios con fondo sólido; el costo es que en escritorio la caja se vuelve más
+> baja y hay que rehacer los tres recortes. Queda a decisión de si vale.
 - **Sin buscador en el banner.** El buscador vive en el encabezado, presente en todo el
   sitio.
 - **Carruseles en vez de grilla de categorías.** «Productos destacados» y «Últimas

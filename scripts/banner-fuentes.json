@@ -21,7 +21,12 @@
     "titulo": "Máquina de café profesional",
     "licencia": "Pexels",
     "origen": "https://www.pexels.com/photo/6612589/",
-    "url": "https://images.pexels.com/photos/6612589/pexels-photo-6612589.jpeg"
+    "url": "https://images.pexels.com/photos/6612589/pexels-photo-6612589.jpeg",
+    "recorte": {
+      "left": 0.1,
+      "top": 0.2,
+      "width": 0.88
+    }
   },
   "vitrinas": {
     "titulo": "Vitrina de pastelería",
