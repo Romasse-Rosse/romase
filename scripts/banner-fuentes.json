@@ -1,0 +1,32 @@
+{
+  "panaderia": {
+    "titulo": "Loaves artisanal bread baguettes Venice",
+    "licencia": "CC0",
+    "origen": "https://www.rawpixel.com/image/3282923/free-photo-image-artisanal-bread-baguettes",
+    "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvdXB3azYxNjYwMjk5LXdpa2ltZWRpYS1pbWFnZS1rb3diMW16Zy5qcGc.jpg"
+  },
+  "gastronomia": {
+    "titulo": "Chef Cook",
+    "licencia": "CC0",
+    "origen": "https://stocksnap.io/photo/chef-cook-J2W0D3CO2L",
+    "url": "https://cdn.stocksnap.io/img-thumbs/960w/J2W0D3CO2L.jpg"
+  },
+  "complementarios": {
+    "titulo": "Cafe Bar",
+    "licencia": "CC0",
+    "origen": "https://stocksnap.io/photo/cafe-bar-FJXYCIFWNK",
+    "url": "https://cdn.stocksnap.io/img-thumbs/960w/FJXYCIFWNK.jpg"
+  },
+  "vitrinas": {
+    "titulo": "Prepared food display in an Italian deli in Ro",
+    "licencia": "CC0",
+    "origen": "https://commons.wikimedia.org/w/index.php?curid=145489190",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/f/f1/Prepared_food_display_in_an_Italian_deli_in_Rome.jpg"
+  },
+  "repuestos": {
+    "titulo": "Chain Machine",
+    "licencia": "CC0",
+    "origen": "https://stocksnap.io/photo/chain-machine-W6DBNYP27J",
+    "url": "https://cdn.stocksnap.io/img-thumbs/960w/W6DBNYP27J.jpg"
+  }
+}

@@ -1,15 +1,11 @@
 import Link from 'next/link'
 import { BadgeCheck, Headset, ShieldCheck, Truck } from 'lucide-react'
-import {
-  getCarouselProducts,
-  getCategoryTree,
-  getHeroProducts,
-  queryProducts,
-} from '@/lib/catalog'
+import { getCarouselProducts, getCategoryTree, queryProducts } from '@/lib/catalog'
 import { site, trustPoints, whatsappUrl } from '@/lib/site'
-import { stripHtml, titleCase, truncate } from '@/lib/format'
+import { titleCase } from '@/lib/format'
 import { Container, SectionHeading, TextLink } from '@/components/ui'
 import { HeroCarousel, type HeroSlide } from '@/components/hero-carousel'
+import { bannerSlides } from '@/content/banner'
 import { ProductCarousel } from '@/components/product-carousel'
 import { Accordion } from '@/components/accordion'
 import { Faqs, homeFaqs } from '@/components/faqs'
@@ -22,24 +18,29 @@ const trustIcons = [BadgeCheck, Truck, Headset, ShieldCheck]
 export default async function HomePage() {
   const categories = await getCategoryTree()
 
-  const [hero, destacados, novedades] = await Promise.all([
-    getHeroProducts(4),
+  const [destacados, novedades] = await Promise.all([
     getCarouselProducts(12),
     queryProducts({ sort: 'novedades', perPage: 12 }),
   ])
 
-  // La categoría más específica de cada producto, para el rótulo del banner.
-  const porId = new Map(categories.flatMap((c) => [[c.id, c.name] as const]))
-  const slides: HeroSlide[] = hero.map((p) => ({
-    id: p.id,
-    slug: p.slug,
-    name: titleCase(p.name),
-    category: p.categoryIds.map((id) => porId.get(id)).find(Boolean) ?? null,
-    price: p.price,
-    image: p.images[0]?.src ?? null,
-    sku: p.sku,
-    summary: truncate(stripHtml(p.shortDescription || p.description), 150),
-  }))
+  // El banner muestra las secciones del catálogo, con foto de ambiente. El
+  // nombre, el enlace y el conteo salen del catálogo; el texto, de
+  // content/banner.ts.
+  const porSlug = new Map(categories.map((c) => [c.slug, c]))
+  const slides: HeroSlide[] = bannerSlides.flatMap((s) => {
+    const categoria = porSlug.get(s.slug)
+    if (!categoria) return []
+    return [
+      {
+        slug: s.slug,
+        imagen: s.imagen,
+        categoria: titleCase(categoria.name),
+        titular: s.titular,
+        bajada: s.bajada,
+        productos: categoria.productCount,
+      },
+    ]
+  })
 
   return (
     <>

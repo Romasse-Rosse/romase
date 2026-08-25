@@ -3,32 +3,31 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, ShoppingBag } from 'lucide-react'
-import { formatPrice } from '@/lib/format'
-import { useCart } from '@/lib/cart'
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { Container } from './ui'
 
 export type HeroSlide = {
-  id: number
   slug: string
-  name: string
-  category: string | null
-  price: number
-  image: string | null
-  sku: string | null
-  summary: string
+  imagen: string
+  categoria: string
+  titular: string
+  bajada: string
+  productos: number
 }
 
-const INTERVALO = 5000
+const INTERVALO = 5500
 
 /**
- * Banner de portada con productos concretos, no categorías: es lo que se
- * acordó, para que se vea qué se vende y a qué precio desde el primer
- * segundo.
+ * Banner de portada: fotografía a todo el ancho, una sección del catálogo por
+ * diapositiva.
+ *
+ * Las diapositivas se cruzan por opacidad y la foto activa hace un zoom muy
+ * lento. Es lo que hace que se lea como carrusel de verdad y no como una
+ * imagen fija: en la referencia acordada el banner es una franja fotográfica,
+ * no un producto recortado sobre fondo blanco.
  */
 export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
-  const { add } = useCart()
   const [actual, setActual] = useState(0)
   const [pausado, setPausado] = useState(false)
 
@@ -37,145 +36,129 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
     [slides.length],
   )
 
-  // Avance automático. Se detiene al pasar el mouse o al enfocar con teclado,
-  // para no mover el contenido bajo el cursor de quien está leyendo.
   useEffect(() => {
     if (pausado || slides.length < 2) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const t = setTimeout(() => ir(actual + 1), INTERVALO)
     return () => clearTimeout(t)
   }, [actual, pausado, ir, slides.length])
 
   if (slides.length === 0) return null
-  const slide = slides[actual]
 
   const flecha =
-    'absolute top-1/2 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-ink-200 bg-white/95 text-ink-800 shadow-lift transition-colors hover:border-ink-950 hover:bg-ink-950 hover:text-white'
+    'absolute top-1/2 z-30 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-ink-950/30 text-white backdrop-blur-sm transition-colors hover:border-white hover:bg-white hover:text-ink-950 sm:flex'
 
   return (
     <section
       aria-roledescription="carrusel"
-      aria-label="Productos destacados"
-      className="relative border-b border-ink-200 bg-ink-50"
+      aria-label="Secciones del catálogo"
+      className="relative isolate overflow-hidden bg-ink-950"
       onMouseEnter={() => setPausado(true)}
       onMouseLeave={() => setPausado(false)}
       onFocusCapture={() => setPausado(true)}
       onBlurCapture={() => setPausado(false)}
     >
-      <Container>
-        <div className="grid items-center gap-8 py-12 lg:grid-cols-2 lg:gap-14 lg:py-16">
-          <div>
-            {slide.category && (
-              <p className="mb-4 text-[11px] font-medium tracking-[0.2em] text-brand-600 uppercase">
-                {slide.category}
-              </p>
+      {/* Las fotos se apilan y se cruzan por opacidad. */}
+      {slides.map((slide, i) => (
+        <div
+          key={slide.slug}
+          aria-hidden={i !== actual}
+          className={cn(
+            'absolute inset-0 transition-opacity duration-700 ease-out',
+            i === actual ? 'opacity-100' : 'opacity-0',
+          )}
+        >
+          <Image
+            src={`/banner/${slide.imagen}.webp`}
+            alt=""
+            fill
+            priority={i === 0}
+            sizes="100vw"
+            className={cn(
+              'object-cover transition-transform duration-[7000ms] ease-out motion-reduce:transform-none',
+              i === actual ? 'scale-105' : 'scale-100',
             )}
+          />
+        </div>
+      ))}
 
-            {/* El nombre del producto es el protagonista, con su nombre
-                técnico y no una descripción genérica del rubro. */}
-            <h2 className="text-[30px] leading-[1.1] font-medium text-ink-950 sm:text-[40px] lg:text-[46px]">
-              <Link href={`/productos/${slide.slug}`} className="hover:text-brand-700">
-                {slide.name}
-              </Link>
-            </h2>
+      {/* Velo para que el texto se lea sobre cualquier foto. */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-gradient-to-r from-ink-950/90 via-ink-950/70 to-ink-950/25"
+      />
 
-            {slide.summary && (
-              <p className="mt-5 max-w-lg leading-relaxed text-ink-600">{slide.summary}</p>
-            )}
-
-            <p className="mt-6 flex items-baseline gap-3">
-              <span className="text-3xl font-semibold text-ink-950">
-                {formatPrice(slide.price)}
-              </span>
-              <span className="text-sm text-ink-500">IVA incluido</span>
+      <Container className="relative z-20">
+        <div className="flex min-h-[26rem] flex-col justify-center py-16 sm:min-h-[30rem] lg:min-h-[34rem]">
+          <div className="max-w-xl">
+            <p className="mb-4 text-[11px] font-medium tracking-[0.2em] text-brand-400 uppercase">
+              {slides[actual].categoria} · {slides[actual].productos} productos
             </p>
 
-            <div className="mt-7 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() =>
-                  add({
-                    id: slide.id,
-                    slug: slide.slug,
-                    name: slide.name,
-                    price: slide.price,
-                    image: slide.image,
-                    sku: slide.sku,
-                  })
-                }
-                className="inline-flex h-13 items-center justify-center gap-2 rounded-sm bg-brand-500 px-7 text-[15px] font-medium text-white transition-colors hover:bg-brand-600"
-              >
-                <ShoppingBag aria-hidden="true" className="size-4.5" />
-                Agregar al carrito
-              </button>
+            <h2 className="text-[32px] leading-[1.08] font-medium text-white sm:text-[44px] lg:text-[52px]">
+              {slides[actual].titular}
+            </h2>
+
+            <p className="mt-5 text-lg leading-relaxed text-ink-200">{slides[actual].bajada}</p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href={`/productos/${slide.slug}`}
-                className="inline-flex h-13 items-center justify-center rounded-sm border border-ink-300 px-7 text-[15px] font-medium text-ink-900 transition-colors hover:border-ink-950 hover:bg-ink-950 hover:text-white"
+                href={`/categorias/${slides[actual].slug}`}
+                className="inline-flex h-13 items-center justify-center gap-2 rounded-sm bg-brand-500 px-8 text-[15px] font-medium text-white transition-colors hover:bg-brand-600"
               >
-                Ver detalle
+                Ver {slides[actual].categoria.toLowerCase()}
+                <ArrowRight className="size-4" />
+              </Link>
+              <Link
+                href="/productos"
+                className="inline-flex h-13 items-center justify-center rounded-sm border border-white/30 px-8 text-[15px] font-medium text-white transition-colors hover:bg-white hover:text-ink-950"
+              >
+                Todo el catálogo
               </Link>
             </div>
           </div>
 
-          <div className="relative">
-            <div className="relative aspect-4/3 overflow-hidden border border-ink-200 bg-white">
-              {slide.image && (
-                <Image
-                  key={slide.id}
-                  src={slide.image}
-                  alt={slide.name}
-                  fill
-                  priority={actual === 0}
-                  sizes="(min-width: 1024px) 45vw, 100vw"
-                  className="object-contain p-8"
+          {slides.length > 1 && (
+            <div className="mt-12 flex items-center gap-2.5" role="tablist" aria-label="Secciones">
+              {slides.map((s, i) => (
+                <button
+                  key={s.slug}
+                  type="button"
+                  role="tab"
+                  aria-selected={i === actual}
+                  aria-label={s.categoria}
+                  onClick={() => ir(i)}
+                  className={cn(
+                    'h-1 rounded-full transition-all',
+                    i === actual ? 'w-12 bg-brand-500' : 'w-6 bg-white/35 hover:bg-white/60',
+                  )}
                 />
-              )}
+              ))}
             </div>
-
-            {slides.length > 1 && (
-              <>
-                {/* Flechas sobre la imagen: así se lee como carrusel. */}
-                <button
-                  type="button"
-                  onClick={() => ir(actual - 1)}
-                  aria-label="Producto anterior"
-                  className={cn(flecha, 'left-3')}
-                >
-                  <ChevronLeft className="size-5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => ir(actual + 1)}
-                  aria-label="Producto siguiente"
-                  className={cn(flecha, 'right-3')}
-                >
-                  <ChevronRight className="size-5" />
-                </button>
-
-                <div
-                  className="mt-5 flex items-center justify-center gap-2"
-                  role="tablist"
-                  aria-label="Elegir producto"
-                >
-                  {slides.map((s, i) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={i === actual}
-                      aria-label={s.name}
-                      onClick={() => ir(i)}
-                      className={cn(
-                        'h-1.5 rounded-full transition-all',
-                        i === actual ? 'w-8 bg-brand-500' : 'w-1.5 bg-ink-300 hover:bg-ink-400',
-                      )}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          )}
         </div>
       </Container>
+
+      {slides.length > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={() => ir(actual - 1)}
+            aria-label="Sección anterior"
+            className={cn(flecha, 'left-4')}
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => ir(actual + 1)}
+            aria-label="Sección siguiente"
+            className={cn(flecha, 'right-4')}
+          >
+            <ChevronRight className="size-5" />
+          </button>
+        </>
+      )}
     </section>
   )
 }

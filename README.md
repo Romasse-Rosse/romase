@@ -27,6 +27,7 @@ y para que el build de Render nunca dependa de un servicio externo.
 | `yarn catalog:fetch` | Vuelve a bajar el catálogo desde romase.cl |
 | `yarn catalog:seed` | Carga el catálogo en Supabase |
 | `yarn favicons` | Regenera los favicons desde el logo |
+| `yarn banner:fetch` | Vuelve a bajar las fotos del banner |
 
 ---
 
@@ -179,10 +180,14 @@ Variables: `RESEND_API_KEY`, `RESEND_FROM`, `LEADS_EMAIL` (ver `.env.example`).
 La portada está armada para que se vea qué se vende y a qué precio desde el primer
 segundo:
 
-- **Banner con productos, no categorías.** Cuatro diapositivas, cada una con un equipo
-  concreto —su nombre técnico, no «equipos de panadería»—, precio y botón al carrito. El
-  selector elige el producto de mayor valor con buenas fotos de cada categoría raíz, así
-  varía solo si cambia el catálogo. Los marcados como `featured` en Supabase pasan primero.
+- **Banner fotográfico a todo el ancho.** Cinco diapositivas, una por sección del catálogo
+  —panadería, gastronomía, equipos complementarios, vitrinas y repuestos—, con foto de
+  ambiente, titular, conteo de productos y enlace a la categoría. Se cruzan por opacidad con
+  un zoom lento sobre la foto activa.
+
+  Antes el banner mostraba productos recortados sobre panel blanco y no se leía como
+  carrusel. El texto de cada diapositiva está en `src/content/banner.ts` y las fotos las baja
+  `yarn banner:fetch`.
 - **Sin buscador en el banner.** El buscador vive en el encabezado, presente en todo el
   sitio.
 - **Carruseles en vez de grilla de categorías.** «Productos destacados» y «Últimas
@@ -197,11 +202,12 @@ segundo:
 - **Texto en desplegables.** El contenido largo pasó a `<details>` bajo «Asesoría antes de
   comprar» y las preguntas frecuentes.
 
-> **El banner exige equipo de verdad.** Para entrar pide dos fotos, descripción y un precio
-> desde $200.000, así no aparece un accesorio como protagonista. Si una categoría no tiene
-> nada a la altura se saltea en vez de rellenar: Repuestos no tiene ni un artículo con dos
-> fotos y descripción, y el mejor candidato era un burlete de puerta. Para que Repuestos
-> aparezca en el banner hay que sumarle fotos y descripción a algún repuesto.
+> **Las fotos del banner son CC0.** Pixabay no se pudo usar: su API pide clave y la búsqueda
+> web rechaza los pedidos automatizados. Se tomaron de Openverse filtrando por CC0 —dominio
+> público equivalente, uso comercial libre y sin atribución obligatoria— y se revisó una por
+> una antes de elegirlas. Quedan servidas desde `public/banner/`, no enlazadas de un tercero,
+> y la procedencia de cada una está en `public/banner/creditos.json`. Para cambiar una: editar
+> su URL en `scripts/banner-fuentes.json` y correr `yarn banner:fetch`.
 
 > **Los desplegables no esconden el contenido de Google.** Un `<details>` cerrado sigue
 > teniendo su texto en el HTML, así que se indexa igual. Es lo que permite cumplir a la vez
