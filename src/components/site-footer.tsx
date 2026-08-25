@@ -1,10 +1,16 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { Clock, Mail, MapPin, Phone } from 'lucide-react'
+import { Clock, Facebook, Instagram, Mail, MapPin, Phone } from 'lucide-react'
+import type { ComponentType } from 'react'
 import { getCategoryTree } from '@/lib/catalog'
 import { site } from '@/lib/site'
 import { titleCase } from '@/lib/format'
 import { Container } from './ui'
+
+const socialIcons: Record<string, ComponentType<{ className?: string }>> = {
+  Instagram,
+  Facebook,
+}
 
 export async function SiteFooter() {
   const categories = await getCategoryTree()
@@ -22,12 +28,31 @@ export async function SiteFooter() {
               className="h-10 w-auto brightness-0 invert"
             />
             <p className="mt-4 text-sm leading-relaxed">{site.description}</p>
+
+            <ul className="mt-6 flex gap-2.5">
+              {site.social.map(({ name, url }) => {
+                const Icon = socialIcons[name]
+                return (
+                  <li key={name}>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${site.name} en ${name}`}
+                      className="flex size-10 items-center justify-center border border-ink-800 text-ink-300 transition-colors hover:border-brand-500 hover:bg-brand-500 hover:text-white"
+                    >
+                      <Icon aria-hidden="true" className="size-4.5" />
+                    </a>
+                  </li>
+                )
+              })}
+            </ul>
           </div>
 
           <div>
             <h2 className="mb-4 text-sm font-semibold text-white">Categorías</h2>
             <ul className="space-y-2 text-sm">
-              {categories.slice(0, 8).map((category) => (
+              {categories.map((category) => (
                 <li key={category.id}>
                   <Link href={`/categorias/${category.slug}`} className="hover:text-brand-400">
                     {titleCase(category.name)}

@@ -24,6 +24,11 @@ export const site = {
     { days: 'Lunes a viernes', time: '09:00 – 18:30' },
     { days: 'Sábado', time: '10:00 – 14:00' },
   ],
+
+  social: [
+    { name: 'Instagram', url: 'https://www.instagram.com/romasepuertomontt/' },
+    { name: 'Facebook', url: 'https://www.facebook.com/romase.puerto.montt/' },
+  ],
 } as const
 
 /** Abre WhatsApp con un mensaje ya escrito. */
