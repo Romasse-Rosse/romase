@@ -1,9 +1,10 @@
 'use server'
 
 import { createClient } from '@supabase/supabase-js'
-import { getCatalog } from '@/lib/catalog'
+import { loadCatalog } from '@/lib/catalog'
 import { sendOrderNotification, type OrderNotification } from '@/lib/email'
 import { titleCase } from '@/lib/format'
+import { site } from '@/lib/site'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -20,6 +21,7 @@ export type CheckoutState = {
 /** Datos del cliente, tal como los devuelve el formulario. */
 type Datos = {
   nombre: string
+  apellidos: string
   email: string
   telefono: string
   rut: string
@@ -29,6 +31,13 @@ type Datos = {
   direccion: string
   comuna: string
   region: string
+  /** Transportista elegido, cuando hay despacho. */
+  transportista: string
+  /** Dirección alternativa de envío, si se pidió una distinta. */
+  otraDireccion: boolean
+  envioDireccion: string
+  envioComuna: string
+  envioRegion: string
   notas: string
 }
 
@@ -36,15 +45,22 @@ function leerDatos(formData: FormData): Datos {
   const v = (k: string) => String(formData.get(k) ?? '').trim()
   return {
     nombre: v('nombre'),
+    apellidos: v('apellidos'),
     email: v('email'),
     telefono: v('telefono'),
     rut: v('rut'),
     documento: v('documento') === 'factura' ? 'factura' : 'boleta',
     razonSocial: v('razonSocial'),
-    entrega: v('entrega') === 'despacho' ? 'despacho' : 'retiro',
+    // El formulario trae 'despacho' por defecto.
+    entrega: v('entrega') === 'retiro' ? 'retiro' : 'despacho',
     direccion: v('direccion'),
     comuna: v('comuna'),
     region: v('region'),
+    transportista: v('transportista'),
+    otraDireccion: formData.get('otraDireccion') !== null,
+    envioDireccion: v('envioDireccion'),
+    envioComuna: v('envioComuna'),
+    envioRegion: v('envioRegion'),
     notas: v('notas'),
   }
 }
@@ -53,8 +69,14 @@ function validar(datos: Datos): Record<string, string> {
   const errores: Record<string, string> = {}
 
   if (datos.nombre.length < 2) errores.nombre = 'Escribe tu nombre.'
+  if (datos.apellidos.length < 2) errores.apellidos = 'Escribe tus apellidos.'
   if (!EMAIL_RE.test(datos.email)) errores.email = 'Revisa el correo electrónico.'
   if (datos.telefono.replace(/\D/g, '').length < 8) errores.telefono = 'Deja un teléfono de contacto.'
+
+  // La dirección se pide siempre, también para retiro: hace falta para
+  // emitir la boleta o la factura.
+  if (!datos.direccion) errores.direccion = 'Indica la dirección.'
+  if (!datos.comuna) errores.comuna = 'Indica la comuna o ciudad.'
 
   if (datos.documento === 'factura') {
     if (!datos.rut) errores.rut = 'Para factura necesitamos el RUT.'
@@ -62,8 +84,11 @@ function validar(datos: Datos): Record<string, string> {
   }
 
   if (datos.entrega === 'despacho') {
-    if (!datos.direccion) errores.direccion = 'Indica la dirección de despacho.'
-    if (!datos.comuna) errores.comuna = 'Indica la comuna.'
+    if (!datos.transportista) errores.transportista = 'Elige una empresa despachadora.'
+    if (datos.otraDireccion) {
+      if (!datos.envioDireccion) errores.envioDireccion = 'Indica la dirección de envío.'
+      if (!datos.envioComuna) errores.envioComuna = 'Indica la comuna de envío.'
+    }
   }
 
   return errores
@@ -102,7 +127,7 @@ export async function submitCheckout(
     return { status: 'error', message: 'Tu carrito está vacío.' }
   }
 
-  const { products } = await getCatalog()
+  const { products } = await loadCatalog()
   const porId = new Map(products.map((p) => [p.id, p]))
 
   const lineas = lineasCliente.flatMap((linea) => {
@@ -131,21 +156,33 @@ export async function submitCheckout(
   // El flete se cotiza aparte: no hay tarifas cargadas todavía.
   const shippingCost = 0
 
-  const direccion =
-    datos.entrega === 'despacho'
-      ? {
-          calle: datos.direccion,
-          comuna: datos.comuna,
-          region: datos.region || 'Los Lagos',
-          tipo: 'despacho',
-        }
-      : { tipo: 'retiro en local' }
+  const nombreCompleto = `${datos.nombre} ${datos.apellidos}`.trim()
+  const transportista = site.carriers.find((c) => c.id === datos.transportista)?.name
+
+  // Dirección de facturación, más la de envío cuando es distinta.
+  const direccion: Record<string, string | undefined> = {
+    tipo: datos.entrega === 'retiro' ? 'retiro en local' : 'despacho',
+    facturacion_calle: datos.direccion,
+    facturacion_comuna: datos.comuna,
+    facturacion_region: datos.region || site.contact.region,
+  }
+
+  if (datos.entrega === 'despacho') {
+    direccion.transportista = transportista
+    if (datos.otraDireccion) {
+      direccion.envio_calle = datos.envioDireccion
+      direccion.envio_comuna = datos.envioComuna
+      direccion.envio_region = datos.envioRegion || site.contact.region
+    }
+  }
 
   const notas = [
-    datos.documento === 'factura'
-      ? `Factura · razón social: ${datos.razonSocial}`
-      : 'Boleta',
-    datos.entrega === 'retiro' ? 'Retira en el local' : 'Despacho a coordinar',
+    datos.documento === 'factura' ? `Factura · razón social: ${datos.razonSocial}` : 'Boleta',
+    datos.entrega === 'retiro'
+      ? 'Retira en el local'
+      : `Despacho por ${transportista ?? 'transportista sin definir'} · flete a cotizar`,
+    datos.otraDireccion &&
+      `Enviar a: ${datos.envioDireccion}, ${datos.envioComuna}, ${datos.envioRegion}`,
     datos.notas && `Nota del cliente: ${datos.notas}`,
   ]
     .filter(Boolean)
@@ -156,7 +193,7 @@ export async function submitCheckout(
   const aviso: OrderNotification = {
     orderNumber: guardado.orderNumber,
     customer: {
-      name: datos.nombre,
+      name: nombreCompleto,
       email: datos.email,
       phone: datos.telefono,
       rut: datos.rut || undefined,
@@ -164,9 +201,12 @@ export async function submitCheckout(
     documento: datos.documento,
     razonSocial: datos.razonSocial || undefined,
     entrega: datos.entrega,
+    transportista,
     direccion:
       datos.entrega === 'despacho'
-        ? `${datos.direccion}, ${datos.comuna}${datos.region ? `, ${datos.region}` : ''}`
+        ? datos.otraDireccion
+          ? `${datos.envioDireccion}, ${datos.envioComuna}, ${datos.envioRegion || site.contact.region}`
+          : `${datos.direccion}, ${datos.comuna}, ${datos.region || site.contact.region}`
         : undefined,
     notas: datos.notas || undefined,
     lines: lineas.map((l) => ({
@@ -239,7 +279,7 @@ async function guardarPedido({
       .from('orders')
       .insert({
         status: 'pendiente',
-        customer_name: datos.nombre,
+        customer_name: `${datos.nombre} ${datos.apellidos}`.trim(),
         customer_email: datos.email,
         customer_phone: datos.telefono,
         customer_rut: datos.rut || null,

@@ -124,8 +124,11 @@ falta es cobrar en línea: ahí entra Webpay.
   carrito» en la ficha. WhatsApp bajó a acción secundaria.
 - **Panel lateral** — se abre solo al agregar algo, con cantidades y subtotal.
 - **`/carrito`** — línea por línea, cantidades, subtotal.
-- **`/checkout`** — cuatro pasos: datos, documento (boleta o factura, con RUT y razón social
-  cuando corresponde), entrega (retiro en el local o despacho, con dirección) y pago.
+- **`/checkout`** — sigue el flujo del sitio actual: detalles de facturación (nombre y
+  apellidos separados, dirección, comuna, región como selector con las 16 regiones,
+  teléfono y correo), documento (boleta o factura con RUT y razón social), entrega
+  (despacho con empresa despachadora —BLUExpress, Chilexpress o Cruz del Sur— o retiro en
+  el local), envío a una dirección distinta, y pago.
 
 Al confirmar, el pedido se guarda en `orders` y `order_items` y se avisa por correo, con la
 misma regla que el formulario de contacto: basta con que uno de los dos canales funcione. Si
@@ -135,10 +138,14 @@ fallan los dos, se ofrece enviar el pedido por WhatsApp con el detalle ya armado
 > unidades; el nombre y el precio se releen del catálogo en el servidor al confirmar. Un
 > `localStorage` manipulado cambia lo que se ve, no lo que se cobra.
 
+> **Los campos van controlados a propósito.** React 19 resetea los inputs no controlados
+> cuando termina una acción de formulario. Con inputs sin controlar, una validación fallida
+> del servidor le borraba al cliente todo lo que había escrito en el checkout.
+
 ### Lo que falta para cobrar en línea
 
 El esquema ya tiene las columnas `webpay_token`, `webpay_buy_order` y `webpay_response`, y el
-paso 4 del checkout tiene el bloque de Webpay marcado como «próximamente». La integración
+paso 3 del checkout tiene el bloque de Webpay marcado como «próximamente». La integración
 con Transbank Webpay Plus REST entra ahí: crear la transacción antes de confirmar, redirigir,
 y confirmar el pedido contra el resultado.
 

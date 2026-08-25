@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { AlertCircle, CheckCircle2, Send } from 'lucide-react'
 import { submitContact, type ContactState } from '@/app/contacto/actions'
@@ -10,6 +10,21 @@ const initialState: ContactState = { status: 'idle' }
 
 export function ContactForm({ productRef }: { productRef?: string }) {
   const [state, formAction] = useActionState(submitContact, initialState)
+
+  // Controlados a propósito: React 19 resetea los inputs no controlados al
+  // terminar una acción de formulario, y si la validación del servidor falla
+  // eso borraría la consulta que la persona ya había escrito.
+  const [valores, setValores] = useState({
+    name: '',
+    company: '',
+    email: '',
+    phone: '',
+    message: '',
+  })
+  const campo = (name: keyof typeof valores) => ({
+    value: valores[name],
+    onChange: (v: string) => setValores((prev) => ({ ...prev, [name]: v })),
+  })
 
   if (state.status === 'ok') {
     return (
@@ -44,14 +59,14 @@ export function ContactForm({ productRef }: { productRef?: string }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           label="Nombre"
-          name="name"
+          name="name" {...campo('name')}
           required
           autoComplete="name"
           error={state.fieldErrors?.name}
         />
         <Field
           label="Empresa"
-          name="company"
+          name="company" {...campo('company')}
           autoComplete="organization"
           hint="Opcional"
         />
@@ -60,7 +75,7 @@ export function ContactForm({ productRef }: { productRef?: string }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           label="Correo electrónico"
-          name="email"
+          name="email" {...campo('email')}
           type="email"
           required
           autoComplete="email"
@@ -68,7 +83,7 @@ export function ContactForm({ productRef }: { productRef?: string }) {
         />
         <Field
           label="Teléfono"
-          name="phone"
+          name="phone" {...campo('phone')}
           type="tel"
           autoComplete="tel"
           hint="Opcional"
@@ -77,7 +92,7 @@ export function ContactForm({ productRef }: { productRef?: string }) {
 
       <Field
         label="¿Qué necesitas?"
-        name="message"
+        name="message" {...campo('message')}
         as="textarea"
         required
         error={state.fieldErrors?.message}
@@ -111,6 +126,8 @@ function SubmitButton() {
 function Field({
   label,
   name,
+  value,
+  onChange,
   type = 'text',
   as = 'input',
   required,
@@ -120,6 +137,8 @@ function Field({
 }: {
   label: string
   name: string
+  value: string
+  onChange: (value: string) => void
   type?: string
   as?: 'input' | 'textarea'
   required?: boolean
@@ -146,6 +165,8 @@ function Field({
           id={name}
           name={name}
           rows={5}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
           required={required}
           aria-describedby={describedBy}
           aria-invalid={Boolean(error)}
@@ -156,6 +177,8 @@ function Field({
           id={name}
           name={name}
           type={type}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
           required={required}
           autoComplete={autoComplete}
           aria-describedby={describedBy}

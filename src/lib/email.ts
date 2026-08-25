@@ -78,6 +78,7 @@ export type OrderNotification = {
   documento: 'boleta' | 'factura'
   razonSocial?: string
   entrega: 'retiro' | 'despacho'
+  transportista?: string
   direccion?: string
   notas?: string
   lines: {
@@ -114,6 +115,7 @@ function buildOrderHtml(pedido: OrderNotification): string {
     ['RUT', pedido.customer.rut],
     ['Documento', pedido.documento === 'factura' ? `Factura — ${pedido.razonSocial}` : 'Boleta'],
     ['Entrega', pedido.entrega === 'retiro' ? 'Retira en el local' : 'Despacho'],
+    ['Transportista', pedido.transportista],
     ['Dirección', pedido.direccion],
   ]
 

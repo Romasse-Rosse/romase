@@ -202,7 +202,14 @@ async function loadFromSnapshot(): Promise<Catalog> {
   }
 }
 
-export const getCatalog = cache(async (): Promise<Catalog> => {
+/**
+ * Carga el catálogo sin memoización.
+ *
+ * cache() de React es un memo por render, y una acción de servidor no corre
+ * dentro de un render: llamar a getCatalog() desde ahí falla. Las acciones
+ * tienen que usar esta función.
+ */
+export async function loadCatalog(): Promise<Catalog> {
   let catalog: Catalog | null = null
 
   if (supabaseConfigured) {
@@ -228,7 +235,10 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
       categoryIds: categoriasDeProducto(p.sku, p.categoryIds),
     })),
   }
-})
+}
+
+/** Versión memoizada, para usar durante el render de las páginas. */
+export const getCatalog = cache(loadCatalog)
 
 // ============================================================
 // Consultas derivadas

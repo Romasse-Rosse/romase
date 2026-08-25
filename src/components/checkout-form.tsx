@@ -4,19 +4,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useActionState, useEffect, useState } from 'react'
 import { useFormStatus } from 'react-dom'
-import {
-  AlertCircle,
-  CheckCircle2,
-  CreditCard,
-  Lock,
-  ShoppingBag,
-  Store,
-  Truck,
-} from 'lucide-react'
+import { AlertCircle, CheckCircle2, Lock, ShoppingBag, Store, Truck } from 'lucide-react'
 import { submitCheckout, type CheckoutState } from '@/app/checkout/actions'
 import { useCart } from '@/lib/cart'
 import { formatPrice } from '@/lib/format'
-import { site, whatsappUrl } from '@/lib/site'
+import { regionesChile, site, whatsappUrl } from '@/lib/site'
 import { cn } from '@/lib/cn'
 import { WhatsAppIcon } from './site-header'
 
@@ -25,11 +17,36 @@ const estadoInicial: CheckoutState = { status: 'idle' }
 export function CheckoutForm() {
   const { items, subtotal, count, ready, clear } = useCart()
   const [state, formAction] = useActionState(submitCheckout, estadoInicial)
-  const [entrega, setEntrega] = useState<'retiro' | 'despacho'>('retiro')
-  const [documento, setDocumento] = useState<'boleta' | 'factura'>('boleta')
 
-  // Se guarda una copia para poder mostrar el resumen en la confirmación,
-  // después de haber vaciado el carrito.
+  // Los campos van controlados a propósito: React 19 resetea los inputs no
+  // controlados cuando termina una acción de formulario, y si la validación
+  // del servidor falla eso le borraría al cliente todo lo que escribió.
+  const [valores, setValores] = useState<Record<string, string>>({
+    nombre: '',
+    apellidos: '',
+    direccion: '',
+    comuna: '',
+    region: site.contact.region,
+    telefono: '',
+    email: '',
+    rut: '',
+    razonSocial: '',
+    envioDireccion: '',
+    envioComuna: '',
+    envioRegion: site.contact.region,
+    notas: '',
+  })
+  const campo = (name: string) => ({
+    value: valores[name] ?? '',
+    onChange: (v: string) => setValores((prev) => ({ ...prev, [name]: v })),
+  })
+
+  const [entrega, setEntrega] = useState<'retiro' | 'despacho'>('despacho')
+  const [documento, setDocumento] = useState<'boleta' | 'factura'>('boleta')
+  const [transportista, setTransportista] = useState<string>('')
+  const [otraDireccion, setOtraDireccion] = useState(false)
+
+  // Copia para poder mostrar el resumen en la confirmación, ya vaciado el carrito.
   const [confirmado, setConfirmado] = useState<{ total: number; unidades: number } | null>(null)
 
   useEffect(() => {
@@ -43,9 +60,7 @@ export function CheckoutForm() {
     return <Confirmacion state={state} resumen={confirmado} />
   }
 
-  if (!ready) {
-    return <div className="h-96 animate-pulse rounded-sm bg-ink-50" />
-  }
+  if (!ready) return <div className="h-96 animate-pulse rounded-sm bg-ink-50" />
 
   if (items.length === 0) {
     return (
@@ -67,7 +82,9 @@ export function CheckoutForm() {
 
   const detalleWhatsApp =
     `Hola ROMASE, quiero hacer este pedido:\n\n` +
-    items.map((i) => `· ${i.quantity} × ${i.name} — ${formatPrice(i.price * i.quantity)}`).join('\n') +
+    items
+      .map((i) => `· ${i.quantity} × ${i.name} — ${formatPrice(i.price * i.quantity)}`)
+      .join('\n') +
     `\n\nTotal: ${formatPrice(subtotal)}`
 
   return (
@@ -83,7 +100,7 @@ export function CheckoutForm() {
         <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" />
       </div>
 
-      <div className="space-y-10">
+      <div className="space-y-11">
         {state.status === 'error' && state.message && (
           <p
             role="alert"
@@ -110,44 +127,93 @@ export function CheckoutForm() {
           </p>
         )}
 
-        <Seccion numero={1} titulo="Tus datos">
+        {/* ------------------------------------------------------------
+            1 · Facturación
+        ------------------------------------------------------------ */}
+        <Seccion numero={1} titulo="Detalles de facturación">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Campo label="Nombre y apellido" name="nombre" required autoComplete="name" error={state.fieldErrors?.nombre} />
-            <Campo label="Teléfono" name="telefono" type="tel" required autoComplete="tel" error={state.fieldErrors?.telefono} />
-            <Campo label="Correo electrónico" name="email" type="email" required autoComplete="email" error={state.fieldErrors?.email} className="sm:col-span-2" />
-          </div>
-        </Seccion>
+            <Campo label="Nombre" name="nombre" {...campo('nombre')} required autoComplete="given-name" error={state.fieldErrors?.nombre} />
+            <Campo label="Apellidos" name="apellidos" {...campo('apellidos')} required autoComplete="family-name" error={state.fieldErrors?.apellidos} />
 
-        <Seccion numero={2} titulo="Documento">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Opcion
-              name="documento"
-              value="boleta"
-              checked={documento === 'boleta'}
-              onChange={() => setDocumento('boleta')}
-              titulo="Boleta"
-              detalle="Para compras personales."
+            <Campo
+              label="Dirección de la calle"
+              name="direccion" {...campo('direccion')}
+              required
+              autoComplete="street-address"
+              placeholder="Nombre de la calle y número de la casa"
+              error={state.fieldErrors?.direccion}
+              className="sm:col-span-2"
             />
-            <Opcion
-              name="documento"
-              value="factura"
-              checked={documento === 'factura'}
-              onChange={() => setDocumento('factura')}
-              titulo="Factura"
-              detalle="Para empresas con RUT."
-            />
-          </div>
 
-          {documento === 'factura' && (
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <Campo label="RUT" name="rut" required placeholder="76.543.210-K" error={state.fieldErrors?.rut} />
-              <Campo label="Razón social" name="razonSocial" required error={state.fieldErrors?.razonSocial} />
+            <Campo label="Comuna / Ciudad" name="comuna" {...campo('comuna')} required autoComplete="address-level2" error={state.fieldErrors?.comuna} />
+
+            <div>
+              <label htmlFor="region" className="mb-1.5 block text-sm font-medium text-ink-800">
+                Región <span className="text-brand-600">*</span>
+              </label>
+              <select
+                id="region"
+                name="region"
+                value={valores.region}
+                onChange={(e) => setValores((p) => ({ ...p, region: e.target.value }))}
+                className="h-11 w-full rounded-sm border border-ink-200 bg-white px-3 text-sm text-ink-900 transition-colors focus:border-ink-950 focus:outline-none"
+              >
+                {regionesChile.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
             </div>
-          )}
+
+            <Campo label="Teléfono" name="telefono" {...campo('telefono')} type="tel" required autoComplete="tel" error={state.fieldErrors?.telefono} />
+            <Campo label="Correo electrónico" name="email" {...campo('email')} type="email" required autoComplete="email" error={state.fieldErrors?.email} />
+          </div>
+
+          <div className="mt-6">
+            <p className="mb-3 text-sm font-medium text-ink-800">Documento</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Opcion
+                name="documento"
+                value="boleta"
+                checked={documento === 'boleta'}
+                onChange={() => setDocumento('boleta')}
+                titulo="Boleta"
+                detalle="Para compras personales."
+              />
+              <Opcion
+                name="documento"
+                value="factura"
+                checked={documento === 'factura'}
+                onChange={() => setDocumento('factura')}
+                titulo="Factura"
+                detalle="Para empresas con RUT."
+              />
+            </div>
+
+            {documento === 'factura' && (
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <Campo label="RUT" name="rut" {...campo('rut')} required placeholder="76.543.210-K" error={state.fieldErrors?.rut} />
+                <Campo label="Razón social" name="razonSocial" {...campo('razonSocial')} required error={state.fieldErrors?.razonSocial} />
+              </div>
+            )}
+          </div>
         </Seccion>
 
-        <Seccion numero={3} titulo="Entrega">
+        {/* ------------------------------------------------------------
+            2 · Entrega
+        ------------------------------------------------------------ */}
+        <Seccion numero={2} titulo="Entrega">
           <div className="grid gap-3 sm:grid-cols-2">
+            <Opcion
+              name="entrega"
+              value="despacho"
+              checked={entrega === 'despacho'}
+              onChange={() => setEntrega('despacho')}
+              icono={Truck}
+              titulo="Despacho"
+              detalle="A todo Chile, con la empresa de transporte que elijas."
+            />
             <Opcion
               name="entrega"
               value="retiro"
@@ -157,32 +223,95 @@ export function CheckoutForm() {
               titulo="Retiro en el local"
               detalle={`${site.contact.address}, ${site.contact.city}. Sin costo.`}
             />
-            <Opcion
-              name="entrega"
-              value="despacho"
-              checked={entrega === 'despacho'}
-              onChange={() => setEntrega('despacho')}
-              icono={Truck}
-              titulo="Despacho"
-              detalle="A todo Chile. El flete se cotiza según volumen y destino."
-            />
           </div>
 
           {entrega === 'despacho' && (
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <Campo label="Dirección" name="direccion" required autoComplete="street-address" error={state.fieldErrors?.direccion} className="sm:col-span-2" />
-              <Campo label="Comuna" name="comuna" required error={state.fieldErrors?.comuna} />
-              <Campo label="Región" name="region" defaultValue="Los Lagos" />
+            <div className="mt-6">
+              <p className="mb-1 text-sm font-medium text-ink-800">
+                Empresa despachadora <span className="text-brand-600">*</span>
+              </p>
+              <p className="mb-3 text-xs text-ink-500">Elige una.</p>
+
+              <div className="grid gap-2.5 sm:grid-cols-3">
+                {site.carriers.map((c) => (
+                  <Opcion
+                    key={c.id}
+                    name="transportista"
+                    value={c.id}
+                    checked={transportista === c.id}
+                    onChange={() => setTransportista(c.id)}
+                    titulo={c.name}
+                  />
+                ))}
+              </div>
+              {state.fieldErrors?.transportista && (
+                <p className="mt-2 text-xs text-red-600">{state.fieldErrors.transportista}</p>
+              )}
+
+              <p className="mt-4 border-l-2 border-brand-300 pl-4 text-sm leading-relaxed text-ink-600">
+                Para ofrecerte el mejor servicio, un asesor te contactará muy pronto para
+                coordinar el medio de transporte de tu preferencia. Revisa que tu número
+                telefónico esté bien escrito para evitar demoras. ¡Gracias por tu confianza!
+              </p>
+
+              <label className="mt-6 flex cursor-pointer items-center gap-2.5 text-sm text-ink-800">
+                <input
+                  type="checkbox"
+                  name="otraDireccion"
+                  checked={otraDireccion}
+                  onChange={(e) => setOtraDireccion(e.target.checked)}
+                  className="size-4 rounded-sm border-ink-300 accent-brand-500"
+                />
+                ¿Enviar a una dirección diferente?
+              </label>
+
+              {otraDireccion && (
+                <div className="mt-4 grid gap-4 border border-ink-200 bg-ink-50 p-5 sm:grid-cols-2">
+                  <Campo
+                    label="Dirección de envío"
+                    name="envioDireccion" {...campo('envioDireccion')}
+                    required
+                    placeholder="Nombre de la calle y número"
+                    error={state.fieldErrors?.envioDireccion}
+                    className="sm:col-span-2"
+                  />
+                  <Campo label="Comuna / Ciudad" name="envioComuna" {...campo('envioComuna')} required error={state.fieldErrors?.envioComuna} />
+                  <div>
+                    <label htmlFor="envioRegion" className="mb-1.5 block text-sm font-medium text-ink-800">
+                      Región
+                    </label>
+                    <select
+                      id="envioRegion"
+                      name="envioRegion"
+                      value={valores.envioRegion}
+                      onChange={(e) => setValores((p) => ({ ...p, envioRegion: e.target.value }))}
+                      className="h-11 w-full rounded-sm border border-ink-200 bg-white px-3 text-sm text-ink-900 focus:border-ink-950 focus:outline-none"
+                    >
+                      {regionesChile.map((r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </Seccion>
 
-        <Seccion numero={4} titulo="Pago">
-          {/* Bloque preparado para Webpay Plus. Hoy el pedido se confirma y se
-              coordina el pago; cuando entre la integración, este es el lugar. */}
+        {/* ------------------------------------------------------------
+            3 · Pago
+        ------------------------------------------------------------ */}
+        <Seccion numero={3} titulo="Pago">
           <div className="border border-ink-200">
             <div className="flex items-start gap-4 border-b border-ink-100 p-5">
-              <CreditCard aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-brand-500" />
+              <span
+                aria-hidden="true"
+                className="mt-0.5 flex h-6 shrink-0 items-center rounded-sm bg-[#4b2e83] px-2 text-[11px] font-bold tracking-tight text-white"
+              >
+                webpay
+              </span>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-medium text-ink-950">Webpay Plus</p>
@@ -191,8 +320,8 @@ export function CheckoutForm() {
                   </span>
                 </div>
                 <p className="mt-1.5 text-sm leading-relaxed text-ink-600">
-                  Tarjetas de crédito y débito a través de Transbank. La integración está en
-                  curso.
+                  Permite el pago con tarjetas de crédito, débito y prepago a través de
+                  Transbank. La integración está en curso.
                 </p>
               </div>
             </div>
@@ -202,14 +331,14 @@ export function CheckoutForm() {
               <div>
                 <p className="font-medium text-ink-950">Coordinamos el pago contigo</p>
                 <p className="mt-1.5 text-sm leading-relaxed text-ink-600">
-                  Al confirmar, tu pedido queda reservado y te contactamos el mismo día hábil
+                  Al realizar el pedido queda reservado y te contactamos el mismo día hábil
                   para cerrar el pago —transferencia o tarjeta en el local— y la entrega.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="mt-5">
+          <div className="mt-6">
             <label htmlFor="notas" className="mb-1.5 block text-sm font-medium text-ink-800">
               Notas del pedido <span className="font-normal text-ink-500">(opcional)</span>
             </label>
@@ -217,20 +346,30 @@ export function CheckoutForm() {
               id="notas"
               name="notas"
               rows={3}
-              placeholder="Horario de entrega, referencias de la dirección, dudas sobre los equipos…"
+              value={valores.notas}
+              onChange={(e) => setValores((p) => ({ ...p, notas: e.target.value }))}
+              placeholder="Notas sobre tu pedido, por ejemplo, indicaciones especiales para la entrega."
               className="w-full rounded-sm border border-ink-200 bg-white px-3.5 py-2.5 text-sm leading-relaxed text-ink-900 transition-colors placeholder:text-ink-400 focus:border-ink-950 focus:outline-none"
             />
           </div>
         </Seccion>
       </div>
 
+      {/* ------------------------------------------------------------
+          Resumen
+      ------------------------------------------------------------ */}
       <aside className="lg:sticky lg:top-40 lg:self-start">
         <div className="border border-ink-200 p-6">
           <h2 className="text-base font-medium text-ink-950">Tu pedido</h2>
 
-          <ul className="mt-5 space-y-4 border-b border-ink-100 pb-5">
+          <div className="mt-5 flex justify-between border-b-2 border-ink-950 pb-2 text-xs font-medium tracking-wide text-ink-500 uppercase">
+            <span>Producto</span>
+            <span>Subtotal</span>
+          </div>
+
+          <ul className="divide-y divide-ink-100">
             {items.map((item) => (
-              <li key={item.id} className="flex gap-3">
+              <li key={item.id} className="flex gap-3 py-4">
                 <span className="relative size-14 shrink-0 border border-ink-200 bg-white">
                   {item.image && (
                     <Image src={item.image} alt="" fill sizes="56px" className="object-contain p-1" />
@@ -238,9 +377,7 @@ export function CheckoutForm() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[13px] leading-snug text-ink-900">{item.name}</span>
-                  <span className="text-xs text-ink-500">
-                    {item.quantity} × {formatPrice(item.price)}
-                  </span>
+                  <span className="text-xs text-ink-500">× {item.quantity}</span>
                 </span>
                 <span className="shrink-0 text-[13px] font-medium text-ink-950">
                   {formatPrice(item.price * item.quantity)}
@@ -249,30 +386,43 @@ export function CheckoutForm() {
             ))}
           </ul>
 
-          <dl className="mt-5 space-y-3 text-sm">
+          <dl className="space-y-3 border-t border-ink-200 pt-4 text-sm">
             <div className="flex justify-between">
               <dt className="text-ink-600">Subtotal</dt>
               <dd className="font-medium text-ink-950">{formatPrice(subtotal)}</dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-ink-600">Despacho</dt>
-              <dd className="text-ink-500">
-                {entrega === 'retiro' ? 'Retiro sin costo' : 'A cotizar'}
+            <div className="flex justify-between gap-6">
+              <dt className="text-ink-600">Envío</dt>
+              <dd className="text-right text-ink-500">
+                {entrega === 'retiro'
+                  ? 'Retiro sin costo'
+                  : transportista
+                    ? `${site.carriers.find((c) => c.id === transportista)?.name} · a cotizar`
+                    : 'Elige la empresa despachadora'}
               </dd>
             </div>
           </dl>
 
-          <div className="mt-5 flex items-baseline justify-between border-t border-ink-200 pt-5">
+          <div className="mt-4 flex items-baseline justify-between border-t border-ink-200 pt-4">
             <span className="font-medium text-ink-950">Total</span>
             <span className="text-2xl font-semibold text-ink-950">{formatPrice(subtotal)}</span>
           </div>
-          <p className="mt-1 text-xs text-ink-500">IVA incluido</p>
+          <p className="mt-1 text-xs text-ink-500">IVA incluido. El flete se suma al cotizarlo.</p>
 
-          <BotonConfirmar />
+          <BotonPedido />
+
+          <p className="mt-4 text-xs leading-relaxed text-ink-500">
+            Tus datos personales se usan para procesar tu pedido y mejorar tu experiencia en
+            esta web, según se describe en nuestra{' '}
+            <Link href="/politica-de-privacidad" className="text-brand-700 underline">
+              política de privacidad
+            </Link>
+            .
+          </p>
 
           <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink-500">
             <Lock aria-hidden="true" className="size-3.5" />
-            Tus datos solo se usan para procesar el pedido.
+            Conexión segura
           </p>
 
           <a
@@ -290,16 +440,16 @@ export function CheckoutForm() {
   )
 }
 
-function BotonConfirmar() {
+function BotonPedido() {
   const { pending } = useFormStatus()
 
   return (
     <button
       type="submit"
       disabled={pending}
-      className="mt-6 flex h-13 w-full items-center justify-center gap-2 rounded-sm bg-brand-500 text-[15px] font-medium text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+      className="mt-6 flex h-13 w-full items-center justify-center rounded-sm bg-brand-500 text-[15px] font-medium tracking-wide text-white uppercase transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {pending ? 'Confirmando…' : 'Confirmar pedido'}
+      {pending ? 'Procesando…' : 'Realizar el pedido'}
     </button>
   )
 }
@@ -314,9 +464,7 @@ function Confirmacion({
   return (
     <div className="mx-auto max-w-xl py-8 text-center">
       <CheckCircle2 aria-hidden="true" className="mx-auto size-12 text-emerald-600" />
-      <h1 className="mt-5 text-3xl font-medium tracking-tight text-ink-950">
-        ¡Pedido recibido!
-      </h1>
+      <h1 className="mt-5 text-3xl font-medium tracking-tight text-ink-950">¡Pedido recibido!</h1>
 
       {state.orderNumber && (
         <p className="mt-3 text-ink-600">
@@ -340,8 +488,8 @@ function Confirmacion({
       </dl>
 
       <p className="mx-auto mt-8 max-w-md leading-relaxed text-ink-600">
-        Te enviamos una copia a tu correo. Te contactamos el mismo día hábil para coordinar el
-        pago y la entrega. Si lo necesitas antes, escríbenos por WhatsApp.
+        Te enviamos una copia a tu correo. Un asesor te contacta el mismo día hábil para
+        coordinar el transporte, el pago y la entrega.
       </p>
 
       <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -382,7 +530,7 @@ function Seccion({
 }) {
   return (
     <section>
-      <h2 className="mb-5 flex items-center gap-3 text-base font-medium text-ink-950">
+      <h2 className="mb-5 flex items-center gap-3 border-b border-ink-200 pb-3 text-lg font-medium text-ink-950">
         <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-ink-950 text-xs font-semibold text-white">
           {numero}
         </span>
@@ -407,7 +555,7 @@ function Opcion({
   checked: boolean
   onChange: () => void
   titulo: string
-  detalle: string
+  detalle?: string
   icono?: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>
 }) {
   return (
@@ -430,7 +578,9 @@ function Opcion({
           {Icono && <Icono aria-hidden className="size-4 text-brand-500" />}
           {titulo}
         </span>
-        <span className="mt-1 block text-xs leading-relaxed text-ink-600">{detalle}</span>
+        {detalle && (
+          <span className="mt-1 block text-xs leading-relaxed text-ink-600">{detalle}</span>
+        )}
       </span>
     </label>
   )
@@ -439,21 +589,23 @@ function Opcion({
 function Campo({
   label,
   name,
+  value,
+  onChange,
   type = 'text',
   required,
   autoComplete,
   placeholder,
-  defaultValue,
   error,
   className,
 }: {
   label: string
   name: string
+  value: string
+  onChange: (value: string) => void
   type?: string
   required?: boolean
   autoComplete?: string
   placeholder?: string
-  defaultValue?: string
   error?: string
   className?: string
 }) {
@@ -467,10 +619,11 @@ function Campo({
         id={name}
         name={name}
         type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
         required={required}
         autoComplete={autoComplete}
         placeholder={placeholder}
-        defaultValue={defaultValue}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${name}-error` : undefined}
         className={cn(
