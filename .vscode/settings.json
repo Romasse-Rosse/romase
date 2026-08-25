@@ -1,0 +1,40 @@
+{
+  // ============================================================
+  // El proyecto tiene ~18.000 archivos, pero solo 64 son código propio.
+  // El resto es generado: node_modules (14.973) y .next (2.747).
+  //
+  // VS Code ya excluye node_modules del vigilante por defecto, pero .next
+  // no, y es la peor de las dos: cambia entera en cada build, así que el
+  // vigilante recibe miles de eventos seguidos y se come CPU y memoria.
+  // ============================================================
+  "files.watcherExclude": {
+    "**/.next/**": true,
+    "**/node_modules/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true
+  },
+
+  // Que Ctrl+Shift+F no recorra lo generado: además de ser más rápido,
+  // evita resultados dentro de dependencias o de código compilado.
+  "search.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/yarn.lock": true
+  },
+
+  // Fuera del explorador. Se pueden volver a mostrar poniendo esto en false.
+  "files.exclude": {
+    "**/.next": true,
+    "**/node_modules": true
+  },
+
+  // El servidor de TypeScript tampoco necesita vigilar lo generado.
+  "typescript.tsserver.watchOptions": {
+    "excludeDirectories": ["**/node_modules", "**/.next"]
+  },
+
+  // Coherente con el resto del proyecto: comillas simples y sin punto y coma,
+  // como está escrito el código.
+  "editor.formatOnSave": false,
+  "files.eol": "\n"
+}
