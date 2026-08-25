@@ -472,7 +472,13 @@ export const getFeaturedProducts = cache(async (limit = 8): Promise<Product[]> =
  * panadería»—, así que se elige el equipo de mayor valor con buenas fotos de
  * cada categoría raíz. Sale variado y se adapta solo si cambia el catálogo.
  * Los marcados como featured en Supabase pasan primero.
+ *
+ * Se exige equipo de verdad —precio, dos fotos y descripción—, no un
+ * accesorio: el banner es lo primero que se ve.
  */
+/** Piso de precio para el banner: separa maquinaria de accesorios. */
+const PRECIO_MINIMO_BANNER = 200_000
+
 export const getHeroProducts = cache(async (limit = 4): Promise<Product[]> => {
   const { products } = await getCatalog()
   const raices = await getCategoryTree()
@@ -489,10 +495,15 @@ export const getHeroProducts = cache(async (limit = 4): Promise<Product[]> => {
           !yaEstan.has(p.id) &&
           p.inStock &&
           p.images.length >= 2 &&
+          p.price >= PRECIO_MINIMO_BANNER &&
+          stripHtml(p.description).length >= 150 &&
           p.categoryIds.some((id) => rama.has(id)),
       )
       .sort((a, b) => b.price - a.price)[0]
 
+    // Si la categoría no tiene nada a la altura se saltea en vez de forzar un
+    // relleno: Repuestos, por ejemplo, no tiene ningún artículo con dos fotos
+    // y descripción, y el mejor candidato era un burlete de puerta.
     if (mejor) {
       elegidos.push(mejor)
       yaEstan.add(mejor.id)

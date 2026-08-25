@@ -20,7 +20,7 @@ export type HeroSlide = {
   summary: string
 }
 
-const INTERVALO = 6000
+const INTERVALO = 5000
 
 /**
  * Banner de portada con productos concretos, no categorías: es lo que se
@@ -47,6 +47,9 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
 
   if (slides.length === 0) return null
   const slide = slides[actual]
+
+  const flecha =
+    'absolute top-1/2 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-ink-200 bg-white/95 text-ink-800 shadow-lift transition-colors hover:border-ink-950 hover:bg-ink-950 hover:text-white'
 
   return (
     <section
@@ -129,8 +132,30 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
             </div>
 
             {slides.length > 1 && (
-              <div className="mt-4 flex items-center justify-between">
-                <div className="flex gap-2" role="tablist" aria-label="Elegir producto">
+              <>
+                {/* Flechas sobre la imagen: así se lee como carrusel. */}
+                <button
+                  type="button"
+                  onClick={() => ir(actual - 1)}
+                  aria-label="Producto anterior"
+                  className={cn(flecha, 'left-3')}
+                >
+                  <ChevronLeft className="size-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => ir(actual + 1)}
+                  aria-label="Producto siguiente"
+                  className={cn(flecha, 'right-3')}
+                >
+                  <ChevronRight className="size-5" />
+                </button>
+
+                <div
+                  className="mt-5 flex items-center justify-center gap-2"
+                  role="tablist"
+                  aria-label="Elegir producto"
+                >
                   {slides.map((s, i) => (
                     <button
                       key={s.id}
@@ -140,32 +165,13 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                       aria-label={s.name}
                       onClick={() => ir(i)}
                       className={cn(
-                        'h-1 rounded-full transition-all',
-                        i === actual ? 'w-8 bg-brand-500' : 'w-4 bg-ink-300 hover:bg-ink-400',
+                        'h-1.5 rounded-full transition-all',
+                        i === actual ? 'w-8 bg-brand-500' : 'w-1.5 bg-ink-300 hover:bg-ink-400',
                       )}
                     />
                   ))}
                 </div>
-
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => ir(actual - 1)}
-                    aria-label="Producto anterior"
-                    className="flex size-9 items-center justify-center rounded-sm border border-ink-300 text-ink-700 transition-colors hover:border-ink-950 hover:bg-ink-950 hover:text-white"
-                  >
-                    <ChevronLeft className="size-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => ir(actual + 1)}
-                    aria-label="Producto siguiente"
-                    className="flex size-9 items-center justify-center rounded-sm border border-ink-300 text-ink-700 transition-colors hover:border-ink-950 hover:bg-ink-950 hover:text-white"
-                  >
-                    <ChevronRight className="size-4" />
-                  </button>
-                </div>
-              </div>
+              </>
             )}
           </div>
         </div>

@@ -61,7 +61,9 @@ export function truncate(text: string, max: number): string {
 /** Siglas y unidades que deben quedar en mayúscula aunque el resto no. */
 const SIGLAS = new Set([
   'INOX', 'PVC', 'LED', 'GN', 'RPM', 'AC', 'DC', 'HP', 'CV',
-  'KG', 'GR', 'LT', 'ML', 'CC', 'CM', 'MM', 'MT', 'W', 'V', 'A', 'HZ',
+  'KG', 'GR', 'LT', 'ML', 'CC', 'CM', 'MM', 'MT', 'W', 'V', 'HZ',
+  // 'A' de amperes queda fuera a propósito: choca con la preposición
+  // ('freidora a gas' se convertía en 'freidora A gas').
   'ITA', // marca de depósitos gastronómicos, se escribe en mayúsculas
 ])
 
@@ -86,8 +88,15 @@ const capitalizar = (palabra: string) =>
 export function titleCase(text: string): string {
   if (!text) return ''
   const limpio = decodeEntities(text)
-  // Si ya viene con mayúsculas y minúsculas mezcladas, se respeta tal cual.
-  if (limpio !== limpio.toUpperCase()) return limpio
+
+  // Hay nombres que gritan pero traen alguna palabra en minúscula
+  // ('BURLETE PARA HORNO TURBO A GAS PRP-8000 Ventus'), así que no alcanza con
+  // comparar contra toUpperCase(): se mide la proporción de mayúsculas.
+  const letras = limpio.replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ]/g, '')
+  if (!letras) return limpio
+  const proporcionMayusculas =
+    [...letras].filter((c) => c === c.toUpperCase()).length / letras.length
+  if (proporcionMayusculas < 0.7) return limpio
 
   const resultado = limpio
     .toLowerCase()
@@ -105,7 +114,9 @@ export function titleCase(text: string): string {
         return partes.map(capitalizar).join('-')
       }
       // Medidas y códigos de modelo: "1/2", "R-134A", "GN1/1".
-      if (/\d/.test(token)) return token.toUpperCase()
+      // La x que separa medidas pasa al signo de multiplicar: es lo correcto
+      // y además iguala a las que ya venían escritas con ×.
+      if (/\d/.test(token)) return token.toUpperCase().replace(/(\d)X(?=\d)/g, '$1×')
       return token
     })
     .join('')

@@ -186,12 +186,22 @@ segundo:
 - **Sin buscador en el banner.** El buscador vive en el encabezado, presente en todo el
   sitio.
 - **Carruseles en vez de grilla de categorías.** «Productos destacados» y «Últimas
-  incorporaciones», 12 productos cada uno, con nombre, precio y botón al carrito.
+  incorporaciones», 12 productos cada uno, con nombre, precio y botón al carrito. Avanzan
+  solos cada 5 s, vuelven al principio al llegar al final, y llevan las flechas circulares
+  sobre la pista más viñetas por página —igual que el carrusel de groner.cl, que usa Swiper
+  con autoplay de 5 s, bucle infinito y flechas—. Se pausan al pasar el mouse, al enfocar con
+  teclado, al tocar la pantalla y si el sistema pide menos movimiento.
 - **Menú solo por categorías.** Se quitó el enlace genérico «Todos los productos»: la
   navegación va por las nueve categorías. `/productos` sigue existiendo con filtros y se
   llega desde el pie y desde cada categoría.
 - **Texto en desplegables.** El contenido largo pasó a `<details>` bajo «Asesoría antes de
   comprar» y las preguntas frecuentes.
+
+> **El banner exige equipo de verdad.** Para entrar pide dos fotos, descripción y un precio
+> desde $200.000, así no aparece un accesorio como protagonista. Si una categoría no tiene
+> nada a la altura se saltea en vez de rellenar: Repuestos no tiene ni un artículo con dos
+> fotos y descripción, y el mejor candidato era un burlete de puerta. Para que Repuestos
+> aparezca en el banner hay que sumarle fotos y descripción a algún repuesto.
 
 > **Los desplegables no esconden el contenido de Google.** Un `<details>` cerrado sigue
 > teniendo su texto en el HTML, así que se indexa igual. Es lo que permite cumplir a la vez

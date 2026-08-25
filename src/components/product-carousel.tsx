@@ -1,55 +1,82 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Product } from '@/lib/catalog'
 import { ProductCard } from './product-card'
 import { cn } from '@/lib/cn'
 
+const AUTOPLAY = 5000
+
 /**
- * Carrusel horizontal de productos.
+ * Carrusel de productos.
  *
- * Usa el desplazamiento nativo con anclaje, así funciona con gesto táctil,
- * con rueda y con teclado sin reimplementar nada. Las flechas mueven de a una
- * pantalla y se desactivan en los extremos.
+ * Avanza solo, vuelve al principio al llegar al final y lleva las flechas
+ * sobre la pista, para que se lea como carrusel y no como una grilla que se
+ * desborda.
+ *
+ * El desplazamiento es el nativo con anclaje: así el gesto táctil, la rueda y
+ * el teclado funcionan sin reimplementarlos, y el avance automático es un
+ * scrollTo sobre la misma pista.
  */
 export function ProductCarousel({ products }: { products: Product[] }) {
   const pista = useRef<HTMLUListElement>(null)
-  const [alInicio, setAlInicio] = useState(true)
-  const [alFinal, setAlFinal] = useState(false)
+  const [pagina, setPagina] = useState(0)
+  const [paginas, setPaginas] = useState(1)
+  const [pausado, setPausado] = useState(false)
 
-  const revisarBordes = () => {
+  const medir = useCallback(() => {
     const el = pista.current
     if (!el) return
-    setAlInicio(el.scrollLeft <= 4)
-    setAlFinal(el.scrollLeft + el.clientWidth >= el.scrollWidth - 4)
-  }
+    const total = Math.max(1, Math.round(el.scrollWidth / el.clientWidth))
+    setPaginas(total)
+    setPagina(Math.round(el.scrollLeft / el.clientWidth))
+  }, [])
 
   useEffect(() => {
-    revisarBordes()
+    medir()
     const el = pista.current
     if (!el) return
-    el.addEventListener('scroll', revisarBordes, { passive: true })
-    window.addEventListener('resize', revisarBordes)
+    el.addEventListener('scroll', medir, { passive: true })
+    window.addEventListener('resize', medir)
     return () => {
-      el.removeEventListener('scroll', revisarBordes)
-      window.removeEventListener('resize', revisarBordes)
+      el.removeEventListener('scroll', medir)
+      window.removeEventListener('resize', medir)
     }
-  }, [products.length])
+  }, [medir, products.length])
 
-  const mover = (direccion: 1 | -1) => {
+  const irA = useCallback((indice: number) => {
     const el = pista.current
     if (!el) return
-    el.scrollBy({ left: direccion * el.clientWidth * 0.9, behavior: 'smooth' })
-  }
+    const total = Math.max(1, Math.round(el.scrollWidth / el.clientWidth))
+    // Vuelve al principio en vez de frenarse: el recorrido no tiene final.
+    const destino = ((indice % total) + total) % total
+    el.scrollTo({ left: destino * el.clientWidth, behavior: 'smooth' })
+  }, [])
+
+  // Avance automático, como el del sitio de referencia. Se detiene al pasar
+  // el mouse, al enfocar con teclado y si el sistema pide menos movimiento.
+  useEffect(() => {
+    if (pausado || paginas < 2) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const t = setTimeout(() => irA(pagina + 1), AUTOPLAY)
+    return () => clearTimeout(t)
+  }, [pagina, paginas, pausado, irA])
 
   if (products.length === 0) return null
 
   const flecha =
-    'flex size-10 items-center justify-center rounded-sm border border-ink-300 text-ink-700 transition-colors hover:border-ink-950 hover:bg-ink-950 hover:text-white disabled:pointer-events-none disabled:opacity-30'
+    'absolute top-[38%] z-20 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-800 shadow-lift transition-colors hover:border-ink-950 hover:bg-ink-950 hover:text-white sm:flex'
 
   return (
-    <div className="relative">
+    <div
+      className="relative"
+      onMouseEnter={() => setPausado(true)}
+      onMouseLeave={() => setPausado(false)}
+      onFocusCapture={() => setPausado(true)}
+      onBlurCapture={() => setPausado(false)}
+      onTouchStart={() => setPausado(true)}
+    >
       <ul
         ref={pista}
         className="-mx-4 flex snap-x snap-mandatory items-stretch gap-5 overflow-x-auto px-4 pb-2 no-scrollbar sm:gap-6"
@@ -57,38 +84,50 @@ export function ProductCarousel({ products }: { products: Product[] }) {
         {products.map((product) => (
           <li
             key={product.id}
-            className="flex w-[calc(50%-0.625rem)] shrink-0 snap-start sm:w-[calc(33.333%-1rem)] lg:w-[calc(25%-1.125rem)]"
+            /* Una tarjeta y media en móvil: el recorte del borde avisa que hay más. */
+            className="flex w-[68%] shrink-0 snap-start sm:w-[calc(50%-0.75rem)] lg:w-[calc(25%-1.125rem)]"
           >
             <ProductCard product={product} />
           </li>
         ))}
       </ul>
 
-      <div className="mt-6 flex items-center justify-between">
-        <p className="text-sm text-ink-500">
-          {products.length} productos · desplaza para ver más
-        </p>
-        <div className="flex gap-2">
+      {paginas > 1 && (
+        <>
           <button
             type="button"
-            onClick={() => mover(-1)}
-            disabled={alInicio}
+            onClick={() => irA(pagina - 1)}
             aria-label="Ver productos anteriores"
-            className={cn(flecha)}
+            className={cn(flecha, '-left-5')}
           >
-            <ChevronLeft className="size-4" />
+            <ChevronLeft className="size-5" />
           </button>
           <button
             type="button"
-            onClick={() => mover(1)}
-            disabled={alFinal}
+            onClick={() => irA(pagina + 1)}
             aria-label="Ver más productos"
-            className={cn(flecha)}
+            className={cn(flecha, '-right-5')}
           >
-            <ChevronRight className="size-4" />
+            <ChevronRight className="size-5" />
           </button>
-        </div>
-      </div>
+
+          <div className="mt-7 flex items-center justify-center gap-2">
+            {Array.from({ length: paginas }, (_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => irA(i)}
+                aria-label={`Ir al grupo ${i + 1} de ${paginas}`}
+                aria-current={i === pagina}
+                className={cn(
+                  'h-1.5 rounded-full transition-all',
+                  i === pagina ? 'w-7 bg-brand-500' : 'w-1.5 bg-ink-300 hover:bg-ink-400',
+                )}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
