@@ -1,0 +1,28 @@
+# Infraestructura como código para Render.
+# Si el servicio ya existe creado a mano, este archivo sirve como
+# documentación de cómo debe quedar configurado.
+services:
+  - type: web
+    name: romase-web
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    buildCommand: yarn install --frozen-lockfile && yarn build
+    startCommand: yarn start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22.20.0
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://romase.cl
+      # Se cargan desde el panel de Render, no acá.
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

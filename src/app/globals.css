@@ -1,0 +1,134 @@
+@import 'tailwindcss';
+
+/* ============================================================
+   ROMASE · sistema visual
+   La terracota (#dd5330) y su versión oscura (#a5371b) salen del
+   logo y del sitio actual, para no romper el reconocimiento de marca.
+   Los neutros son cálidos a propósito: acompañan al naranja mejor
+   que un gris azulado.
+   ============================================================ */
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-brand-50: #fdf5f2;
+  --color-brand-100: #fbe8e1;
+  --color-brand-200: #f7cfc2;
+  --color-brand-300: #f0ac97;
+  --color-brand-400: #e77f60;
+  --color-brand-500: #dd5330;
+  --color-brand-600: #c53f20;
+  --color-brand-700: #a5371b;
+  --color-brand-800: #862e19;
+  --color-brand-900: #6f2a19;
+
+  --color-ink-50: #f7f4f1;
+  --color-ink-100: #ece7e2;
+  --color-ink-200: #ddd5cd;
+  --color-ink-300: #c9c0b9;
+  --color-ink-400: #a1958c;
+  --color-ink-500: #7a6d64;
+  --color-ink-600: #5c5049;
+  --color-ink-700: #4a3f38;
+  --color-ink-800: #2f2721;
+  --color-ink-900: #241d18;
+  --color-ink-950: #17120f;
+
+  --shadow-card: 0 1px 2px rgb(23 18 15 / 0.04), 0 8px 24px -12px rgb(23 18 15 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(23 18 15 / 0.06), 0 16px 40px -16px rgb(23 18 15 / 0.2);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: white;
+    color: var(--color-ink-900);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* El foco visible se mantiene siempre: mucha gente compra con teclado. */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+@layer components {
+  /* Envuelve las descripciones que vienen como HTML desde WooCommerce,
+     que llegan sin ninguna clase de Tailwind. */
+  .rich-text {
+    color: var(--color-ink-700);
+    line-height: 1.75;
+  }
+  .rich-text > * + * {
+    margin-top: 1rem;
+  }
+  .rich-text h2,
+  .rich-text h3,
+  .rich-text h4 {
+    color: var(--color-ink-900);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .rich-text h2 {
+    font-size: 1.25rem;
+    margin-top: 2rem;
+  }
+  .rich-text h3 {
+    font-size: 1.075rem;
+    margin-top: 1.5rem;
+  }
+  .rich-text ul,
+  .rich-text ol {
+    padding-left: 1.5rem;
+  }
+  .rich-text ul {
+    list-style: disc;
+  }
+  .rich-text ol {
+    list-style: decimal;
+  }
+  .rich-text li + li {
+    margin-top: 0.35rem;
+  }
+  .rich-text a {
+    color: var(--color-brand-700);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .rich-text strong {
+    color: var(--color-ink-900);
+    font-weight: 600;
+  }
+  .rich-text table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  .rich-text th,
+  .rich-text td {
+    border: 1px solid var(--color-ink-200);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+  .rich-text th {
+    background-color: var(--color-ink-50);
+    font-weight: 600;
+  }
+  .rich-text img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+  }
+}
+
+/* Oculta la barra de scroll en los carruseles horizontales sin perder el gesto. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
