@@ -24,10 +24,16 @@ export function ProductCard({
       : 0
 
   return (
-    <article className={cn('group relative flex h-full w-full flex-col', className)}>
-      {/* Marco solo alrededor de la foto: la ficha respira mejor que
-          encerrando también el texto. */}
-      <div className="relative aspect-square overflow-hidden border border-ink-200 bg-white transition-colors duration-200 group-hover:border-ink-300">
+    // Una sola caja para todo: foto, nombre, precio y botón. Antes el marco
+    // rodeaba solo la foto y el resto quedaba suelto debajo; con el botón en
+    // naranja eso se leía como un botón despegado de su producto.
+    <article
+      className={cn(
+        'group relative flex h-full w-full flex-col border border-ink-200 bg-white transition-all duration-200 hover:border-ink-300 hover:shadow-lift',
+        className,
+      )}
+    >
+      <div className="relative aspect-square overflow-hidden border-b border-ink-100 bg-white">
         {image ? (
           <Image
             src={image.src}
@@ -54,7 +60,7 @@ export function ProductCard({
         )}
       </div>
 
-      <div className="flex flex-1 flex-col pt-4">
+      <div className="flex flex-1 flex-col p-4">
         <h3 className="text-[13px] leading-snug text-ink-800">
           {/* El enlace cubre toda la tarjeta, así el área de click es grande. */}
           <SelectItemLink
@@ -107,7 +113,9 @@ export function ProductGrid({
   listName?: string
 }) {
   return (
-    <div className="grid grid-cols-2 gap-x-5 gap-y-10 sm:gap-x-6 lg:grid-cols-4">
+    // Con la tarjeta cerrada, el aire va entre cajas y no dentro: la
+    // separación deja de ser el doble en vertical que en horizontal.
+    <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4">
       {products.map((product) => (
         <ProductCard key={product.id} product={product} listId={listId} listName={listName} />
       ))}

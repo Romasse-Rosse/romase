@@ -333,8 +333,16 @@ Los tokens viven en `src/app/globals.css` y gobiernan todo el sitio: cambiar `--
 
 Piezas propias del rediseño:
 
-- **Tarjetas planas**: el marco rodea solo la foto, el texto respira fuera. Se estiran a la
-  altura de la fila para que los precios y los botones queden alineados entre sí.
+- **Tarjetas cerradas**: una sola caja envuelve foto, nombre, precio y botón. La primera
+  versión tenía el marco solo alrededor de la foto y el texto suelto debajo, que se veía bien
+  mientras el botón era un contorno gris; con el botón en naranja el conjunto se leía como un
+  botón despegado de su producto. Se estiran a la altura de la fila para que precios y botones
+  queden alineados entre sí.
+- **Los controles del carrusel van debajo**, con las viñetas. Antes eran flechas circulares
+  sobre la pista: funcionaban cuando la tarjeta era un marco alrededor de la foto, pero sobre
+  una caja cerrada tapan una esquina y se ven como un parche. Abajo no roban espacio, no
+  pueden chocar con un título de dos líneas, y en móvil se esconden —ahí se navega con el
+  dedo—.
 - **Menú con etiquetas cortas.** Con los nombres completos, las diez entradas no entran en
   1280 px. Los nombres largos se siguen usando en títulos y migas de pan.
 

@@ -11,9 +11,9 @@ const AUTOPLAY = 5000
 /**
  * Carrusel de productos.
  *
- * Avanza solo, vuelve al principio al llegar al final y lleva las flechas
- * sobre la pista, para que se lea como carrusel y no como una grilla que se
- * desborda.
+ * Avanza solo, vuelve al principio al llegar al final y lleva flechas y
+ * viñetas debajo de la pista, para que se lea como carrusel y no como una
+ * grilla que se desborda.
  *
  * El desplazamiento es el nativo con anclaje: así el gesto táctil, la rueda y
  * el teclado funcionan sin reimplementarlos, y el avance automático es un
@@ -74,12 +74,15 @@ export function ProductCarousel({
 
   if (products.length === 0) return null
 
+  // Las flechas acompañan a las viñetas, abajo. Cuando la tarjeta era un
+  // marco alrededor de la foto podían montarse sobre el margen sin molestar;
+  // ahora es una caja cerrada y taparle una esquina se ve como un parche. Acá
+  // no roban espacio ni pueden chocar con un título de dos líneas.
   const flecha =
-    'absolute top-[38%] z-20 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-800 shadow-lift transition-colors hover:border-ink-950 hover:bg-ink-950 hover:text-white sm:flex'
+    'size-10 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-800 transition-colors hover:border-brand-500 hover:bg-brand-500 hover:text-white'
 
   return (
     <div
-      className="relative"
       onMouseEnter={() => setPausado(true)}
       onMouseLeave={() => setPausado(false)}
       onFocusCapture={() => setPausado(true)}
@@ -107,25 +110,17 @@ export function ProductCarousel({
       </ul>
 
       {paginas > 1 && (
-        <>
+        <div className="mt-7 flex items-center justify-center gap-5">
           <button
             type="button"
             onClick={() => irA(pagina - 1)}
             aria-label="Ver productos anteriores"
-            className={cn(flecha, '-left-5')}
+            className={cn(flecha, 'hidden sm:flex')}
           >
-            <ChevronLeft className="size-5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => irA(pagina + 1)}
-            aria-label="Ver más productos"
-            className={cn(flecha, '-right-5')}
-          >
-            <ChevronRight className="size-5" />
+            <ChevronLeft className="size-4.5" />
           </button>
 
-          <div className="mt-7 flex items-center justify-center gap-2">
+          <div className="flex items-center gap-2">
             {Array.from({ length: paginas }, (_, i) => (
               <button
                 key={i}
@@ -140,7 +135,16 @@ export function ProductCarousel({
               />
             ))}
           </div>
-        </>
+
+          <button
+            type="button"
+            onClick={() => irA(pagina + 1)}
+            aria-label="Ver más productos"
+            className={cn(flecha, 'hidden sm:flex')}
+          >
+            <ChevronRight className="size-4.5" />
+          </button>
+        </div>
       )}
     </div>
   )
