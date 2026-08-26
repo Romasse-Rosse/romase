@@ -72,8 +72,11 @@ export default async function HomePage() {
             {trustPoints.map((point, index) => {
               const Icon = trustIcons[index]
               return (
-                <li key={point.title} className="flex gap-3">
-                  <Icon aria-hidden="true" className="mt-0.5 size-4.5 shrink-0 text-brand-400" />
+                <li
+                  key={point.title}
+                  className="flex flex-col items-center gap-2 text-center sm:flex-row sm:items-start sm:gap-3 sm:text-left"
+                >
+                  <Icon aria-hidden="true" className="size-4.5 shrink-0 text-brand-400 sm:mt-0.5" />
                   <div>
                     <p className="text-[13px] leading-snug font-medium text-white">{point.title}</p>
                     <p className="mt-1 hidden text-xs leading-relaxed text-ink-300 lg:block">

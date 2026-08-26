@@ -92,8 +92,12 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
                 El botón del menú va acá y no a la izquierda porque el panel
                 entra desde la derecha: el panel tiene que aparecer desde donde
                 se tocó. Además queda en la zona del pulgar. */}
-            <div className="ml-auto flex items-center gap-1">
+            <div className="ml-auto flex items-center gap-2">
               <CartButton />
+              <span
+                aria-hidden="true"
+                className="h-6 w-px bg-ink-200 lg:hidden"
+              />
               <button
                 type="button"
                 aria-label="Abrir menú"

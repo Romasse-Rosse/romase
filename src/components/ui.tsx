@@ -103,8 +103,8 @@ export function SectionHeading({
   action?: ReactNode
 }) {
   return (
-    <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
-      <div className="max-w-2xl">
+    <div className="mb-10 flex flex-wrap items-end justify-between gap-4 text-center sm:text-left">
+      <div className="mx-auto max-w-2xl sm:mx-0">
         {eyebrow && (
           <p className="mb-3 text-[11px] font-medium tracking-[0.18em] text-brand-600 uppercase">
             {eyebrow}

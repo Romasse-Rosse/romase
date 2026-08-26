@@ -385,7 +385,16 @@ Decisiones de móvil:
 
 - **El panel del menú entra desde la derecha, y el botón que lo abre está a la derecha.** Un
   panel tiene que aparecer desde donde se tocó, y ahí queda en la zona del pulgar. El carrito
-  lo acompaña; el logo se queda solo a la izquierda.
+  lo acompaña; el logo se queda solo a la izquierda. Entre los dos iconos va una línea
+  divisoria: pegados se leían como un grupo y era fácil tocar el que no era.
+- **Los textos van centrados bajo `sm`** —titular del banner, encabezados de sección y la
+  banda de beneficios, con el icono arriba— y vuelven a la izquierda desde ahí. En una columna
+  de 390 px un bloque alineado a la izquierda queda descolgado hacia un lado; centrado se lee
+  como una decisión.
+
+  El velo del banner tuvo que acompañar: era un degradado de izquierda a derecha pensado para
+  el texto a la izquierda, y con el titular centrado dejaba su mitad derecha sobre foto casi
+  sin velo. En móvil ahora es parejo, con caída suave arriba y abajo.
 - **Objetivos táctiles de 44 px** en carrito, menú, aspa de cerrar y enlaces del panel. Antes
   medían 36 y 40.
 - **El panel no separa la lista del bloque de contacto.** Con el contacto anclado al fondo

@@ -79,10 +79,16 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
         </div>
       ))}
 
-      {/* Velo para que el texto se lea sobre cualquier foto. */}
+      {/* Velo para que el texto se lea sobre cualquier foto.
+
+          En escritorio es de izquierda a derecha, porque el texto está a la
+          izquierda y así la foto queda al aire del otro lado. En móvil el texto
+          va centrado y ocupa todo el ancho, así que el degradado horizontal
+          dejaba la mitad derecha del titular sobre foto casi sin velo: ahí es
+          parejo, con una caída suave hacia arriba y abajo. */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-r from-ink-950/92 via-ink-950/72 to-ink-950/30"
+        className="absolute inset-0 bg-gradient-to-b from-ink-950/78 via-ink-950/72 to-ink-950/85 sm:bg-gradient-to-r sm:from-ink-950/92 sm:via-ink-950/72 sm:to-ink-950/30"
       />
 
       <Container className="relative z-20">
@@ -102,7 +108,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                 inert={i !== actual}
                 aria-hidden={i !== actual}
                 className={cn(
-                  'col-start-1 row-start-1 max-w-xl self-center transition-[opacity,translate] ease-out',
+                  'col-start-1 row-start-1 mx-auto max-w-xl self-center text-center transition-[opacity,translate] ease-out sm:mx-0 sm:text-left',
                   i === actual
                     ? 'translate-y-0 opacity-100 delay-200 duration-500'
                     : 'translate-y-1 opacity-0 duration-[180ms] motion-reduce:translate-y-0',
@@ -130,7 +136,11 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
           </div>
 
           {slides.length > 1 && (
-            <div className="mt-9 flex items-center gap-2.5" role="tablist" aria-label="Secciones">
+            <div
+              className="mt-9 flex items-center justify-center gap-2.5 sm:justify-start"
+              role="tablist"
+              aria-label="Secciones"
+            >
               {slides.map((s, i) => (
                 <button
                   key={s.slug}
