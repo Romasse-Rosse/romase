@@ -51,64 +51,82 @@ export default async function HomePage() {
         Maquinaria y equipamiento para panadería, pastelería y gastronomía en Chile
       </h1>
 
-      <HeroCarousel slides={slides} />
-
       {/* ---------------------------------------------------------------
-          Beneficios. Salieron de dentro del banner: ahí se comían la foto, y
-          en un teléfono la dejaban en una franja de 390 × 766 donde no se
-          reconocía nada. Con banda propia el banner respira y la foto vuelve
-          a leerse.
+          Banner, beneficios y destacados, en un contenedor flex para poder
+          cambiarles el orden por ancho de pantalla.
 
-          En móvil se muestran solo los títulos en dos columnas: con los
-          detalles la banda medía cuatro pantallazos. El detalle aparece desde
-          lg, donde hay ancho para las cuatro columnas.
-      --------------------------------------------------------------- */}
-      <section
-        aria-label="Por qué comprar en ROMASE"
-        className="border-b border-ink-800 bg-gradient-to-r from-ink-950 via-ink-900 to-ink-950"
-      >
-        <Container>
-          <ul className="grid grid-cols-2 gap-x-6 gap-y-5 py-6 lg:grid-cols-4 lg:py-7">
-            {trustPoints.map((point, index) => {
-              const Icon = trustIcons[index]
-              return (
-                <li
-                  key={point.title}
-                  className="flex flex-col items-center gap-2 text-center sm:flex-row sm:items-start sm:gap-3 sm:text-left"
-                >
-                  <Icon aria-hidden="true" className="size-4.5 shrink-0 text-brand-400 sm:mt-0.5" />
-                  <div>
-                    <p className="text-[13px] leading-snug font-medium text-white">{point.title}</p>
-                    <p className="mt-1 hidden text-xs leading-relaxed text-ink-300 lg:block">
-                      {point.detail}
-                    </p>
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
-        </Container>
-      </section>
+          En escritorio los beneficios van pegados al banner: hay ancho para
+          las cuatro columnas y la banda cierra el bloque de portada.
 
-      {/* ---------------------------------------------------------------
-          Destacados. Van antes que las categorías: lo primero que se ve
-          después del banner es producto con precio.
+          En móvil no: el banner es oscuro y la banda también, así que pegados
+          se leían como un solo bloque negro y la foto parecía terminar donde
+          empezaba la banda. Ahí la banda baja después de los destacados, con
+          el blanco de la sección de productos separándola del banner. De paso,
+          lo primero que se ve después de la portada es producto con precio, que
+          es lo que se quiere empujar.
+
+          Se reordena con `order` en vez de repetir el marcado. La banda no
+          tiene nada enfocable —son iconos y texto—, así que el orden visual
+          distinto del orden del DOM no altera el recorrido con teclado.
       --------------------------------------------------------------- */}
-      <section className="py-16 lg:py-20">
-        <Container>
-          <SectionHeading
-            eyebrow="Lo más pedido"
-            title="Productos destacados"
-            description="Los equipos que más nos consultan panaderías, cafeterías y restaurantes."
-          />
-          <ViewItemList products={destacados} listId="destacados" listName="Productos destacados" />
-          <ProductCarousel
-            products={destacados}
-            listId="destacados"
-            listName="Productos destacados"
-          />
-        </Container>
-      </section>
+      <div className="flex flex-col">
+        <HeroCarousel slides={slides} />
+
+        {/* En móvil se muestran solo los títulos en dos columnas: con los
+            detalles la banda medía cuatro pantallazos. El detalle aparece
+            desde lg, donde hay ancho para las cuatro columnas. */}
+        <section
+          aria-label="Por qué comprar en ROMASE"
+          className="order-3 border-y border-ink-800 bg-gradient-to-r from-ink-950 via-ink-900 to-ink-950 sm:order-2 sm:border-t-0"
+        >
+          <Container>
+            <ul className="grid grid-cols-2 gap-x-6 gap-y-5 py-7 lg:grid-cols-4">
+              {trustPoints.map((point, index) => {
+                const Icon = trustIcons[index]
+                return (
+                  <li
+                    key={point.title}
+                    className="flex flex-col items-center gap-2 text-center sm:flex-row sm:items-start sm:gap-3 sm:text-left"
+                  >
+                    <Icon
+                      aria-hidden="true"
+                      className="size-4.5 shrink-0 text-brand-400 sm:mt-0.5"
+                    />
+                    <div>
+                      <p className="text-[13px] leading-snug font-medium text-white">
+                        {point.title}
+                      </p>
+                      <p className="mt-1 hidden text-xs leading-relaxed text-ink-300 lg:block">
+                        {point.detail}
+                      </p>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          </Container>
+        </section>
+
+        <section className="order-2 py-14 sm:order-3 sm:py-16 lg:py-20">
+          <Container>
+            <SectionHeading
+              eyebrow="Lo más pedido"
+              title="Productos destacados"
+              description="Los equipos que más nos consultan panaderías, cafeterías y restaurantes."
+            />
+            <ViewItemList
+              products={destacados}
+              listId="destacados"
+              listName="Productos destacados"
+            />
+            <ProductCarousel
+              products={destacados}
+              listId="destacados"
+              listName="Productos destacados"
+            />
+          </Container>
+        </section>
+      </div>
 
       {/* ---------------------------------------------------------------
           Categorías

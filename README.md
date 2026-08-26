@@ -421,6 +421,16 @@ Decisiones de móvil:
   panorámica de 2000×900 ahí no se reconoce nada. Con banda propia debajo, el recuadro de la
   foto vuelve a ser ancho y la foto se lee. En móvil la banda muestra solo los cuatro títulos
   en dos columnas: con los detalles medía cuatro pantallazos.
+- **Y en móvil la banda baja después de los destacados.** Sacarla del banner no alcanzaba:
+  el banner es oscuro y la banda también, así que pegadas seguían leyéndose como un solo
+  bloque negro y la foto parecía terminar donde empezaba la banda. Ahora el blanco de la
+  sección de productos las separa, y lo primero que aparece después de la portada es producto
+  con precio.
+
+  El banner, la banda y los destacados están en un contenedor `flex flex-col` y se reordenan
+  con `order` según el ancho, en vez de repetir el marcado. En escritorio la banda sigue
+  pegada al banner, que es donde funciona. La banda no tiene nada enfocable —iconos y texto—,
+  así que el orden visual distinto del orden del DOM no altera el recorrido con teclado.
 
 ### Favicon
 
