@@ -154,7 +154,7 @@ export default async function CategoriaPage({ params }: { params: Params }) {
       {/* Contenido editorial: es lo que le da a la categoría posibilidad
           real de posicionar, más allá del listado de productos. */}
       {content && (
-        <section className="mt-16 border-t border-brand-100 bg-brand-50 py-14">
+        <section className="mt-10 border-t border-brand-100 bg-brand-50 py-10 sm:mt-16 sm:py-14">
           <Container>
             <div className="grid gap-12 lg:grid-cols-[1.6fr_1fr]">
               {/* El texto largo va en desplegables: la página queda liviana y

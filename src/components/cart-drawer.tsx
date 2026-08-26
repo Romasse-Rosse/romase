@@ -17,7 +17,7 @@ export function CartButton() {
       type="button"
       onClick={() => setOpen(true)}
       aria-label={count > 0 ? `Carrito, ${count} productos` : 'Carrito vacío'}
-      className="relative inline-flex size-10 items-center justify-center rounded-sm text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-950"
+      className="relative inline-flex size-11 items-center justify-center rounded-sm text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-950"
     >
       <ShoppingBag className="size-5" />
       {/* El contador aparece recién cuando se leyó el almacenamiento, para

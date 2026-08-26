@@ -70,16 +70,6 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
       <div className="border-b border-ink-200 bg-white">
         <Container>
           <div className="flex h-18 items-center gap-4">
-            <button
-              type="button"
-              aria-label="Abrir menú"
-              aria-expanded={mobileOpen}
-              onClick={() => setMobileOpen(true)}
-              className="-ml-2 rounded-lg p-2 text-ink-700 hover:bg-ink-100 lg:hidden"
-            >
-              <Menu className="size-6" />
-            </button>
-
             <Link href="/" className="shrink-0" aria-label={`${site.name} · Inicio`}>
               <Image
                 src="/brand/logo-web.webp"
@@ -95,10 +85,24 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
 
             <SearchBox className="mx-auto hidden max-w-xl flex-1 md:block" />
 
-            {/* Solo el carrito. Sin «Cotizar» ni «Contacto»: la acción que se
-                quiere empujar es comprar, no pedir presupuesto. */}
-            <div className="ml-auto flex items-center gap-2 lg:ml-0">
+            {/* Carrito y menú, los dos a la derecha. Sin «Cotizar» ni
+                «Contacto»: la acción que se quiere empujar es comprar, no pedir
+                presupuesto.
+
+                El botón del menú va acá y no a la izquierda porque el panel
+                entra desde la derecha: el panel tiene que aparecer desde donde
+                se tocó. Además queda en la zona del pulgar. */}
+            <div className="ml-auto flex items-center gap-1">
               <CartButton />
+              <button
+                type="button"
+                aria-label="Abrir menú"
+                aria-expanded={mobileOpen}
+                onClick={() => setMobileOpen(true)}
+                className="-mr-2 inline-flex size-11 items-center justify-center rounded-sm text-ink-700 transition-colors hover:bg-ink-100 lg:hidden"
+              >
+                <Menu className="size-6" />
+              </button>
             </div>
           </div>
 
@@ -203,24 +207,37 @@ function MobileMenu({
 }) {
   const [expanded, setExpanded] = useState<number | null>(null)
 
-  return (
-    <div className="fixed inset-0 z-50 lg:hidden">
-      <div className="absolute inset-0 bg-ink-950/50" onClick={onClose} aria-hidden="true" />
+  // Escape cierra el panel, igual que en el del carrito.
+  useEffect(() => {
+    const alEscape = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    document.addEventListener('keydown', alEscape)
+    return () => document.removeEventListener('keydown', alEscape)
+  }, [onClose])
 
-      <div className="absolute inset-y-0 left-0 flex w-[88%] max-w-sm flex-col bg-white">
+  return (
+    <div role="dialog" aria-modal="true" aria-label="Menú" className="fixed inset-0 z-50 lg:hidden">
+      <div
+        className="absolute inset-0 animate-[fade-in_200ms_ease-out] bg-ink-950/50"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Entra desde la derecha, igual que el botón que lo abre. */}
+      <div className="absolute inset-y-0 right-0 flex w-[88%] max-w-sm animate-[slide-in-right_260ms_cubic-bezier(0.22,1,0.36,1)] flex-col bg-white shadow-lift">
         <div className="flex h-16 shrink-0 items-center justify-between border-b border-ink-200 px-4">
           <span className="text-sm font-semibold tracking-wide text-ink-950">Categorías</span>
           <button
             type="button"
             aria-label="Cerrar menú"
             onClick={onClose}
-            className="rounded-lg p-2 text-ink-600 hover:bg-ink-100"
+            className="-mr-2 inline-flex size-11 items-center justify-center rounded-sm text-ink-600 transition-colors hover:bg-ink-100"
           >
             <X className="size-5" />
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-2">
+        <div className="flex-1 overflow-y-auto">
+          <nav className="py-2">
           {categories.map((category) => (
             <div key={category.id} className="border-t border-ink-100">
               <div className="flex items-stretch">
@@ -266,23 +283,27 @@ function MobileMenu({
               )}
             </div>
           ))}
-        </nav>
+          </nav>
 
-        <div className="shrink-0 space-y-1 border-t border-ink-200 p-4 text-sm">
-          <Link href="/nosotros" className="block py-2 text-ink-700" onClick={onClose}>
-            Sobre nosotros
-          </Link>
-          <Link href="/contacto" className="block py-2 text-ink-700" onClick={onClose}>
-            Contacto
-          </Link>
-          <a href={site.contact.phoneHref} className="flex items-center gap-2 py-2 text-ink-700">
-            <Phone className="size-4" />
-            {site.contact.phone}
-          </a>
-          <p className="flex items-start gap-2 py-2 text-xs text-ink-500">
-            <MapPin className="mt-0.5 size-4 shrink-0" />
-            {site.contact.address}, {site.contact.city}
-          </p>
+          <div className="mt-4 space-y-1 border-t border-ink-200 p-4 text-sm">
+            <Link href="/nosotros" className="flex min-h-11 items-center text-ink-700" onClick={onClose}>
+              Sobre nosotros
+            </Link>
+            <Link href="/contacto" className="flex min-h-11 items-center text-ink-700" onClick={onClose}>
+              Contacto
+            </Link>
+            <a
+              href={site.contact.phoneHref}
+              className="flex min-h-11 items-center gap-2 text-ink-700"
+            >
+              <Phone className="size-4" />
+              {site.contact.phone}
+            </a>
+            <p className="flex items-start gap-2 pt-2 text-xs text-ink-500">
+              <MapPin className="mt-0.5 size-4 shrink-0" />
+              {site.contact.address}, {site.contact.city}
+            </p>
+          </div>
         </div>
       </div>
     </div>

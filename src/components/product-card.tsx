@@ -74,7 +74,10 @@ export function ProductCard({
         </h3>
 
         <div className="mt-auto pt-3">
-          <div className="flex items-baseline gap-2">
+          {/* Con envoltura: en una grilla de dos columnas a 360 px, un precio
+              de siete cifras más el tachado no caben en la misma línea y
+              empujaban la página hacia el costado. */}
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <span className="text-[17px] font-medium text-ink-950">
               {formatPrice(product.price)}
             </span>

@@ -371,6 +371,39 @@ márgenes y el borde de la tarjeta anterior asomaba. Con el botón gris no se no
 naranja se leía como una astilla de color. Se quitó el sangrado —la tarjeta siguiente
 cortada a la derecha ya avisa que hay más—.
 
+### Móvil
+
+Se auditó con Chrome DevTools **9 páginas × 4 anchos** (320, 360, 390 y 414 px), midiendo
+`scrollWidth` contra `clientWidth` y, cuando había diferencia, buscando el elemento culpable
+—descartando los que desbordan a propósito dentro de un contenedor con `overflow-x`—. Las 36
+combinaciones dan **cero scroll horizontal**.
+
+El único desborde real que había: en la grilla de dos columnas a 360 px, un precio de siete
+cifras más el precio tachado no caben en la misma línea y empujaban la página hacia el
+costado. La fila de precios ahora envuelve.
+
+Decisiones de móvil:
+
+- **El panel del menú entra desde la derecha, y el botón que lo abre está a la derecha.** Un
+  panel tiene que aparecer desde donde se tocó, y ahí queda en la zona del pulgar. El carrito
+  lo acompaña; el logo se queda solo a la izquierda.
+- **Objetivos táctiles de 44 px** en carrito, menú, aspa de cerrar y enlaces del panel. Antes
+  medían 36 y 40.
+- **El panel no separa la lista del bloque de contacto.** Con el contacto anclado al fondo
+  quedaba un pantallazo en blanco entre «Línea de frío» y «Sobre nosotros»; ahora todo el
+  panel se desplaza como una pieza.
+- **Barra de compra fija en la ficha de producto.** En un teléfono la foto ocupa la pantalla
+  entera y el botón queda siempre bajo el pliegue. La barra aparece cuando el botón principal
+  ya quedó arriba y se retira al llegar al pie, para no taparlo.
+
+  Se implementó midiendo posición en el evento de scroll, con `requestAnimationFrame`, y no
+  con `IntersectionObserver`: el observador solo avisa al cruzar el umbral, y de la parte de
+  arriba de la página a muy abajo el botón pasa de «no visible» a «no visible» sin cruzar
+  nada. Con un salto de scroll —un ancla, la posición restaurada al volver atrás— la barra no
+  aparecía nunca.
+- **El ritmo vertical se aprieta bajo `sm`**: los márgenes pensados para escritorio se apilan
+  y dejan pantallazos vacíos entre bloques cortos.
+
 ### Favicon
 
 El logo es un wordmark horizontal: entero en un favicon queda ilegible a 16 px. Lo único que

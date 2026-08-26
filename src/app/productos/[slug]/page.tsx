@@ -17,7 +17,7 @@ import { ViewItem, ViewItemList } from '@/components/analytics'
 import { ProductGallery } from '@/components/product-gallery'
 import { ProductGrid } from '@/components/product-card'
 import { WhatsAppIcon } from '@/components/site-header'
-import { AddToCartFull } from '@/components/add-to-cart'
+import { AddToCartFull, AddToCartSticky } from '@/components/add-to-cart'
 
 export const revalidate = 3600
 
@@ -168,7 +168,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
               )}
             </p>
 
-            <div className="mt-7">
+            <div id="comprar" className="mt-7">
               <AddToCartFull
                 product={{
                   id: product.id,
@@ -227,7 +227,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
         {/* Sin descripción no se arma la grilla: dejaría media página vacía
             al lado de las preguntas. */}
         {description ? (
-          <div className="mt-14 grid gap-10 lg:grid-cols-[1.5fr_1fr] lg:gap-14">
+          <div className="mt-10 grid gap-10 sm:mt-14 lg:grid-cols-[1.5fr_1fr] lg:gap-14">
             <section>
               <h2 className="mb-4 text-xl font-semibold tracking-tight text-ink-950">
                 Descripción del producto
@@ -238,13 +238,13 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
             <Faqs items={faqsProducto(name, product.inStock)} title="Compra, despacho y garantía" />
           </div>
         ) : (
-          <div className="mt-14 max-w-2xl">
+          <div className="mt-10 max-w-2xl sm:mt-14">
             <Faqs items={faqsProducto(name, product.inStock)} title="Compra, despacho y garantía" />
           </div>
         )}
 
         {own.length > 0 && (
-          <section className="mt-12">
+          <section className="mt-10 sm:mt-12">
             <h2 className="mb-3 text-sm font-semibold text-ink-950">Categorías</h2>
             <ul className="flex flex-wrap gap-2">
               {own.map((category) => (
@@ -263,7 +263,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
       </Container>
 
       {related.length > 0 && (
-        <section className="mt-16 border-t border-brand-100 bg-brand-50 py-14">
+        <section className="mt-10 border-t border-brand-100 bg-brand-50 py-10 sm:mt-16 sm:py-14">
           <Container>
             <SectionHeading title="También te puede servir" />
             <ViewItemList
@@ -279,6 +279,21 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
           </Container>
         </section>
       )}
+
+      {/* En móvil la foto se come la pantalla y el botón queda siempre bajo
+          el pliegue: esta barra lo trae de vuelta sin tener que subir. */}
+      <AddToCartSticky
+        ancla="comprar"
+        inStock={product.inStock}
+        product={{
+          id: product.id,
+          slug: product.slug,
+          name,
+          price: product.price,
+          image: product.images[0]?.src ?? null,
+          sku: product.sku,
+        }}
+      />
 
       <ViewItem product={product} categoria={deepest ? titleCase(deepest.name) : undefined} />
 
