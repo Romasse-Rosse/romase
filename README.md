@@ -225,8 +225,8 @@ segundo:
 
 - **Banner fotográfico a todo el ancho.** Tres diapositivas, una por sección del catálogo
   —panadería, gastronomía y equipos complementarios—, con foto de ambiente, titular y botón
-  a la categoría. La franja de beneficios va dentro del mismo bloque, así el banner y los
-  beneficios entran en la misma pantalla sin desplazarse.
+  a la categoría. Los beneficios van en una banda oscura aparte, justo debajo: dentro del
+  banner le comían la foto.
 
   **La foto se cruza; el texto se releva.** La foto sí se funde con la siguiente —una foto
   encima de otra se ve bien—, pero el texto no: cruzar dos titulares en la misma posición los
@@ -249,12 +249,11 @@ segundo:
   el resultado: la de café terminó en `{left: 0.10, top: 0.20, width: 0.88}`, que es lo que
   deja la taza completa sobre la bandeja y a la derecha del titular.
 
-> **En móvil la foto es textura, no foto.** La franja mide 390×766 —los beneficios se apilan
-> y estiran el bloque—, así que en una imagen de 2000×900 se ve apenas el 10 % central del
-> ancho: cualquier motivo queda irreconocible. `object-position` no lo arregla, se probó y no
-> cambia nada. Se arregla limitando la foto al área de la diapositiva en móvil y dejando la
-> franja de beneficios con fondo sólido; el costo es que en escritorio la caja se vuelve más
-> baja y hay que rehacer los tres recortes. Queda a decisión de si vale.
+> **Lo de la foto en móvil quedó resuelto.** La franja medía 390×766 —los beneficios se
+> apilaban y estiraban el bloque—, así que de una imagen de 2000×900 se veía apenas el 10 %
+> central del ancho. Al mover los beneficios a su propia banda, el recuadro bajó a unos
+> 390×340 y la foto se reconoce. `object-position` se había probado antes y no cambiaba nada:
+> el problema era la proporción del recuadro, no dónde estaba centrado el recorte.
 - **Sin buscador en el banner.** El buscador vive en el encabezado, presente en todo el
   sitio.
 - **Carruseles en vez de grilla de categorías.** «Productos destacados» y «Últimas
@@ -403,6 +402,16 @@ Decisiones de móvil:
   aparecía nunca.
 - **El ritmo vertical se aprieta bajo `sm`**: los márgenes pensados para escritorio se apilan
   y dejan pantallazos vacíos entre bloques cortos.
+- **En móvil los carruseles de producto no son carruseles**: el mismo `<ul>` pasa de `flex` a
+  `grid grid-cols-2`, con seis productos. La tarjeta cortada al borde de la pantalla se leía
+  como un error, y el gesto lateral competía con el scroll de la página. No hizo falta tocar
+  la lógica: en grilla no hay desplazamiento horizontal, así que el cálculo de páginas da 1 y
+  los controles y el avance automático se apagan solos.
+- **Los beneficios salieron de dentro del banner.** Estaban en la misma sección que la foto y
+  se la comían; en un teléfono, además, estiraban el bloque a 766 px de alto, y de una imagen
+  panorámica de 2000×900 ahí no se reconoce nada. Con banda propia debajo, el recuadro de la
+  foto vuelve a ser ancho y la foto se lee. En móvil la banda muestra solo los cuatro títulos
+  en dos columnas: con los detalles medía cuatro pantallazos.
 
 ### Favicon
 

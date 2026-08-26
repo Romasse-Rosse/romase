@@ -8,12 +8,15 @@ import { cn } from '@/lib/cn'
 
 const AUTOPLAY = 5000
 
+/** Cuántos productos se muestran en la grilla de móvil. */
+const VISIBLES_EN_MOVIL = 6
+
 /**
  * Carrusel de productos.
  *
- * Avanza solo, vuelve al principio al llegar al final y lleva flechas y
- * viñetas debajo de la pista, para que se lea como carrusel y no como una
- * grilla que se desborda.
+ * En móvil es una grilla de dos columnas; desde sm en adelante es carrusel:
+ * avanza solo, vuelve al principio al llegar al final y lleva flechas y viñetas
+ * debajo de la pista.
  *
  * El desplazamiento es el nativo con anclaje: así el gesto táctil, la rueda y
  * el teclado funcionan sin reimplementarlos, y el avance automático es un
@@ -89,20 +92,28 @@ export function ProductCarousel({
       onBlurCapture={() => setPausado(false)}
       onTouchStart={() => setPausado(true)}
     >
+      {/* En móvil no hay carrusel: es una grilla de dos columnas que se
+          desplaza hacia abajo. La tarjeta cortada al borde de la pantalla se
+          veía como un error, y el gesto lateral compite con el scroll de la
+          página. Desde sm en adelante sí es carrusel.
+
+          El mismo <ul> cambia de flex a grid: en grilla no hay desplazamiento
+          horizontal, así que `paginas` da 1 y los controles y el avance
+          automático se apagan solos. */}
       <ul
         ref={pista}
-        /* Sin sangrado lateral: la pista arranca donde arranca el contenido.
-           Con el botón en naranja, el borde de la tarjeta anterior asomando en
-           el margen se leía como una astilla de color, no como "hay más". La
-           pista igual corta la tarjeta siguiente a la derecha, que es la señal
-           que importa. */
-        className="flex snap-x snap-mandatory items-stretch gap-5 overflow-x-auto pb-2 no-scrollbar sm:gap-6"
+        className="grid grid-cols-2 gap-4 sm:flex sm:snap-x sm:snap-mandatory sm:items-stretch sm:gap-6 sm:overflow-x-auto sm:pb-2 sm:no-scrollbar"
       >
-        {products.map((product) => (
+        {products.map((product, i) => (
           <li
             key={product.id}
-            /* Una tarjeta y media en móvil: el recorte del borde avisa que hay más. */
-            className="flex w-[68%] shrink-0 snap-start sm:w-[calc(50%-0.75rem)] lg:w-[calc(25%-1.125rem)]"
+            className={cn(
+              'flex',
+              // En móvil, seis productos: la sección tiene que terminar en
+              // algún momento y desde ahí se sigue por categoría.
+              i >= VISIBLES_EN_MOVIL && 'hidden sm:flex',
+              'sm:w-[calc(50%-0.75rem)] sm:shrink-0 sm:snap-start lg:w-[calc(25%-1.125rem)]',
+            )}
           >
             <ProductCard product={product} listId={listId} listName={listName} />
           </li>

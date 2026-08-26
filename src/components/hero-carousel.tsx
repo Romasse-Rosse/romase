@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { Container } from './ui'
@@ -19,17 +19,13 @@ export type HeroSlide = {
 const INTERVALO = 5500
 
 /**
- * Banner de portada: una sección del catálogo por diapositiva, a todo el
- * ancho, con la franja de beneficios dentro del mismo bloque para que se vea
- * sin desplazarse.
+ * Banner de portada: una sección del catálogo por diapositiva, a todo el ancho.
+ *
+ * La franja de beneficios vivía acá dentro y se quitó: le comía la foto, y en
+ * un teléfono estiraba el bloque a 766 px de alto, donde de una imagen
+ * panorámica no se reconoce nada. Ahora es una sección aparte, debajo.
  */
-export function HeroCarousel({
-  slides,
-  beneficios,
-}: {
-  slides: HeroSlide[]
-  beneficios?: ReactNode
-}) {
+export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
   const [actual, setActual] = useState(0)
   const [pausado, setPausado] = useState(false)
 
@@ -173,14 +169,6 @@ export function HeroCarousel({
             <ChevronRight className="size-5" />
           </button>
         </>
-      )}
-
-      {/* Los beneficios cierran el bloque: entran en la misma pantalla que el
-          carrusel, sin tener que desplazarse. */}
-      {beneficios && (
-        <div className="relative z-20 border-t border-white/15 bg-ink-950/55 backdrop-blur-sm">
-          <Container>{beneficios}</Container>
-        </div>
       )}
     </section>
   )

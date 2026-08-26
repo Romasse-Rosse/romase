@@ -51,25 +51,41 @@ export default async function HomePage() {
         Maquinaria y equipamiento para panadería, pastelería y gastronomía en Chile
       </h1>
 
-      <HeroCarousel
-        slides={slides}
-        beneficios={
-          <ul className="grid gap-x-8 gap-y-5 py-6 sm:grid-cols-2 lg:grid-cols-4">
+      <HeroCarousel slides={slides} />
+
+      {/* ---------------------------------------------------------------
+          Beneficios. Salieron de dentro del banner: ahí se comían la foto, y
+          en un teléfono la dejaban en una franja de 390 × 766 donde no se
+          reconocía nada. Con banda propia el banner respira y la foto vuelve
+          a leerse.
+
+          En móvil se muestran solo los títulos en dos columnas: con los
+          detalles la banda medía cuatro pantallazos. El detalle aparece desde
+          lg, donde hay ancho para las cuatro columnas.
+      --------------------------------------------------------------- */}
+      <section
+        aria-label="Por qué comprar en ROMASE"
+        className="border-b border-ink-800 bg-gradient-to-r from-ink-950 via-ink-900 to-ink-950"
+      >
+        <Container>
+          <ul className="grid grid-cols-2 gap-x-6 gap-y-5 py-6 lg:grid-cols-4 lg:py-7">
             {trustPoints.map((point, index) => {
               const Icon = trustIcons[index]
               return (
                 <li key={point.title} className="flex gap-3">
                   <Icon aria-hidden="true" className="mt-0.5 size-4.5 shrink-0 text-brand-400" />
                   <div>
-                    <p className="text-[13px] font-medium text-white">{point.title}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-ink-300">{point.detail}</p>
+                    <p className="text-[13px] leading-snug font-medium text-white">{point.title}</p>
+                    <p className="mt-1 hidden text-xs leading-relaxed text-ink-300 lg:block">
+                      {point.detail}
+                    </p>
                   </div>
                 </li>
               )
             })}
           </ul>
-        }
-      />
+        </Container>
+      </section>
 
       {/* ---------------------------------------------------------------
           Destacados. Van antes que las categorías: lo primero que se ve
