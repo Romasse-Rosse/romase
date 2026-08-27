@@ -96,12 +96,16 @@ export function SectionHeading({
   title,
   description,
   action,
+  as = 'h2',
 }: {
   eyebrow?: string
   title: string
   description?: string
   action?: ReactNode
+  /** Nivel del encabezado. La sección que encabeza la página lleva h1. */
+  as?: 'h1' | 'h2'
 }) {
+  const Titulo = as
   return (
     <div className="mb-10 flex flex-wrap items-end justify-between gap-4 text-center sm:text-left">
       <div className="mx-auto max-w-2xl sm:mx-0">
@@ -110,9 +114,9 @@ export function SectionHeading({
             {eyebrow}
           </p>
         )}
-        <h2 className="text-[26px] leading-[1.15] font-medium text-ink-950 sm:text-[34px]">
+        <Titulo className="text-[26px] leading-[1.15] font-medium text-ink-950 sm:text-[34px]">
           {title}
-        </h2>
+        </Titulo>
         {description && (
           <p className="mt-3 leading-relaxed text-ink-600">{description}</p>
         )}

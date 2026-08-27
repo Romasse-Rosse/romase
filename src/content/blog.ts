@@ -31,7 +31,10 @@ export type Articulo = {
   /** Clave del manifiesto de public/banner/, o null si el artículo no lleva foto. */
   portada: string | null
   portadaAlt: string
-  /** Cuerpo en HTML. Se pinta con la clase .rich-text, igual que el catálogo. */
+  /**
+   * Cuerpo en HTML. Se pinta con .rich-text, igual que el catálogo.
+   * Los apartados van en `<h2>`: cuelgan directamente del `<h1>` del artículo.
+   */
   cuerpo: string
 }
 
@@ -55,7 +58,7 @@ export const articulos: Articulo[] = [
       demás. Un horno chico se compensa haciendo dos hornadas; una amasadora chica no se
       compensa con nada, porque el tiempo de amasado no se puede acortar.</p>
 
-      <h3>La capacidad del bol no es la capacidad de producción</h3>
+      <h2>La capacidad del bol no es la capacidad de producción</h2>
 
       <p>Una amasadora de 12 kilos no hace 12 kilos de pan: hace 12 kilos de <em>masa</em>, y
       con la masa al tope la máquina trabaja forzada. La regla práctica es contar con el
@@ -66,7 +69,7 @@ export const articulos: Articulo[] = [
       la receta, más el vaciado y la limpieza entre tandas. En una jornada de seis horas de
       producción efectiva entran unos 15 ciclos, no 30.</p>
 
-      <h3>Cómo hacer la cuenta al revés</h3>
+      <h2>Cómo hacer la cuenta al revés</h2>
 
       <p>Parte de lo que vendes, no de lo que quieres comprar. Si despachas 400 panes de
       100 gramos, son 40 kilos de producto terminado, que con la merma de horneado significan
@@ -77,7 +80,7 @@ export const articulos: Articulo[] = [
       de 22 kilos. Comprar dos de 12 para llegar al mismo número casi nunca conviene: son dos
       motores, dos mantenciones y dos veces el espacio.</p>
 
-      <h3>Lo que se olvida al presupuestar</h3>
+      <h2>Lo que se olvida al presupuestar</h2>
 
       <ul>
         <li><strong>La corriente.</strong> Desde los 20 kilos, la mayoría de los modelos son
@@ -110,7 +113,7 @@ export const articulos: Articulo[] = [
       se compra pensando en lo que entra hoy y no en lo que hay que guardar cuando llega el
       pedido del proveedor.</p>
 
-      <h3>Conservar y exhibir son dos cosas distintas</h3>
+      <h2>Conservar y exhibir son dos cosas distintas</h2>
 
       <p>Una vitrina no es un refrigerador con vidrio. Está diseñada para mantener temperatura
       con la puerta abriéndose todo el día y con la carga a la vista, no para bajar la
@@ -121,7 +124,7 @@ export const articulos: Articulo[] = [
       vertical, según lo que guardes— y la vitrina solo con la exhibición del día. La vitrina
       se repone desde el equipo cerrado, no al revés.</p>
 
-      <h3>El error de cálculo típico</h3>
+      <h2>El error de cálculo típico</h2>
 
       <p>Casi todos los locales que abren compran frío para el consumo promedio. El problema
       es que la compra al proveedor no llega promediada: llega entera, una o dos veces por
@@ -133,7 +136,7 @@ export const articulos: Articulo[] = [
       circule. Un equipo lleno hasta el techo no enfría: bloquea el flujo y deja zonas
       tibias.</p>
 
-      <h3>Tres cosas que conviene mirar en la ficha</h3>
+      <h2>Tres cosas que conviene mirar en la ficha</h2>
 
       <ul>
         <li><strong>Rango de temperatura y clima de trabajo.</strong> Un equipo especificado

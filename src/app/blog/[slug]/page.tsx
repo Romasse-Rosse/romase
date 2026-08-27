@@ -12,9 +12,15 @@ import {
   minutosDeLectura,
 } from '@/content/blog'
 import manifiestoBanner from '../../../../public/banner/manifiesto.json'
+import { getCarouselProducts } from '@/lib/catalog'
 import { site } from '@/lib/site'
 import { truncate } from '@/lib/format'
-import { Breadcrumbs, ButtonLink, Container } from '@/components/ui'
+import { Breadcrumbs, Container, SectionHeading } from '@/components/ui'
+import { ProductCarousel } from '@/components/product-carousel'
+import { ViewItemList } from '@/components/analytics'
+
+// Los destacados salen del catálogo: se refrescan con el resto del sitio.
+export const revalidate = 3600
 
 type Params = Promise<{ slug: string }>
 
@@ -51,6 +57,7 @@ export default async function ArticuloPage({ params }: { params: Params }) {
   const archivo = articulo.portada ? portadas[articulo.portada] : null
   const minutos = minutosDeLectura(articulo.cuerpo)
   const otros = articulosPublicados().filter((a) => a.slug !== articulo.slug)
+  const masVendidos = await getCarouselProducts(12)
 
   const schema = {
     '@context': 'https://schema.org',
@@ -113,29 +120,35 @@ export default async function ArticuloPage({ params }: { params: Params }) {
             className="rich-text mt-9"
             dangerouslySetInnerHTML={{ __html: articulo.cuerpo }}
           />
-
-          <div className="mt-12 border border-brand-100 bg-brand-50 p-6">
-            <h2 className="text-base font-semibold text-ink-950">
-              ¿Necesitas ayuda para elegir?
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-ink-600">
-              Cuéntanos tu volumen de producción y el espacio que tienes, y te decimos qué
-              equipo corresponde.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <ButtonLink href="/contacto" size="sm">
-                Escribirnos
-              </ButtonLink>
-              <ButtonLink href="/#categorias" size="sm" variant="outline">
-                Ver el catálogo por categoría
-              </ButtonLink>
-            </div>
-          </div>
         </article>
       </Container>
 
+      {/* Producto al cerrar el artículo: quien terminó de leer sobre cómo
+          elegir un equipo es quien está por comprarlo. */}
+      {masVendidos.length > 0 && (
+        <section className="mt-10 border-t border-brand-100 bg-brand-50 py-12 sm:mt-14 sm:py-16">
+          <Container>
+            <SectionHeading
+              eyebrow="Lo más vendido"
+              title="Productos destacados"
+              description="Los equipos que más nos consultan panaderías, cafeterías y restaurantes."
+            />
+            <ViewItemList
+              products={masVendidos}
+              listId="blog-articulo"
+              listName={`Destacados en: ${articulo.titulo}`}
+            />
+            <ProductCarousel
+              products={masVendidos}
+              listId="blog-articulo"
+              listName={`Destacados en: ${articulo.titulo}`}
+            />
+          </Container>
+        </section>
+      )}
+
       {otros.length > 0 && (
-        <section className="mt-10 border-t border-ink-200 py-12 sm:mt-16 sm:py-14">
+        <section className="border-t border-ink-200 py-12 sm:py-14">
           <Container>
             <h2 className="mb-6 text-sm font-semibold tracking-[0.02em] text-ink-600 uppercase">
               Seguir leyendo

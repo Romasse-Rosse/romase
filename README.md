@@ -138,6 +138,17 @@ Para publicarlo, cuando llegue esa etapa, son tres pasos anotados en el mismo ar
 Las portadas se resuelven contra `public/banner/manifiesto.json`, igual que el banner de la
 portada: así siguen funcionando cuando `yarn banner:fetch` cambia el hash de los nombres.
 
+Las dos páginas cierran con **«Lo más vendido»**, el mismo carrusel de la portada: quien
+termina de leer sobre cómo elegir un equipo es justo quien está por comprarlo, y el blog
+existe para eso.
+
+**Jerarquía de encabezados.** El listado abre con `h1` y cada nota es un `h2`; el artículo
+abre con `h1` y sus apartados son `h2`. Suena obvio pero la primera versión estaba mal: el
+listado no tenía `h1` —seis `h2` sueltos— y el artículo saltaba de `h1` a `h3`, dejando un
+nivel vacío en medio. Los apartados del cuerpo van en `h2` en `src/content/blog.ts`, no en
+`h3` como el texto de las categorías, porque ahí cuelgan de un `h2` de sección y acá cuelgan
+del `h1` del artículo.
+
 ---
 
 ## Carrito y checkout
