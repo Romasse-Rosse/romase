@@ -61,7 +61,7 @@ export function ProductCard({
       </div>
 
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="text-[13px] leading-snug text-ink-800">
+        <h3 className="text-[13px] leading-snug font-semibold text-ink-950">
           {/* El enlace cubre toda la tarjeta, así el área de click es grande. */}
           <SelectItemLink
             product={product}

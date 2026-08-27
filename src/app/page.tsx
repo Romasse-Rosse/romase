@@ -110,7 +110,7 @@ export default async function HomePage() {
         <section className="order-2 py-14 sm:order-3 sm:py-16 lg:py-20">
           <Container>
             <SectionHeading
-              eyebrow="Lo más pedido"
+              eyebrow="Lo más vendido"
               title="Productos destacados"
               description="Los equipos que más nos consultan panaderías, cafeterías y restaurantes."
             />
@@ -133,11 +133,7 @@ export default async function HomePage() {
       --------------------------------------------------------------- */}
       <section id="categorias" className="border-y border-brand-100 bg-brand-50 py-16 lg:py-20">
         <Container>
-          <SectionHeading
-            eyebrow="Catálogo"
-            title="Compra por categoría"
-            description="Todo el equipamiento organizado por rubro."
-          />
+          <SectionHeading title="Encuentra el producto que necesitas para tu negocio" />
 
           {/* Cada tarjeta muestra un producto real de la categoría, no un
               icono: lo que se vende es el catálogo. La foto viene recortada
@@ -170,7 +166,7 @@ export default async function HomePage() {
                     </span>
 
                     <span className="flex items-center justify-between gap-2 border-t border-brand-100 px-4 py-3.5">
-                      <span className="text-[13px] leading-snug font-medium text-ink-950">
+                      <span className="text-[13px] leading-snug font-semibold text-ink-950">
                         {titleCase(category.name)}
                       </span>
                       <ArrowRight

@@ -88,7 +88,7 @@ export default function CarritoPage() {
                       <div className="min-w-0">
                         <Link
                           href={`/productos/${item.slug}`}
-                          className="text-sm leading-snug text-ink-900 hover:text-brand-600"
+                          className="text-sm leading-snug font-semibold text-ink-900 hover:text-brand-600"
                         >
                           {item.name}
                         </Link>

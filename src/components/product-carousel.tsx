@@ -6,21 +6,31 @@ import type { Product } from '@/lib/catalog'
 import { ProductCard } from './product-card'
 import { cn } from '@/lib/cn'
 
-const AUTOPLAY = 5000
+const AUTOPLAY = 4000
 
 /** Cuántos productos se muestran en la grilla de móvil. */
 const VISIBLES_EN_MOVIL = 6
 
 /**
+ * Cuántas tarjetas se clonan al final de la pista.
+ *
+ * Son las que se ven mientras la pista vuelve al principio: tienen que alcanzar
+ * para llenar la ventana más ancha, que muestra cuatro.
+ */
+const CLONES = 4
+
+/**
  * Carrusel de productos.
  *
  * En móvil es una grilla de dos columnas; desde sm en adelante es carrusel:
- * avanza solo, vuelve al principio al llegar al final y lleva flechas y viñetas
- * debajo de la pista.
+ * avanza de a una tarjeta, de derecha a izquierda, y no tiene final.
  *
- * El desplazamiento es el nativo con anclaje: así el gesto táctil, la rueda y
- * el teclado funcionan sin reimplementarlos, y el avance automático es un
- * scrollTo sobre la misma pista.
+ * El desplazamiento es el nativo con anclaje —así el gesto táctil, la rueda y el
+ * teclado funcionan sin reimplementarlos— y el bucle se hace clonando las
+ * primeras tarjetas al final: cuando el recorrido llega a los clones, se
+ * teletransporta al principio, que muestra exactamente los mismos píxeles. No se
+ * ve el salto y no hace falta reemplazar el scroll por transformaciones, que es
+ * lo que rompería el gesto.
  */
 export function ProductCarousel({
   products,
@@ -33,56 +43,105 @@ export function ProductCarousel({
   listName?: string
 }) {
   const pista = useRef<HTMLUListElement>(null)
-  const [pagina, setPagina] = useState(0)
-  const [paginas, setPaginas] = useState(1)
+  const [indice, setIndice] = useState(0)
+  const [esCarrusel, setEsCarrusel] = useState(false)
   const [pausado, setPausado] = useState(false)
 
-  const medir = useCallback(() => {
+  /** Distancia entre el inicio de una tarjeta y el de la siguiente. */
+  const medirPaso = useCallback(() => {
     const el = pista.current
-    if (!el) return
-    const total = Math.max(1, Math.round(el.scrollWidth / el.clientWidth))
-    setPaginas(total)
-    setPagina(Math.round(el.scrollLeft / el.clientWidth))
+    if (!el || el.children.length < 2) return 0
+    const [a, b] = [el.children[0] as HTMLElement, el.children[1] as HTMLElement]
+    return b.offsetLeft - a.offsetLeft
   }, [])
 
+  // En grilla no hay carrusel: ni controles, ni avance automático, ni clones
+  // visibles. Se pregunta al navegador en vez de suponer el ancho.
   useEffect(() => {
-    medir()
+    const consulta = window.matchMedia('(min-width: 640px)')
+    const revisar = () => setEsCarrusel(consulta.matches)
+    revisar()
+    consulta.addEventListener('change', revisar)
+    return () => consulta.removeEventListener('change', revisar)
+  }, [])
+
+  // Posición actual y vuelta al principio. Se espera a que el desplazamiento se
+  // detenga: teletransportar en medio de una animación la cortaría.
+  useEffect(() => {
     const el = pista.current
-    if (!el) return
-    el.addEventListener('scroll', medir, { passive: true })
-    window.addEventListener('resize', medir)
-    return () => {
-      el.removeEventListener('scroll', medir)
-      window.removeEventListener('resize', medir)
+    if (!el || !esCarrusel) return
+
+    let reposo: ReturnType<typeof setTimeout>
+
+    const alDesplazar = () => {
+      const paso = medirPaso()
+      if (!paso) return
+      setIndice(Math.round(el.scrollLeft / paso))
+
+      clearTimeout(reposo)
+      reposo = setTimeout(() => {
+        const vuelta = products.length * paso
+        if (el.scrollLeft < vuelta - 1) return
+        // Sin animación: los clones y las primeras tarjetas son iguales, así
+        // que el corte es invisible.
+        el.style.scrollBehavior = 'auto'
+        el.scrollLeft -= vuelta
+        el.style.scrollBehavior = ''
+        setIndice(Math.round(el.scrollLeft / paso))
+      }, 140)
     }
-  }, [medir, products.length])
 
-  const irA = useCallback((indice: number) => {
-    const el = pista.current
-    if (!el) return
-    const total = Math.max(1, Math.round(el.scrollWidth / el.clientWidth))
-    // Vuelve al principio en vez de frenarse: el recorrido no tiene final.
-    const destino = ((indice % total) + total) % total
-    el.scrollTo({ left: destino * el.clientWidth, behavior: 'smooth' })
-  }, [])
+    el.addEventListener('scroll', alDesplazar, { passive: true })
+    window.addEventListener('resize', alDesplazar)
+    return () => {
+      clearTimeout(reposo)
+      el.removeEventListener('scroll', alDesplazar)
+      window.removeEventListener('resize', alDesplazar)
+    }
+  }, [esCarrusel, medirPaso, products.length])
 
-  // Avance automático, como el del sitio de referencia. Se detiene al pasar
-  // el mouse, al enfocar con teclado y si el sistema pide menos movimiento.
+  const irA = useCallback(
+    (destino: number) => {
+      const el = pista.current
+      const paso = medirPaso()
+      if (!el || !paso) return
+      // Hacia atrás desde la primera: se salta al final de la tanda real y se
+      // sigue desde ahí, así tampoco hay tope por la izquierda.
+      if (destino < 0) {
+        el.style.scrollBehavior = 'auto'
+        el.scrollLeft += products.length * paso
+        el.style.scrollBehavior = ''
+        destino += products.length
+      }
+      el.scrollTo({ left: destino * paso, behavior: 'smooth' })
+    },
+    [medirPaso, products.length],
+  )
+
+  // Avance automático. Se detiene al pasar el mouse, al enfocar con teclado, al
+  // tocar la pantalla y si el sistema pide menos movimiento.
   useEffect(() => {
-    if (pausado || paginas < 2) return
+    if (!esCarrusel || pausado || products.length < 2) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const t = setTimeout(() => irA(pagina + 1), AUTOPLAY)
+    const t = setTimeout(() => irA(indice + 1), AUTOPLAY)
     return () => clearTimeout(t)
-  }, [pagina, paginas, pausado, irA])
+  }, [esCarrusel, indice, pausado, irA, products.length])
 
   if (products.length === 0) return null
 
-  // Las flechas acompañan a las viñetas, abajo. Cuando la tarjeta era un
-  // marco alrededor de la foto podían montarse sobre el margen sin molestar;
-  // ahora es una caja cerrada y taparle una esquina se ve como un parche. Acá
-  // no roban espacio ni pueden chocar con un título de dos líneas.
+  const enPista = [
+    ...products.map((p) => ({ producto: p, clave: String(p.id), clon: false })),
+    ...products
+      .slice(0, CLONES)
+      .map((p) => ({ producto: p, clave: `${p.id}-clon`, clon: true })),
+  ]
+
+  const posicion = indice % products.length
+
+  // Las flechas acompañan a las viñetas, abajo. Acá no roban espacio ni pueden
+  // chocar con un título de dos líneas.
   const flecha =
-    'size-10 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-800 transition-colors hover:border-brand-500 hover:bg-brand-500 hover:text-white'
+    'flex size-10 items-center justify-center rounded-full border border-ink-200 bg-white text-ink-800 transition-colors hover:border-brand-500 hover:bg-brand-500 hover:text-white'
 
   return (
     <div
@@ -94,54 +153,53 @@ export function ProductCarousel({
     >
       {/* En móvil no hay carrusel: es una grilla de dos columnas que se
           desplaza hacia abajo. La tarjeta cortada al borde de la pantalla se
-          veía como un error, y el gesto lateral compite con el scroll de la
-          página. Desde sm en adelante sí es carrusel.
-
-          El mismo <ul> cambia de flex a grid: en grilla no hay desplazamiento
-          horizontal, así que `paginas` da 1 y los controles y el avance
-          automático se apagan solos. */}
+          veía como un error, y el gesto lateral competía con el scroll de la
+          página. */}
       <ul
         ref={pista}
         className="grid grid-cols-2 gap-4 sm:flex sm:snap-x sm:snap-mandatory sm:items-stretch sm:gap-6 sm:overflow-x-auto sm:pb-2 sm:no-scrollbar"
       >
-        {products.map((product, i) => (
+        {enPista.map(({ producto, clave, clon }, i) => (
           <li
-            key={product.id}
+            key={clave}
+            /* Los clones existen solo para tapar la vuelta al principio: no
+               son contenido nuevo, así que se sacan del recorrido. */
+            {...(clon ? { inert: true, 'aria-hidden': true } : {})}
             className={cn(
               'flex',
-              // En móvil, seis productos: la sección tiene que terminar en
-              // algún momento y desde ahí se sigue por categoría.
+              // En móvil, seis productos y ningún clon: la sección tiene que
+              // terminar en algún momento y desde ahí se sigue por categoría.
               i >= VISIBLES_EN_MOVIL && 'hidden sm:flex',
               'sm:w-[calc(50%-0.75rem)] sm:shrink-0 sm:snap-start lg:w-[calc(25%-1.125rem)]',
             )}
           >
-            <ProductCard product={product} listId={listId} listName={listName} />
+            <ProductCard product={producto} listId={listId} listName={listName} />
           </li>
         ))}
       </ul>
 
-      {paginas > 1 && (
+      {esCarrusel && products.length > 1 && (
         <div className="mt-7 flex items-center justify-center gap-5">
           <button
             type="button"
-            onClick={() => irA(pagina - 1)}
-            aria-label="Ver productos anteriores"
-            className={cn(flecha, 'hidden sm:flex')}
+            onClick={() => irA(indice - 1)}
+            aria-label="Ver el producto anterior"
+            className={flecha}
           >
             <ChevronLeft className="size-4.5" />
           </button>
 
-          <div className="flex items-center gap-2">
-            {Array.from({ length: paginas }, (_, i) => (
+          <div className="flex items-center gap-1.5">
+            {products.map((p, i) => (
               <button
-                key={i}
+                key={p.id}
                 type="button"
                 onClick={() => irA(i)}
-                aria-label={`Ir al grupo ${i + 1} de ${paginas}`}
-                aria-current={i === pagina}
+                aria-label={`Ir al producto ${i + 1} de ${products.length}`}
+                aria-current={i === posicion}
                 className={cn(
                   'h-1.5 rounded-full transition-all',
-                  i === pagina ? 'w-7 bg-brand-500' : 'w-1.5 bg-ink-300 hover:bg-ink-400',
+                  i === posicion ? 'w-6 bg-brand-500' : 'w-1.5 bg-ink-300 hover:bg-ink-400',
                 )}
               />
             ))}
@@ -149,9 +207,9 @@ export function ProductCarousel({
 
           <button
             type="button"
-            onClick={() => irA(pagina + 1)}
-            aria-label="Ver más productos"
-            className={cn(flecha, 'hidden sm:flex')}
+            onClick={() => irA(indice + 1)}
+            aria-label="Ver el producto siguiente"
+            className={flecha}
           >
             <ChevronRight className="size-4.5" />
           </button>

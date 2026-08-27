@@ -76,6 +76,65 @@ const MARCAS = new Set([
   'ARCOS', 'COUSIÑO', 'HERCULES',
 ])
 
+/**
+ * Palabras del catálogo cargadas sin tilde, más un par de erratas del origen.
+ *
+ * WooCommerce tiene los nombres en mayúscula sostenida y sin acentos
+ * ("SOBADORA ELECTRICA"), así que al pasarlos a mayúscula de oración quedaban
+ * mal escritos. Se corrigen acá, en la capa de presentación: el slug y por
+ * tanto la URL no cambian, y la búsqueda compara sin tildes, así que nada se
+ * rompe. Lo correcto sería arreglarlo en el origen; mientras eso no pase, esto
+ * evita publicar 214 nombres con faltas.
+ *
+ * Las dos erratas —«estidora» por estiradora y «perrila» por perilla— están
+ * así en el WordPress. Conviene avisarle al cliente para corregirlas ahí.
+ */
+const ORTOGRAFIA: Record<string, string> = {
+  articulos: 'artículos',
+  bifida: 'bífida',
+  camara: 'cámara',
+  ceramica: 'cerámica',
+  citricos: 'cítricos',
+  corazon: 'corazón',
+  deposito: 'depósito',
+  depositos: 'depósitos',
+  electrica: 'eléctrica',
+  electricas: 'eléctricas',
+  electrico: 'eléctrico',
+  electricos: 'eléctricos',
+  espatula: 'espátula',
+  espatulas: 'espátulas',
+  estidora: 'estiradora',
+  frio: 'frío',
+  gastronomia: 'gastronomía',
+  gastronomico: 'gastronómico',
+  gastronomicos: 'gastronómicos',
+  maquina: 'máquina',
+  maquinas: 'máquinas',
+  maria: 'María',
+  metalica: 'metálica',
+  panaderia: 'panadería',
+  pasteleria: 'pastelería',
+  perrila: 'perilla',
+  poruna: 'poruña',
+  porunas: 'poruñas',
+  produccion: 'producción',
+  sarten: 'sartén',
+  sartenes: 'sartenes',
+  sifon: 'sifón',
+  teflon: 'teflón',
+  termometro: 'termómetro',
+  vacio: 'vacío',
+  valvula: 'válvula',
+  // El catálogo escribe las dos formas; se unifica en la de doble f.
+  waflera: 'wafflera',
+  wafleras: 'waffleras',
+}
+
+/** Aplica el diccionario sobre un texto ya en minúsculas. */
+const corregirOrtografia = (texto: string) =>
+  texto.replace(/[a-záéíóúüñ]+/g, (palabra) => ORTOGRAFIA[palabra] ?? palabra)
+
 const capitalizar = (palabra: string) =>
   palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
 
@@ -87,7 +146,9 @@ const capitalizar = (palabra: string) =>
  */
 export function titleCase(text: string): string {
   if (!text) return ''
-  const limpio = decodeEntities(text)
+  // Hay nombres cargados con espacios de más ("...28 CM  PARETI"): se colapsan,
+  // porque en el HTML no se ven pero en un atributo o en un mensaje de WhatsApp sí.
+  const limpio = decodeEntities(text).replace(/\s+/g, ' ').trim()
 
   // Hay nombres que gritan pero traen alguna palabra en minúscula
   // ('BURLETE PARA HORNO TURBO A GAS PRP-8000 Ventus'), así que no alcanza con
@@ -98,8 +159,7 @@ export function titleCase(text: string): string {
     [...letras].filter((c) => c === c.toUpperCase()).length / letras.length
   if (proporcionMayusculas < 0.7) return limpio
 
-  const resultado = limpio
-    .toLowerCase()
+  const resultado = corregirOrtografia(limpio.toLowerCase())
     .split(/(\s+)/)
     .map((token) => {
       if (!token.trim()) return token

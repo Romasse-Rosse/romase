@@ -90,6 +90,7 @@ src/
 | `/productos/[slug]` | estática (214) | ficha de producto |
 | `/categorias/[slug]` | estática (64) | página SEO de categoría |
 | `/buscar` | dinámica | resultados de búsqueda; fuera del índice |
+| `/blog`, `/blog/[slug]` | estáticas | **construido y oculto**; ver más abajo |
 | `/contacto`, `/nosotros`, `/politica-de-privacidad` | estáticas | |
 | `/carrito` | cliente | carrito, en localStorage |
 | `/checkout` | cliente | pedido; fuera del índice |
@@ -116,6 +117,26 @@ productos quedan enlazados desde una sola URL indexable.
 - **URLs con nombre:** se terminaron las URLs tipo `/9-2`. `next.config.ts` redirige con 301
   las viejas (`/producto/:slug` → `/productos/:slug`, `/tienda` → `/productos`).
 - `sitemap.xml` y `robots.txt` se generan solos desde el catálogo.
+
+---
+
+## Blog: construido y oculto
+
+Está armado con su listado y su diseño de artículo, pero **no publicado**: no se enlaza desde
+el encabezado ni el pie, no entra al sitemap, `/blog` está en el `disallow` de `robots.ts` y
+las dos páginas piden `noindex`. Existe para poder revisar el diseño antes de que se escriba
+el contenido.
+
+Los dos artículos de `src/content/blog.ts` son **de ejemplo**, escritos con el criterio del
+negocio para poder juzgar el diseño con texto real en vez de relleno. Se reemplazan sin tocar
+código: el archivo es una lista de objetos con slug, título, bajada, tema, fecha, portada y
+cuerpo en HTML. Los minutos de lectura se calculan del texto, no se escriben a mano.
+
+Para publicarlo, cuando llegue esa etapa, son tres pasos anotados en el mismo archivo:
+`BLOG_VISIBLE = true`, sacar `/blog` del `disallow` y agregar las entradas al sitemap.
+
+Las portadas se resuelven contra `public/banner/manifiesto.json`, igual que el banner de la
+portada: así siguen funcionando cuando `yarn banner:fetch` cambia el hash de los nombres.
 
 ---
 
@@ -533,9 +554,9 @@ aplica al armar el catálogo.
 El script es idempotente: vuelve a correrse cuando se agregan productos y solo baja lo que
 falta.
 
-> **Peso del proyecto.** La carpeta local pesa unos 600 MB, pero son `node_modules` (386 MB)
-> y `.next` (237 MB): generados, ignorados por git y no se despliegan como fuente. El
-> proyecto versionado son **2,1 MB en 73 archivos**.
+> **Peso del proyecto.** La carpeta local pesa unos 620 MB, pero 610 son `node_modules`
+> (386 MB) y `.next` (224 MB): generados, ignorados por git y no se despliegan como fuente.
+> Lo versionado son **6,5 MB en 468 archivos**, y 4 MB de eso son las fotos de producto.
 
 ---
 
@@ -583,3 +604,31 @@ ninguno de los dos avisa en pantalla con el teléfono y el correo.
 - **Versión compacta del logo.** El lockup incluye la bajada «Distribuidor equipamiento
   integral para el comercio», que a la altura del encabezado (36–44 px) es ilegible. Convendría
   pedir una variante sin bajada para usar ahí.
+
+---
+
+## Ortografía de los nombres del catálogo
+
+WooCommerce tiene los 214 nombres en mayúscula sostenida y **sin tildes**: «SOBADORA
+ELECTRICA», «MAQUINA DE JUGOS», «DEPOSITOS GASTRONOMICOS». Al pasarlos a mayúscula de oración
+quedaban mal escritos en toda la web.
+
+`titleCase()` en `src/lib/format.ts` aplica un diccionario de correcciones —37 de los 214
+nombres cambian— antes de armar el resultado. Es una capa de presentación a propósito:
+
+- El `slug` no cambia, así que **ninguna URL se rompe** y no hacen falta redirecciones.
+- La búsqueda compara con `normalize()`, que quita tildes, así que «maquina» sigue encontrando
+  «máquina».
+- La corrección llega sola a todos lados: tarjetas, fichas, migas de pan, carrito, correo del
+  pedido, JSON-LD y el mensaje de WhatsApp.
+
+Dos entradas del diccionario no son tildes sino **erratas del origen**: «ESTIDORA» por
+estiradora y «PERRILA» por perilla. Conviene corregirlas en el WordPress; mientras eso no
+pase, acá no se publican con la falta.
+
+> Lo correcto es arreglarlo en el origen. El diccionario evita publicar 214 nombres con faltas
+> hoy, no reemplaza esa tarea. Cuando el catálogo se cargue bien en Supabase, este bloque se
+> puede ir vaciando.
+
+También se colapsan los espacios repetidos: hay nombres cargados con dos espacios que en el
+HTML no se notan, pero sí en un atributo `alt` o en el mensaje de WhatsApp.

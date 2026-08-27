@@ -390,7 +390,9 @@ export function CheckoutForm() {
                   )}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[13px] leading-snug text-ink-900">{item.name}</span>
+                  <span className="block text-[13px] leading-snug font-semibold text-ink-900">
+                    {item.name}
+                  </span>
                   <span className="text-xs text-ink-500">× {item.quantity}</span>
                 </span>
                 <span className="shrink-0 text-[13px] font-medium text-ink-950">

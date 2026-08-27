@@ -3,9 +3,11 @@
   // El proyecto tiene ~18.000 archivos, pero solo 64 son código propio.
   // El resto es generado: node_modules (14.973) y .next (2.747).
   //
-  // VS Code ya excluye node_modules del vigilante por defecto, pero .next
-  // no, y es la peor de las dos: cambia entera en cada build, así que el
-  // vigilante recibe miles de eventos seguidos y se come CPU y memoria.
+  // No hay que confiar en los valores por defecto del editor: acá se
+  // comprobó que node_modules NO estaba excluido del vigilante. Se declaran
+  // las dos carpetas explícitamente, y .next es la peor de las dos porque
+  // cambia entera en cada build: el vigilante recibe miles de eventos
+  // seguidos y se come CPU y memoria.
   // ============================================================
   "files.watcherExclude": {
     "**/.next/**": true,

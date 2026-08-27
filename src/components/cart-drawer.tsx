@@ -119,7 +119,7 @@ export function CartDrawer() {
                     <Link
                       href={`/productos/${item.slug}`}
                       onClick={() => setOpen(false)}
-                      className="text-[13px] leading-snug text-ink-900 hover:text-brand-600"
+                      className="text-[13px] leading-snug font-semibold text-ink-900 hover:text-brand-600"
                     >
                       {item.name}
                     </Link>
