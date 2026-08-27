@@ -12,9 +12,9 @@ import {
   minutosDeLectura,
 } from '@/content/blog'
 import manifiestoBanner from '../../../../public/banner/manifiesto.json'
-import { getCarouselProducts } from '@/lib/catalog'
+import { getCarouselProducts, getProductBySlug } from '@/lib/catalog'
 import { site } from '@/lib/site'
-import { truncate } from '@/lib/format'
+import { titleCase } from '@/lib/format'
 import { Breadcrumbs, Container, SectionHeading } from '@/components/ui'
 import { ProductCarousel } from '@/components/product-carousel'
 import { ViewItemList } from '@/components/analytics'
@@ -34,15 +34,15 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   if (!articulo) return { title: 'Artículo no encontrado' }
 
   return {
-    title: articulo.titulo,
-    description: truncate(articulo.bajada, 155),
+    title: { absolute: articulo.metaTitulo },
+    description: articulo.metaDescripcion,
     // Mientras el blog esté oculto no se ofrece al índice. Ver src/content/blog.ts.
     robots: BLOG_VISIBLE ? { index: true, follow: true } : { index: false, follow: false },
     alternates: { canonical: `/blog/${articulo.slug}` },
     openGraph: {
       type: 'article',
-      title: articulo.titulo,
-      description: truncate(articulo.bajada, 155),
+      title: articulo.metaTitulo,
+      description: articulo.metaDescripcion,
       publishedTime: articulo.fecha,
     },
   }
@@ -59,11 +59,23 @@ export default async function ArticuloPage({ params }: { params: Params }) {
   const otros = articulosPublicados().filter((a) => a.slug !== articulo.slug)
   const masVendidos = await getCarouselProducts(12)
 
+  // Segunda imagen de la nota: la foto de un producto del catálogo. Cumple el
+  // mínimo de dos imágenes y da un enlace interno que no se siente pegado.
+  const enContenido = articulo.imagenProducto
+    ? await getProductBySlug(articulo.imagenProducto.slug)
+    : null
+
+  // El último párrafo del cuerpo es el CTA. Se separa para que la foto del
+  // producto entre antes y el enlace quede cerrando la nota, que es su lugar.
+  const corte = articulo.cuerpo.lastIndexOf('<p><a href=')
+  const cuerpo = corte > 0 ? articulo.cuerpo.slice(0, corte) : articulo.cuerpo
+  const cierre = corte > 0 ? articulo.cuerpo.slice(corte) : ''
+
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: articulo.titulo,
-    description: articulo.bajada,
+    description: articulo.metaDescripcion,
     datePublished: articulo.fecha,
     author: { '@type': 'Organization', name: site.name },
     publisher: { '@type': 'Organization', name: site.name },
@@ -116,10 +128,35 @@ export default async function ArticuloPage({ params }: { params: Params }) {
             </div>
           )}
 
-          <div
-            className="rich-text mt-9"
-            dangerouslySetInnerHTML={{ __html: articulo.cuerpo }}
-          />
+          <div className="rich-text mt-9" dangerouslySetInnerHTML={{ __html: cuerpo }} />
+
+          {enContenido && articulo.imagenProducto && enContenido.images[0] && (
+            <figure className="mt-10 border border-ink-200 bg-white">
+              <Link
+                href={`/productos/${enContenido.slug}`}
+                className="relative block aspect-[4/3] overflow-hidden"
+              >
+                <Image
+                  src={enContenido.images[0].src}
+                  alt={articulo.imagenProducto.alt}
+                  fill
+                  sizes="(min-width: 768px) 42rem, 92vw"
+                  className="object-contain p-8"
+                />
+              </Link>
+              <figcaption className="border-t border-ink-100 px-5 py-3.5 text-sm text-ink-600">
+                {articulo.imagenProducto.pie}{' '}
+                <Link href={`/productos/${enContenido.slug}`} className="text-brand-700 underline">
+                  {titleCase(enContenido.name)}
+                </Link>
+              </figcaption>
+            </figure>
+          )}
+
+          {/* El CTA cierra la nota, después de la foto. */}
+          {cierre && (
+            <div className="rich-text mt-10" dangerouslySetInnerHTML={{ __html: cierre }} />
+          )}
         </article>
       </Container>
 

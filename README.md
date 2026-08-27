@@ -29,6 +29,7 @@ y para que el build de Render nunca dependa de un servicio externo.
 | `yarn favicons` | Regenera los favicons desde el logo |
 | `yarn banner:fetch` | Vuelve a bajar las fotos del banner |
 | `yarn productos:imagenes` | Baja y optimiza las fotos de producto a `public/productos/` |
+| `yarn notas:auditar` | Revisa las notas del blog contra el estándar de redacción |
 
 ---
 
@@ -127,10 +128,46 @@ el encabezado ni el pie, no entra al sitemap, `/blog` está en el `disallow` de 
 las dos páginas piden `noindex`. Existe para poder revisar el diseño antes de que se escriba
 el contenido.
 
-Los dos artículos de `src/content/blog.ts` son **de ejemplo**, escritos con el criterio del
-negocio para poder juzgar el diseño con texto real en vez de relleno. Se reemplazan sin tocar
-código: el archivo es una lista de objetos con slug, título, bajada, tema, fecha, portada y
-cuerpo en HTML. Los minutos de lectura se calculan del texto, no se escriben a mano.
+Los dos artículos de `src/content/blog.ts` son **de ejemplo**, pero están escritos contra el
+**estándar de redacción de la agencia** (`skills/seo/redaccion-contenido` en el repositorio de
+conocimiento). Se reemplazan sin tocar código: el archivo es una lista de objetos con slug,
+título, keyword foco, metatítulo, metadescripción, bajada, tema, fecha, portada, foto de
+producto y cuerpo en HTML. Los minutos de lectura se calculan del texto, no se escriben a mano.
+
+### La regla es verificable, no una intención
+
+`yarn notas:auditar` revisa cada nota y sale con código 1 si alguna falla, así que puede correr
+en CI. Lo que comprueba:
+
+- Mínimo 600 palabras y 1 H2 cada ~300, con dos como piso.
+- Keyword foco en H1, primer párrafo, metatítulo, metadescripción, slug y el alt de una imagen.
+- Metatítulo de 50 a 60 caracteres, metadescripción de 135 a 145, slug de hasta 60.
+- Ningún párrafo de más de 50 palabras.
+- Los cuatro formatos: negritas, cursivas, listas y cita en bloque.
+- Dos imágenes como mínimo, tres desde las 1.200 palabras.
+- Al menos dos enlaces internos, ningún enlace externo, y CTA al cierre hacia una categoría o
+  un producto —no hacia otra nota— con texto que no suene a instrucción de venta.
+- Último H2 descriptivo: nunca «Conclusión».
+- Frases de plantilla prohibidas («en este artículo te explicamos», «en resumen»…).
+- Avisa de toda cifra en el cuerpo, para revisarla contra su fuente a mano.
+
+Lo que una máquina no puede juzgar —que la voz suene a persona, que la keyword tenga volumen
+real— sale como aviso, no como error.
+
+> **La keyword foco de cada nota está puesta a criterio y falta validarla con volumen real.**
+> Ese es el paso 1 del flujo de la agencia (`seo/keyword-research-notas`) y necesita
+> DataForSEO. Las notas cumplen la forma; el research queda pendiente.
+
+### Regla cero-alucinación
+
+Ninguna cifra concreta entra al cuerpo de una nota si no está verificada en una fuente que la
+muestre directamente. Es la lección más dura del estándar —viene de una nota de Pandero llena
+de rangos de precios inventados que el cliente detectó y mandó a sacar— y la primera versión de
+estas dos notas la incumplía: **23 cifras sin fuente** solo en la de amasadoras.
+
+Se reescribieron para explicar **qué mueve** un costo o un plazo en vez de inventar el número.
+El lector entiende igual y el cliente no queda expuesto. Cuando ROMASE entregue sus propios
+datos —capacidades por modelo, plazos reales de despacho— ahí sí entran, citando la ficha.
 
 Para publicarlo, cuando llegue esa etapa, son tres pasos anotados en el mismo archivo:
 `BLOG_VISIBLE = true`, sacar `/blog` del `disallow` y agregar las entradas al sitemap.

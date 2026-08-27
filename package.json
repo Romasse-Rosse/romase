@@ -13,7 +13,8 @@
     "catalog:seed": "node migration/seed-supabase.mjs",
     "favicons": "node scripts/generate-favicons.mjs",
     "banner:fetch": "node scripts/fetch-banner-images.mjs",
-    "productos:imagenes": "node scripts/localize-product-images.mjs"
+    "productos:imagenes": "node scripts/localize-product-images.mjs",
+    "notas:auditar": "node scripts/auditar-notas.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",

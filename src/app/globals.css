@@ -118,6 +118,18 @@
     text-decoration: underline;
     text-underline-offset: 2px;
   }
+  /* Citas en bloque: las usan las notas del blog para destacar la idea que
+     resume el apartado. Sin comillas decorativas — el filete y el tamaño ya
+     la separan del cuerpo. */
+  .rich-text blockquote {
+    margin-top: 1.75rem;
+    margin-bottom: 1.75rem;
+    border-left: 3px solid var(--color-brand-500);
+    padding: 0.25rem 0 0.25rem 1.25rem;
+    color: var(--color-ink-900);
+    font-size: 1.1rem;
+    line-height: 1.55;
+  }
   .rich-text strong {
     color: var(--color-ink-900);
     font-weight: 600;
