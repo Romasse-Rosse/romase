@@ -30,6 +30,8 @@ y para que el build de Render nunca dependa de un servicio externo.
 | `yarn banner:fetch` | Vuelve a bajar las fotos del banner |
 | `yarn productos:imagenes` | Baja y optimiza las fotos de producto a `public/productos/` |
 | `yarn notas:auditar` | Revisa las notas del blog contra el estándar de redacción |
+| `yarn webpay:probar` | Abre una transacción de prueba en el ambiente de integración |
+| `yarn webpay:casos` | Comprueba las cuatro formas en que Transbank vuelve al sitio |
 
 ---
 
@@ -219,12 +221,77 @@ fallan los dos, el formulario lo dice en pantalla y no da el pedido por tomado.
 > cuando termina una acción de formulario. Con inputs sin controlar, una validación fallida
 > del servidor le borraba al cliente todo lo que había escrito en el checkout.
 
-### Lo que falta para cobrar en línea
+### Webpay Plus
 
-El esquema ya tiene las columnas `webpay_token`, `webpay_buy_order` y `webpay_response`, y el
-paso 3 del checkout tiene el bloque de Webpay marcado como «próximamente». La integración
-con Transbank Webpay Plus REST entra ahí: crear la transacción antes de confirmar, redirigir,
-y confirmar el pedido contra el resultado.
+Integrado con el **SDK oficial de Transbank**. Son dos llamadas y se podrían hacer con
+`fetch`, pero en una pasarela conviene el camino que Transbank soporta: la homologación pide
+evidencia de las pruebas, y «usamos su SDK» es mejor respuesta que «escribimos el cliente».
+
+**El flujo, de punta a punta:**
+
+1. El checkout valida, vuelve a poner los precios desde el catálogo y guarda el pedido en
+   `orders` como `pendiente`.
+2. Abre la transacción con Transbank y anota `webpay_token` y `webpay_buy_order` en el pedido.
+3. El navegador entra a Webpay con un **POST** y un campo `token_ws` — así lo define
+   Transbank, no sirve un enlace.
+4. Transbank vuelve a `/checkout/retorno`, que confirma la transacción y deja el pedido en
+   `pagado` o `rechazado`.
+5. `/checkout/resultado` muestra el comprobante.
+
+**Tres cosas que no son obvias y están resueltas:**
+
+- **La vuelta es un route handler, no una página.** Transbank puede volver por POST o por GET
+  según el caso, y una página de Next solo atiende GET: un POST devolvería 405 y el comprador
+  vería un error *después* de haber pagado.
+- **Cuatro casos de vuelta, no uno.** `token_ws` es el pago normal;
+  `TBK_TOKEN` + `TBK_ORDEN_COMPRA` + `TBK_ID_SESION` es que el comprador anuló;
+  solo `TBK_ORDEN_COMPRA` + `TBK_ID_SESION` es que se venció el plazo; y
+  `token_ws` + `TBK_TOKEN` es error en el formulario. **En los tres últimos no se confirma
+  nada**: confirmar un token anulado deja pedidos en un estado que no corresponde.
+- **El commit se hace una sola vez.** Transbank rechaza el segundo commit del mismo token, y
+  basta con que alguien recargue la página de vuelta para que pase. Si el pedido ya tiene
+  `webpay_response`, se muestra lo guardado en vez de volver a llamar.
+
+**Y dos que son de plata:**
+
+- **El monto se compara** contra el que se guardó al crear el pedido. Si no calza, el pedido
+  no se marca como pagado aunque Transbank haya autorizado.
+- **El carrito se vacía en la página de resultado, no al salir hacia Webpay.** Si el pago se
+  rechaza, el comprador tiene que poder reintentar sin volver a armar el pedido. Por lo mismo,
+  el evento `purchase` de GA4 sale ahí y no antes.
+
+**La orden de compra lleva prefijo `ROM-`.** Transbank exige que sea única por código de
+comercio: si el WooCommerce viejo sigue cobrando con el mismo código, los dos sistemas no
+pueden generar el mismo número.
+
+### La página de resultado es un requisito, no una decisión de diseño
+
+Transbank define qué tiene que ver el tarjetahabiente y lo revisa en la homologación. Los
+nueve datos obligatorios están todos en `/checkout/resultado`: número de pedido, nombre del
+comercio, monto y moneda, código de autorización, fecha, tipo de pago (débito o crédito),
+cantidad de cuotas, últimos cuatro dígitos de la tarjeta y descripción de lo comprado. Para
+las rechazadas piden además informar las causas posibles, que salen de traducir el
+`response_code`.
+
+### Ambientes y qué falta
+
+Sin variables de entorno el sitio corre contra **integración**, con las credenciales públicas
+de prueba de Transbank. Para producción hacen falta `WEBPAY_AMBIENTE=produccion`,
+`WEBPAY_CODIGO_COMERCIO` y `WEBPAY_API_KEY`; si alguna falta, Webpay queda apagado y el
+checkout sigue funcionando como pedido por correo en vez de romperse.
+
+> **Webpay necesita Supabase.** Sin base no se puede guardar el pedido antes de cobrar, y sin
+> eso no hay contra qué comparar el monto a la vuelta ni qué mostrar en el comprobante. Si
+> Supabase no está configurado, el pago no se ofrece.
+
+> **Transbank exige HTTPS también en integración**, así que el pago completo solo se puede
+> probar en el sitio desplegado, no en localhost. Lo que sí se prueba en local es la vuelta:
+> `yarn webpay:casos` recorre las cinco formas en que Transbank puede volver —incluido el
+> POST— y comprueba a dónde deriva cada una. Hoy pasan las cinco.
+
+Falta la **homologación**: un formulario de validación, evidencia de las pruebas y una
+transacción real el día de la puesta en producción. Recién ahí Transbank entrega la llave
+productiva. Y antes que eso, el cliente tiene que recuperar los accesos a Webpay.
 
 ---
 

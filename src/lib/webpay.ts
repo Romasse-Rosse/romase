@@ -1,0 +1,178 @@
+import 'server-only'
+import { WebpayPlus, Options, Environment, IntegrationCommerceCodes, IntegrationApiKeys } from 'transbank-sdk'
+
+/**
+ * Webpay Plus REST.
+ *
+ * Se usa el SDK oficial de Transbank en vez de llamar la API a mano. Son solo
+ * dos llamadas y se podrían hacer con fetch, pero en una pasarela de pago
+ * conviene el camino que Transbank soporta: la homologación pide evidencia de
+ * las pruebas, y «usamos su SDK» es mejor respuesta que «escribimos el cliente».
+ *
+ * ------------------------------------------------------------------
+ * Ambientes
+ * ------------------------------------------------------------------
+ * Sin variables de entorno funciona contra **integración** con las credenciales
+ * públicas de prueba que publica Transbank. No hay secreto que proteger ahí: el
+ * código de comercio y la llave son los mismos para todo el mundo.
+ *
+ * Para producción hacen falta las tres variables, y las dos credenciales las
+ * entrega Transbank por escrito al terminar la homologación:
+ *
+ *   WEBPAY_AMBIENTE      = produccion
+ *   WEBPAY_CODIGO_COMERCIO
+ *   WEBPAY_API_KEY
+ *
+ * ------------------------------------------------------------------
+ * HTTPS
+ * ------------------------------------------------------------------
+ * Transbank no acepta integraciones sin HTTPS, ni siquiera en integración: la
+ * URL de retorno tiene que ser https. En Render lo es; en localhost no, así que
+ * el flujo completo se prueba en el sitio desplegado, no en la máquina.
+ */
+
+const AMBIENTE = process.env.WEBPAY_AMBIENTE === 'produccion' ? 'produccion' : 'integracion'
+
+const CODIGO_COMERCIO =
+  process.env.WEBPAY_CODIGO_COMERCIO ?? IntegrationCommerceCodes.WEBPAY_PLUS
+const API_KEY = process.env.WEBPAY_API_KEY ?? IntegrationApiKeys.WEBPAY
+
+/**
+ * En producción no se cae a las credenciales de prueba: sería cobrar contra un
+ * comercio que no es el del cliente. Si faltan, Webpay queda apagado y el
+ * checkout sigue funcionando como pedido por correo.
+ */
+export const webpayConfigurado =
+  AMBIENTE === 'integracion' ||
+  Boolean(process.env.WEBPAY_CODIGO_COMERCIO && process.env.WEBPAY_API_KEY)
+
+export const webpayEsIntegracion = AMBIENTE === 'integracion'
+
+function transaccion() {
+  return new WebpayPlus.Transaction(
+    new Options(
+      CODIGO_COMERCIO,
+      API_KEY,
+      AMBIENTE === 'produccion' ? Environment.Production : Environment.Integration,
+    ),
+  )
+}
+
+/** Lo que devuelve Transbank al confirmar. Solo los campos que se usan. */
+export type RespuestaWebpay = {
+  vci?: string
+  amount: number
+  status: string
+  buy_order: string
+  session_id?: string
+  card_detail?: { card_number?: string }
+  accounting_date?: string
+  transaction_date?: string
+  authorization_code?: string
+  payment_type_code?: string
+  response_code: number
+  installments_number?: number
+  installments_amount?: number
+}
+
+/**
+ * Abre la transacción. Devuelve el token y la URL a la que hay que enviar al
+ * comprador con un POST.
+ *
+ * `buyOrder` tiene que ser único por comercio: si el WooCommerce viejo sigue
+ * cobrando con el mismo código, los dos sistemas no pueden repetir el número.
+ * Por eso el prefijo.
+ */
+export async function crearTransaccion({
+  ordenCompra,
+  sesion,
+  monto,
+  urlRetorno,
+}: {
+  ordenCompra: string
+  sesion: string
+  monto: number
+  urlRetorno: string
+}): Promise<{ token: string; url: string }> {
+  // CLP no tiene decimales y Transbank rechaza el monto con coma.
+  const entero = Math.round(monto)
+  const respuesta = await transaccion().create(ordenCompra, sesion, entero, urlRetorno)
+  return { token: respuesta.token, url: respuesta.url }
+}
+
+/** Confirma la transacción. Se llama una sola vez por token. */
+export async function confirmarTransaccion(token: string): Promise<RespuestaWebpay> {
+  return (await transaccion().commit(token)) as RespuestaWebpay
+}
+
+/**
+ * ¿Quedó aprobada?
+ *
+ * Las dos condiciones se piden juntas a propósito: la documentación exige
+ * `response_code === 0` **y** `status === 'AUTHORIZED'`. Mirar solo una de las
+ * dos es el error clásico de estas integraciones.
+ */
+export function aprobada(r: RespuestaWebpay): boolean {
+  return r.response_code === 0 && r.status === 'AUTHORIZED'
+}
+
+const TIPOS_DE_PAGO: Record<string, string> = {
+  VD: 'Débito',
+  VN: 'Crédito',
+  VC: 'Crédito en cuotas',
+  SI: 'Crédito, 3 cuotas sin interés',
+  S2: 'Crédito, 2 cuotas sin interés',
+  NC: 'Crédito, cuotas comercio',
+  VP: 'Prepago',
+}
+
+/** La página de resultado tiene que decir si fue débito o crédito, en palabras. */
+export function tipoDePago(codigo: string | undefined): string {
+  if (!codigo) return 'No informado'
+  return TIPOS_DE_PAGO[codigo] ?? codigo
+}
+
+/**
+ * Por qué se pudo haber rechazado.
+ *
+ * Transbank pide informar al tarjetahabiente las causas posibles cuando la
+ * transacción se rechaza. Los códigos negativos no traen glosa en la respuesta,
+ * así que se traducen acá.
+ */
+export function motivoDelRechazo(codigo: number): string {
+  switch (codigo) {
+    case -1:
+      return 'La transacción fue rechazada. Puede ser un error en los datos de la tarjeta, ' +
+        'saldo o cupo insuficiente, o que la compra supere el límite diario.'
+    case -2:
+      return 'La transacción se reintentó y volvió a fallar. Conviene probar con otra tarjeta.'
+    case -3:
+      return 'Hubo un error al procesar el pago. No se hizo ningún cargo.'
+    case -4:
+      return 'El banco emisor rechazó la transacción.'
+    case -5:
+      return 'La transacción fue rechazada por riesgo de fraude.'
+    case -6:
+      return 'Se excedió el máximo de reintentos permitidos.'
+    case -7:
+      return 'La transacción fue rechazada. Conviene consultar con el banco emisor.'
+    case -8:
+      return 'La transacción fue rechazada por un error en los datos ingresados.'
+    default:
+      return 'La transacción no se completó. No se hizo ningún cargo a la tarjeta.'
+  }
+}
+
+/** Fecha de la transacción, en el formato que se muestra al comprador. */
+export function fechaDeTransaccion(iso: string | undefined): string {
+  if (!iso) return 'No informada'
+  const fecha = new Date(iso)
+  if (Number.isNaN(fecha.getTime())) return iso
+  return fecha.toLocaleString('es-CL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}

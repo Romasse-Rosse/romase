@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Archivo de prueba de Webpay, generado por yarn webpay:probar
+webpay-prueba.html

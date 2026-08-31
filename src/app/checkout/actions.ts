@@ -5,17 +5,25 @@ import { loadCatalog } from '@/lib/catalog'
 import { sendOrderNotification, type OrderNotification } from '@/lib/email'
 import { titleCase } from '@/lib/format'
 import { site } from '@/lib/site'
+import { crearTransaccion, webpayConfigurado } from '@/lib/webpay'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export type CheckoutLine = { id: number; quantity: number }
 
 export type CheckoutState = {
-  status: 'idle' | 'ok' | 'error'
+  /**
+   * 'pagar' es el camino con Webpay: el formulario recibe la URL y el token y
+   * manda al comprador a Transbank. 'ok' es el camino sin pasarela, que sigue
+   * existiendo mientras Webpay no esté configurado.
+   */
+  status: 'idle' | 'ok' | 'error' | 'pagar'
   message?: string
   fieldErrors?: Record<string, string>
   /** Número de pedido, cuando se pudo registrar. */
   orderNumber?: string
+  /** Datos para el POST a Webpay, cuando status es 'pagar'. */
+  webpay?: { url: string; token: string }
 }
 
 /** Datos del cliente, tal como los devuelve el formulario. */
@@ -219,6 +227,38 @@ export async function submitCheckout(
     subtotal,
   }
 
+  // ------------------------------------------------------------
+  // Pago con Webpay
+  //
+  // Solo si hay pasarela configurada y el pedido quedó guardado: el número de
+  // orden y el total tienen que existir en la base antes de mandar a nadie a
+  // pagar, porque al volver hay que comparar el monto contra lo que se cobró.
+  // ------------------------------------------------------------
+  if (webpayConfigurado && guardado.ok && guardado.orderNumber && guardado.id) {
+    const total = subtotal
+    const ordenCompra = ordenDeCompra(guardado.orderNumber)
+
+    try {
+      const { token, url } = await crearTransaccion({
+        ordenCompra,
+        sesion: guardado.id.slice(0, 61),
+        monto: total,
+        urlRetorno: `${site.url}/checkout/retorno`,
+      })
+
+      const anotado = await anotarTransaccion(guardado.id, token, ordenCompra)
+      if (!anotado) {
+        // Sin el token guardado no se puede reconocer el pedido a la vuelta.
+        console.error('[checkout] no se pudo anotar el token de Webpay')
+      } else {
+        return { status: 'pagar', orderNumber: guardado.orderNumber, webpay: { url, token } }
+      }
+    } catch (error) {
+      // Que Webpay falle no puede perder el pedido: cae al aviso por correo.
+      console.error('[checkout] Webpay no respondió:', (error as Error).message)
+    }
+  }
+
   const enviado = await sendOrderNotification(aviso)
 
   // Igual que en el formulario de contacto: con que uno de los dos canales
@@ -267,7 +307,7 @@ async function guardarPedido({
   shippingCost: number
   direccion: Record<string, string | undefined>
   notas: string
-}): Promise<{ ok: boolean; orderNumber?: string; reason?: string }> {
+}): Promise<{ ok: boolean; id?: string; orderNumber?: string; reason?: string }> {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !key) return { ok: false, reason: 'Supabase no configurado' }
@@ -304,8 +344,41 @@ async function guardarPedido({
       return { ok: false, reason: `order_items: ${errorItems.message}` }
     }
 
-    return { ok: true, orderNumber: String(pedido.order_number) }
+    return { ok: true, id: pedido.id, orderNumber: String(pedido.order_number) }
   } catch (error) {
     return { ok: false, reason: (error as Error).message }
+  }
+}
+
+/**
+ * Orden de compra para Transbank.
+ *
+ * Máximo 26 caracteres y **única por código de comercio**. El prefijo importa:
+ * si el WooCommerce viejo sigue cobrando con el mismo código, los dos sistemas
+ * no pueden generar el mismo número. `ROM-` marca cuál es de este sitio.
+ */
+function ordenDeCompra(numeroPedido: string): string {
+  return `ROM-${numeroPedido}`.slice(0, 26)
+}
+
+/** Deja el token de Webpay en el pedido, para reconocerlo cuando vuelva. */
+async function anotarTransaccion(
+  id: string,
+  token: string,
+  ordenCompra: string,
+): Promise<boolean> {
+  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) return false
+
+  try {
+    const db = createClient(url, key, { auth: { persistSession: false } })
+    const { error } = await db
+      .from('orders')
+      .update({ webpay_token: token, webpay_buy_order: ordenCompra, updated_at: new Date().toISOString() })
+      .eq('id', id)
+    return !error
+  } catch {
+    return false
   }
 }

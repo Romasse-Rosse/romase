@@ -77,6 +77,26 @@ export function CheckoutForm() {
     addShippingInfo(enGa4(), modo)
   }, [ready, entrega, transportista])
 
+  // Con Webpay: se manda al comprador a Transbank con un POST. Tiene que ser
+  // POST y el campo tiene que llamarse token_ws — así lo define Transbank.
+  // El carrito NO se vacía acá: si el pago se rechaza hay que poder reintentar.
+  const enviadoAWebpay = useRef(false)
+  useEffect(() => {
+    if (state.status !== 'pagar' || !state.webpay || enviadoAWebpay.current) return
+    enviadoAWebpay.current = true
+
+    const formulario = document.createElement('form')
+    formulario.method = 'POST'
+    formulario.action = state.webpay.url
+    const campo = document.createElement('input')
+    campo.type = 'hidden'
+    campo.name = 'token_ws'
+    campo.value = state.webpay.token
+    formulario.appendChild(campo)
+    document.body.appendChild(formulario)
+    formulario.submit()
+  }, [state.status, state.webpay])
+
   useEffect(() => {
     if (state.status === 'ok' && !confirmado) {
       purchase(enGa4(), {
@@ -86,6 +106,19 @@ export function CheckoutForm() {
       clear()
     }
   }, [state.status, state.orderNumber, confirmado, subtotal, count, clear])
+
+  if (state.status === 'pagar') {
+    return (
+      <div className="mx-auto max-w-md py-16 text-center">
+        <div className="mx-auto size-10 animate-spin rounded-full border-2 border-ink-200 border-t-brand-500" />
+        <h2 className="mt-6 text-lg font-medium text-ink-950">Te estamos llevando a Webpay</h2>
+        <p className="mx-auto mt-2 max-w-sm text-sm text-ink-600">
+          El pago se hace en el sitio seguro de Transbank. Si no avanza en unos segundos,
+          revisa que el navegador no esté bloqueando la redirección.
+        </p>
+      </div>
+    )
+  }
 
   if (state.status === 'ok' && confirmado) {
     return <Confirmacion state={state} resumen={confirmado} />

@@ -35,3 +35,11 @@ services:
       # Contenedor de Google Tag Manager (GTM-XXXXXXX).
       - key: NEXT_PUBLIC_GTM_ID
         sync: false
+      # Webpay Plus. Sin estas variables corre contra el ambiente de
+      # integración de Transbank con las credenciales públicas de prueba.
+      - key: WEBPAY_AMBIENTE
+        value: integracion
+      - key: WEBPAY_CODIGO_COMERCIO
+        sync: false
+      - key: WEBPAY_API_KEY
+        sync: false
