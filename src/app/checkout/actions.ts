@@ -5,6 +5,7 @@ import { loadCatalog } from '@/lib/catalog'
 import { sendOrderNotification, type OrderNotification } from '@/lib/email'
 import { titleCase } from '@/lib/format'
 import { site } from '@/lib/site'
+import { origenDelSitio } from '@/lib/origen'
 import { crearTransaccion, webpayConfigurado } from '@/lib/webpay'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -243,7 +244,8 @@ export async function submitCheckout(
         ordenCompra,
         sesion: guardado.id.slice(0, 61),
         monto: total,
-        urlRetorno: `${site.url}/checkout/retorno`,
+        // El origen real, no el canónico: ver src/lib/origen.ts.
+        urlRetorno: `${await origenDelSitio()}/checkout/retorno`,
       })
 
       const anotado = await anotarTransaccion(guardado.id, token, ordenCompra)

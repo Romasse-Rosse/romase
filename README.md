@@ -260,7 +260,22 @@ evidencia de las pruebas, y «usamos su SDK» es mejor respuesta que «escribimo
   rechaza, el comprador tiene que poder reintentar sin volver a armar el pedido. Por lo mismo,
   el evento `purchase` de GA4 sale ahí y no antes.
 
-**La orden de compra lleva prefijo `ROM-`.** Transbank exige que sea única por código de
+### El dominio canónico no sirve como URL de retorno
+
+ vale  porque ahí es donde va a vivir el sitio
+cuando se mueva el dominio, y para el canónico de Google está bien. Para Webpay está mal: hoy
+romase.cl **es el WordPress viejo**, así que darle esa URL a Transbank como retorno manda al
+comprador a otro sitio después de pagar y el pedido queda cobrado sin confirmar.
+
+ tampoco sirve: detrás del proxy de Render devuelve la dirección interna,
+. Se comprobó en el sitio desplegado, redirigiendo justo ahí.
+
+ resuelve el origen real desde  y
+, y cae a  si no están. Es lo que se usa para la URL de
+retorno y para la redirección de vuelta; el día que el dominio se mueva, sigue funcionando sin
+tocar nada.
+
+**La orden de compra lleva prefijo .** Transbank exige que sea única por código de
 comercio: si el WooCommerce viejo sigue cobrando con el mismo código, los dos sistemas no
 pueden generar el mismo número.
 

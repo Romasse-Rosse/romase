@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { sendOrderNotification, type OrderNotification } from '@/lib/email'
+import { origenDelSitio } from '@/lib/origen'
 import { aprobada, confirmarTransaccion, type RespuestaWebpay } from '@/lib/webpay'
 
 /**
@@ -70,7 +71,7 @@ function destino(datos: Record<string, string | null>) {
 
 export async function GET(request: NextRequest) {
   const url = await procesar(request.nextUrl.searchParams)
-  return NextResponse.redirect(new URL(url, request.url))
+  return NextResponse.redirect(new URL(url, await origenDelSitio()))
 }
 
 export async function POST(request: NextRequest) {
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
 
   const url = await procesar(params)
   // 303: la vuelta es un POST y el destino tiene que abrirse con GET.
-  return NextResponse.redirect(new URL(url, request.url), 303)
+  return NextResponse.redirect(new URL(url, await origenDelSitio()), 303)
 }
 
 // ------------------------------------------------------------------
