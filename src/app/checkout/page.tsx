@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Breadcrumbs, Container } from '@/components/ui'
 import { CheckoutForm } from '@/components/checkout-form'
+import { pagoEnLineaActivo, webpayEsIntegracion } from '@/lib/webpay'
 
 export const metadata: Metadata = {
   title: 'Finalizar pedido',
@@ -23,7 +24,7 @@ export default function CheckoutPage() {
         Finalizar pedido
       </h1>
 
-      <CheckoutForm />
+      <CheckoutForm pagoEnLinea={pagoEnLineaActivo()} ambientePrueba={webpayEsIntegracion} />
     </Container>
   )
 }

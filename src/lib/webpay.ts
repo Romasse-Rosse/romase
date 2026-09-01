@@ -48,6 +48,27 @@ export const webpayConfigurado =
 
 export const webpayEsIntegracion = AMBIENTE === 'integracion'
 
+/**
+ * ¿Se puede cobrar en línea ahora mismo?
+ *
+ * Webpay necesita Supabase: el pedido tiene que existir en la base antes de
+ * mandar a nadie a pagar, porque a la vuelta hay que comparar el monto contra
+ * lo que se cobró y hay que tener qué mostrar en el comprobante.
+ *
+ * Es una sola función a propósito. La usan el diagnóstico, el checkout —para
+ * decidir qué texto mostrar en el paso de pago— y la acción que abre la
+ * transacción: si cada uno lo decidiera por su cuenta, la pantalla podría
+ * prometer algo que el servidor no va a hacer, que es exactamente lo que pasó
+ * cuando el panel decía «próximamente» con la integración ya andando.
+ */
+export function pagoEnLineaActivo(): boolean {
+  const supabase = Boolean(
+    (process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+  )
+  return webpayConfigurado && supabase
+}
+
 function transaccion() {
   return new WebpayPlus.Transaction(
     new Options(

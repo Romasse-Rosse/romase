@@ -14,7 +14,15 @@ import { cn } from '@/lib/cn'
 
 const estadoInicial: CheckoutState = { status: 'idle' }
 
-export function CheckoutForm() {
+export function CheckoutForm({
+  /** ¿Se cobra en línea? Lo decide el servidor: ver pagoEnLineaActivo(). */
+  pagoEnLinea,
+  /** Con Webpay en integración se avisa en pantalla que no hay cargo real. */
+  ambientePrueba,
+}: {
+  pagoEnLinea: boolean
+  ambientePrueba: boolean
+}) {
   const { items, subtotal, count, ready, clear } = useCart()
   const [state, formAction] = useActionState(submitCheckout, estadoInicial)
 
@@ -390,8 +398,13 @@ export function CheckoutForm() {
             3 · Pago
         ------------------------------------------------------------ */}
         <Seccion numero={3} titulo="Pago">
+          {/* El texto lo decide el servidor con la misma función que usa la
+              acción que abre la transacción. Si se decidiera acá por separado,
+              la pantalla podría prometer un pago que el servidor no va a hacer
+              —que es justo lo que pasaba mientras decía «próximamente» con la
+              integración ya funcionando—. */}
           <div className="border border-ink-200">
-            <div className="flex items-start gap-4 border-b border-ink-100 p-5">
+            <div className="flex items-start gap-4 p-5">
               <span
                 aria-hidden="true"
                 className="mt-0.5 flex h-6 shrink-0 items-center rounded-sm bg-[#4b2e83] px-2 text-[11px] font-bold tracking-tight text-white"
@@ -401,27 +414,49 @@ export function CheckoutForm() {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-medium text-ink-950">Webpay Plus</p>
-                  <span className="rounded-sm bg-ink-100 px-2 py-0.5 text-[11px] font-medium tracking-wide text-ink-600 uppercase">
-                    Próximamente
-                  </span>
+                  {pagoEnLinea && ambientePrueba && (
+                    <span className="rounded-sm bg-amber-100 px-2 py-0.5 text-[11px] font-medium tracking-wide text-amber-800 uppercase">
+                      Ambiente de prueba
+                    </span>
+                  )}
+                  {!pagoEnLinea && (
+                    <span className="rounded-sm bg-ink-100 px-2 py-0.5 text-[11px] font-medium tracking-wide text-ink-600 uppercase">
+                      Próximamente
+                    </span>
+                  )}
                 </div>
                 <p className="mt-1.5 text-sm leading-relaxed text-ink-600">
-                  Permite el pago con tarjetas de crédito, débito y prepago a través de
-                  Transbank. La integración está en curso.
+                  {pagoEnLinea
+                    ? 'Al realizar el pedido pasas al sitio seguro de Transbank para pagar con ' +
+                      'tarjeta de crédito, débito o prepago. Los datos de tu tarjeta se ' +
+                      'ingresan allá; este sitio no los recibe ni los guarda.'
+                    : 'Permite el pago con tarjetas de crédito, débito y prepago a través de ' +
+                      'Transbank. La integración está en curso.'}
                 </p>
+                {pagoEnLinea && ambientePrueba && (
+                  <p className="mt-2 text-sm leading-relaxed text-amber-800">
+                    Está conectado al ambiente de prueba de Transbank: no se hace ningún cargo
+                    real. Solo funcionan las tarjetas de prueba.
+                  </p>
+                )}
               </div>
             </div>
 
-            <div className="flex items-start gap-4 bg-ink-50 p-5">
-              <CheckCircle2 aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-emerald-600" />
-              <div>
-                <p className="font-medium text-ink-950">Coordinamos el pago contigo</p>
-                <p className="mt-1.5 text-sm leading-relaxed text-ink-600">
-                  Al realizar el pedido queda reservado y te contactamos el mismo día hábil
-                  para cerrar el pago —transferencia o tarjeta en el local— y la entrega.
-                </p>
+            {!pagoEnLinea && (
+              <div className="flex items-start gap-4 border-t border-ink-100 bg-ink-50 p-5">
+                <CheckCircle2
+                  aria-hidden="true"
+                  className="mt-0.5 size-5 shrink-0 text-emerald-600"
+                />
+                <div>
+                  <p className="font-medium text-ink-950">Coordinamos el pago contigo</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-ink-600">
+                    Al realizar el pedido queda reservado y te contactamos el mismo día hábil
+                    para cerrar el pago —transferencia o tarjeta en el local— y la entrega.
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="mt-6">
@@ -497,7 +532,7 @@ export function CheckoutForm() {
           </div>
           <p className="mt-1 text-xs text-ink-500">IVA incluido. El flete se suma al cotizarlo.</p>
 
-          <BotonPedido />
+          <BotonPedido etiqueta={pagoEnLinea ? 'Ir a pagar' : 'Realizar el pedido'} />
 
           <p className="mt-4 text-xs leading-relaxed text-ink-500">
             Tus datos personales se usan para procesar tu pedido y mejorar tu experiencia en
@@ -518,7 +553,7 @@ export function CheckoutForm() {
   )
 }
 
-function BotonPedido() {
+function BotonPedido({ etiqueta }: { etiqueta: string }) {
   const { pending } = useFormStatus()
 
   return (
@@ -527,7 +562,7 @@ function BotonPedido() {
       disabled={pending}
       className="mt-6 flex h-13 w-full items-center justify-center rounded-sm bg-brand-500 text-[15px] font-medium tracking-wide text-white uppercase transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {pending ? 'Procesando…' : 'Realizar el pedido'}
+      {pending ? 'Procesando…' : etiqueta}
     </button>
   )
 }
