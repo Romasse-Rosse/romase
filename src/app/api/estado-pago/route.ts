@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 import { origenDelSitio } from '@/lib/origen'
 import { pagoEnLineaActivo, webpayConfigurado, webpayEsIntegracion } from '@/lib/webpay'
 
@@ -17,6 +18,56 @@ import { pagoEnLineaActivo, webpayConfigurado, webpayEsIntegracion } from '@/lib
 
 export const dynamic = 'force-dynamic'
 
+/**
+ * Prueba que Supabase responda de verdad.
+ *
+ * Que las variables estén cargadas no significa que sirvan. Un pedido de prueba
+ * murió con «No pudimos registrar tu pedido» teniendo el diagnóstico en verde:
+ * las tres variables presentes y la tabla creada, pero la consulta fallaba y el
+ * motivo solo quedaba en el log del servidor, que en el plan gratuito de Render
+ * no se puede leer.
+ *
+ * Pide **exactamente las columnas que el checkout escribe**, no solo `id`: así
+ * también se cae si a la tabla le falta una columna, que es la otra forma en que
+ * esto se rompe y una lectura genérica no vería.
+ *
+ * Va con `head`: cuenta filas sin traer ninguna. No escribe nada y no devuelve
+ * datos de ningún cliente.
+ */
+
+/** Las columnas que toca el checkout. Si cambia el insert, cambia esta lista. */
+const COLUMNAS_PEDIDO =
+  'id, order_number, status, customer_name, customer_email, customer_phone, customer_rut, shipping_address, subtotal, shipping_cost, total, currency, notes, webpay_token, webpay_buy_order, webpay_response'
+const COLUMNAS_LINEA = 'id, order_id, product_id, product_name, sku, unit_price, quantity, line_total'
+
+async function probarSupabase(): Promise<{
+  responde: boolean
+  error?: string
+  pedidos?: number
+}> {
+  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) return { responde: false, error: 'faltan las variables' }
+
+  try {
+    const db = createClient(url, key, { auth: { persistSession: false } })
+
+    const pedidos = await db.from('orders').select(COLUMNAS_PEDIDO, { count: 'exact', head: true })
+    if (pedidos.error) return { responde: false, error: `orders: ${motivo(pedidos.error)}` }
+
+    const lineas = await db.from('order_items').select(COLUMNAS_LINEA, { head: true })
+    if (lineas.error) return { responde: false, error: `order_items: ${motivo(lineas.error)}` }
+
+    return { responde: true, pedidos: pedidos.count ?? 0 }
+  } catch (error) {
+    return { responde: false, error: (error as Error).message }
+  }
+}
+
+function motivo(error: { message: string; hint?: string | null; code?: string }): string {
+  return [error.message, error.code && `código ${error.code}`, error.hint].filter(Boolean).join(' · ')
+}
+
 export async function GET() {
   const origen = await origenDelSitio()
 
@@ -34,6 +85,7 @@ export async function GET() {
 
   const hayUrl = variables.SUPABASE_URL || variables.NEXT_PUBLIC_SUPABASE_URL
   const supabase = Boolean(hayUrl && variables.SUPABASE_SERVICE_ROLE_KEY)
+  const prueba = await probarSupabase()
 
   /**
    * Nombres de variables cargadas que se parecen a las que necesitamos.
@@ -70,6 +122,10 @@ export async function GET() {
    * avisa a nadie. Queda registrado en la base, pero nadie lo mira.
    */
   const advertencias = [
+    supabase &&
+      !prueba.responde &&
+      `Supabase está configurado pero la consulta falla: ${prueba.error}. Ningún ` +
+        'pedido se puede guardar hasta resolverlo.',
     !variables.RESEND_API_KEY &&
       'RESEND_API_KEY no está cargada: el pedido pagado se guarda en la base ' +
         'pero no sale ningún correo. Nadie en el negocio se entera de la venta.',
@@ -90,7 +146,7 @@ export async function GET() {
         ambiente: webpayEsIntegracion ? 'integracion' : 'produccion',
         urlDeRetorno: `${origen}/checkout/retorno`,
       },
-      supabase: { configurado: supabase },
+      supabase: { configurado: supabase, ...prueba },
       correo: { configurado: variables.RESEND_API_KEY },
       // Si esto no es el dominio donde está el sitio, la vuelta de Webpay falla.
       origen,
