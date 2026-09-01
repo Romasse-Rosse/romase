@@ -102,8 +102,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     actuales.current = items
   }, [items])
 
+  /**
+   * Vaciado explícito, para que la hidratación no lo deshaga.
+   *
+   * React ejecuta los efectos de hijo a padre, así que un componente de más
+   * abajo puede llamar a `clear()` **antes** de que este proveedor lea el
+   * almacenamiento. Sin esta marca, esa lectura repone lo que se acababa de
+   * vaciar: es lo que pasaba en el comprobante de Webpay, donde el comprador
+   * terminaba de pagar y seguía viendo los productos en el carrito.
+   *
+   * Un vaciado pedido a mano gana sobre lo que haya guardado, siempre.
+   */
+  const vaciadoExplicito = useRef(false)
+
   useEffect(() => {
-    setItems(leerAlmacenado())
+    if (!vaciadoExplicito.current) setItems(leerAlmacenado())
     setReady(true)
   }, [])
 
@@ -163,7 +176,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [remove],
   )
 
-  const clear = useCallback(() => setItems([]), [])
+  const clear = useCallback(() => {
+    vaciadoExplicito.current = true
+    setItems([])
+  }, [])
 
   const valor = useMemo<CartContexto>(
     () => ({

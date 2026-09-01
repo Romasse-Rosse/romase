@@ -109,7 +109,10 @@ export default async function ResultadoPage({ searchParams }: { searchParams: Se
           />
           <Fila termino="Fecha de la transacción" valor={fechaDeTransaccion(r.transaction_date)} />
           <Fila termino="Tipo de pago" valor={tipoDePago(r.payment_type_code)} />
-          <Fila termino="Cuotas" valor={String(r.installments_number ?? 0)} />
+          <Fila
+            termino="Cuotas"
+            valor={r.installments_number ? String(r.installments_number) : 'Sin cuotas'}
+          />
           <Fila
             termino="Tarjeta"
             valor={tarjeta ? `Terminada en ${tarjeta}` : 'No informada'}
