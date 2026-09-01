@@ -20,13 +20,32 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   const origen = await origenDelSitio()
 
-  const supabase = Boolean(
-    (process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL) &&
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
-  )
+  // Variable por variable: decir «falta Supabase» obliga a adivinar cuál de
+  // las tres es, y son fáciles de confundir entre sí.
+  const variables = {
+    SUPABASE_URL: Boolean(process.env.SUPABASE_URL),
+    NEXT_PUBLIC_SUPABASE_URL: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+    SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+    RESEND_API_KEY: Boolean(process.env.RESEND_API_KEY),
+    WEBPAY_CODIGO_COMERCIO: Boolean(process.env.WEBPAY_CODIGO_COMERCIO),
+    WEBPAY_API_KEY: Boolean(process.env.WEBPAY_API_KEY),
+  }
+
+  const hayUrl = variables.SUPABASE_URL || variables.NEXT_PUBLIC_SUPABASE_URL
+  const supabase = Boolean(hayUrl && variables.SUPABASE_SERVICE_ROLE_KEY)
 
   // Webpay necesita guardar el pedido antes de cobrar: sin base no se ofrece.
   const puedeCobrar = webpayConfigurado && supabase
+
+  const queFalta = [
+    !webpayConfigurado && 'faltan WEBPAY_CODIGO_COMERCIO y WEBPAY_API_KEY',
+    !hayUrl && 'falta SUPABASE_URL (o NEXT_PUBLIC_SUPABASE_URL)',
+    !variables.SUPABASE_SERVICE_ROLE_KEY &&
+      'falta SUPABASE_SERVICE_ROLE_KEY. Ojo: no es la anon key. La anon es ' +
+        'pública y RLS le bloquea escribir en orders; para guardar el pedido ' +
+        'hace falta la service_role, y esa nunca va con prefijo NEXT_PUBLIC_.',
+  ].filter(Boolean)
 
   return NextResponse.json(
     {
@@ -37,15 +56,11 @@ export async function GET() {
         urlDeRetorno: `${origen}/checkout/retorno`,
       },
       supabase: { configurado: supabase },
-      correo: { configurado: Boolean(process.env.RESEND_API_KEY) },
+      correo: { configurado: variables.RESEND_API_KEY },
       // Si esto no es el dominio donde está el sitio, la vuelta de Webpay falla.
       origen,
-      queFalta: puedeCobrar
-        ? []
-        : [
-            !webpayConfigurado && 'faltan WEBPAY_CODIGO_COMERCIO y WEBPAY_API_KEY',
-            !supabase && 'falta Supabase: sin base no se puede guardar el pedido antes de cobrar',
-          ].filter(Boolean),
+      variables,
+      queFalta,
     },
     { headers: { 'x-robots-tag': 'noindex', 'cache-control': 'no-store' } },
   )
