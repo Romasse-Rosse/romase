@@ -35,6 +35,18 @@ export async function GET() {
   const hayUrl = variables.SUPABASE_URL || variables.NEXT_PUBLIC_SUPABASE_URL
   const supabase = Boolean(hayUrl && variables.SUPABASE_SERVICE_ROLE_KEY)
 
+  /**
+   * Nombres de variables cargadas que se parecen a las que necesitamos.
+   *
+   * Es para cazar erratas de tipeo, que es el modo de falla real de esto: una
+   * variable escrita `SUPABASE_SERVICE_ROL_KEY` está cargada y no sirve, y sin
+   * ver los nombres no hay forma de darse cuenta. **Solo los nombres**, nunca
+   * los valores.
+   */
+  const nombresParecidos = Object.keys(process.env)
+    .filter((k) => /SUPABASE|WEBPAY|TRANSBANK|RESEND|LEADS/i.test(k))
+    .sort()
+
   // Webpay necesita guardar el pedido antes de cobrar: sin base no se ofrece.
   const puedeCobrar = webpayConfigurado && supabase
 
@@ -60,6 +72,8 @@ export async function GET() {
       // Si esto no es el dominio donde está el sitio, la vuelta de Webpay falla.
       origen,
       variables,
+      // Solo nombres, para cazar erratas de tipeo. Ningún valor.
+      nombresCargados: nombresParecidos,
       queFalta,
     },
     { headers: { 'x-robots-tag': 'noindex', 'cache-control': 'no-store' } },
