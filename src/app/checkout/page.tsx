@@ -9,6 +9,16 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
+/**
+ * Se renderiza en cada visita, no en el build.
+ *
+ * Sin esto la página queda prerenderizada y el estado del pago se congela con
+ * las variables de entorno que había al compilar: el panel dice «próximamente»
+ * aunque el servidor esté cobrando, y activar Webpay en Render no tiene efecto
+ * hasta el siguiente despliegue. Un checkout no se cachea de todas formas.
+ */
+export const dynamic = 'force-dynamic'
+
 export default function CheckoutPage() {
   return (
     <Container className="py-8 lg:py-12">
