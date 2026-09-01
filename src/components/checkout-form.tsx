@@ -97,6 +97,45 @@ export function CheckoutForm() {
     formulario.submit()
   }, [state.status, state.webpay])
 
+  // ------------------------------------------------------------
+  // React 19 hace form.reset() al terminar una acción de formulario, y eso
+  // pisa los controles que no son de texto.
+  //
+  // Los campos de texto se salvan porque están controlados y cualquier tecla
+  // provoca un renderizado que vuelve a escribir el valor. El <select> y los
+  // radios no: el estado de React sigue diciendo «factura» y «Magallanes»
+  // mientras el DOM volvió a «boleta» y a la primera región de la lista.
+  //
+  // Eso no es un detalle estético: **el formulario manda lo que dice el DOM**.
+  // Después de un rechazo de validación, quien compraba con factura terminaba
+  // enviando boleta, y quien elegía su región enviaba Arica y Parinacota, sin
+  // ver nada raro en pantalla.
+  //
+  // Se vuelve a escribir el DOM desde el estado cuando la acción termina.
+  // ------------------------------------------------------------
+  useEffect(() => {
+    if (state.status === 'idle') return
+
+    const select = (id: string, valor: string) => {
+      const el = document.getElementById(id) as HTMLSelectElement | null
+      if (el && valor && el.value !== valor) el.value = valor
+    }
+    const marcar = (name: string, valor: string) => {
+      for (const el of document.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`)) {
+        el.checked = el.value === valor
+      }
+    }
+
+    select('region', valores.region)
+    select('envioRegion', valores.envioRegion)
+    marcar('documento', documento)
+    marcar('entrega', entrega)
+    if (transportista) marcar('transportista', transportista)
+
+    const casilla = document.querySelector<HTMLInputElement>('input[name="otraDireccion"]')
+    if (casilla) casilla.checked = otraDireccion
+  }, [state, valores.region, valores.envioRegion, documento, entrega, transportista, otraDireccion])
+
   useEffect(() => {
     if (state.status === 'ok' && !confirmado) {
       purchase(enGa4(), {
