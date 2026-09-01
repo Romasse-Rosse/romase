@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { sendOrderNotification, type OrderNotification } from '@/lib/email'
+import { sendOrderNotification } from '@/lib/email'
+import { avisoDesdePedido } from '@/lib/pedido-aviso'
 import { origenDelSitio } from '@/lib/origen'
 import { aprobada, confirmarTransaccion, type RespuestaWebpay } from '@/lib/webpay'
 
@@ -94,10 +95,14 @@ type Pedido = {
   id: string
   order_number: number
   total: number
+  subtotal: number
   status: string
   customer_name: string
   customer_email: string
   customer_phone: string | null
+  customer_rut: string | null
+  shipping_address: Record<string, string | undefined> | null
+  notes: string | null
   webpay_response: unknown
 }
 
@@ -114,7 +119,9 @@ async function pedidoPorToken(token: string): Promise<Pedido | null> {
   const { data } = await db
     .from('orders')
     .select(
-      'id, order_number, total, status, customer_name, customer_email, customer_phone, webpay_response',
+      // Va en una sola línea a propósito: supabase-js deduce el tipo de la fila
+      // a partir del literal, y partirlo con + deja `data` sin tipar.
+      'id, order_number, total, subtotal, status, customer_name, customer_email, customer_phone, customer_rut, shipping_address, notes, webpay_response',
     )
     .eq('webpay_token', token)
     .maybeSingle()
@@ -168,25 +175,22 @@ async function resolver(token: string, respuesta: RespuestaWebpay, pedido: Pedid
         .eq('order_id', pedido.id)
     : { data: null }
 
-  const aviso: OrderNotification = {
-    orderNumber: String(pedido.order_number),
-    customer: {
-      name: pedido.customer_name,
-      email: pedido.customer_email,
-      phone: pedido.customer_phone ?? '',
-    },
-    documento: 'boleta',
-    entrega: 'despacho',
-    lines: (lineas ?? []).map((l) => ({
-      name: l.product_name,
-      sku: l.sku,
-      quantity: l.quantity,
-      unitPrice: Number(l.unit_price),
-      lineTotal: Number(l.line_total),
-    })),
-    subtotal: Number(pedido.total),
-    notas: `Pagado con Webpay · autorización ${respuesta.authorization_code ?? 's/n'}`,
-  }
+  // El aviso se reconstruye desde el pedido guardado, no a mano: así lleva la
+  // factura, la razón social, el transportista y la dirección con la que se
+  // despacha. Ver src/lib/pedido-aviso.ts.
+  const tarjeta = respuesta.card_detail?.card_number
+  const aviso = avisoDesdePedido(
+    pedido,
+    lineas ?? [],
+    [
+      'Pagado con Webpay Plus.',
+      `Autorización ${respuesta.authorization_code ?? 's/n'}`,
+      tarjeta && `tarjeta terminada en ${tarjeta}`,
+      `orden de compra ${respuesta.buy_order}`,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+  )
 
   const enviado = await sendOrderNotification(aviso)
   if (!enviado.sent) {

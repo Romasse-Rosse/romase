@@ -169,8 +169,17 @@ export async function submitCheckout(
   const transportista = site.carriers.find((c) => c.id === datos.transportista)?.name
 
   // Dirección de facturación, más la de envío cuando es distinta.
+  //
+  // Acá van también el tipo de documento, la razón social y la nota del
+  // cliente. No tienen columna propia y con Webpay el correo al negocio sale a
+  // la vuelta del pago, cuando del formulario ya no queda nada: si no se
+  // guardan, el aviso del pedido pagado se manda sin ellos. Ver
+  // src/lib/pedido-aviso.ts.
   const direccion: Record<string, string | undefined> = {
     tipo: datos.entrega === 'retiro' ? 'retiro en local' : 'despacho',
+    documento: datos.documento,
+    razon_social: datos.documento === 'factura' ? datos.razonSocial : undefined,
+    nota_cliente: datos.notas || undefined,
     facturacion_calle: datos.direccion,
     facturacion_comuna: datos.comuna,
     facturacion_region: datos.region || site.contact.region,
