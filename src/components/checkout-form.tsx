@@ -600,9 +600,14 @@ function Confirmacion({
         </div>
       </dl>
 
+      {/*
+        No dice «te enviamos una copia a tu correo»: el correo del pedido va al
+        negocio, con el cliente en reply_to. El cliente no recibe nada, y
+        prometerle un correo que no llega lo deja esperando en vez de llamar.
+      */}
       <p className="mx-auto mt-8 max-w-md leading-relaxed text-ink-600">
-        Te enviamos una copia a tu correo. Un asesor te contacta el mismo día hábil para
-        coordinar el transporte, el pago y la entrega.
+        Un asesor te contacta el mismo día hábil para coordinar el transporte, el pago y la
+        entrega. Si necesitas apurarlo, escríbenos por WhatsApp con tu número de pedido.
       </p>
 
       <div className="mt-8 flex flex-wrap justify-center gap-3">

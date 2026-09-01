@@ -89,8 +89,8 @@ export default async function ResultadoPage({ searchParams }: { searchParams: Se
           </h1>
           <p className="mt-3 text-ink-600">
             {ok
-              ? 'Te enviamos una copia a tu correo. Un asesor te contacta el mismo día hábil ' +
-                'para coordinar la entrega.'
+              ? 'Guarda este comprobante: es el respaldo de tu pago. Un asesor te contacta ' +
+                'el mismo día hábil para coordinar la entrega.'
               : motivoDelRechazo(r.response_code)}
           </p>
         </div>
