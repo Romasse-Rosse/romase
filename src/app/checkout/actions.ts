@@ -350,6 +350,31 @@ async function guardarPedido({
       .insert(lineas.map((l) => ({ ...l, order_id: pedido.id })))
 
     if (errorItems) {
+      /**
+       * 23503 es violación de clave ajena: order_items.product_id apunta a
+       * la tabla products, y esa tabla puede no tener la fila. Hoy el catálogo
+       * se sirve del respaldo local, así que Supabase puede estar sin sembrar
+       * y en ese caso **ninguna venta se guardaría**.
+       *
+       * La línea no necesita el vínculo: el nombre, el SKU y el precio se
+       * congelan al comprar, justamente para que el pedido no dependa de que
+       * el catálogo no cambie. Así que se reintenta sin la referencia. Perder
+       * el vínculo es un inconveniente; perder la venta, no.
+       */
+      if (errorItems.code === '23503') {
+        const { error: sinVinculo } = await db
+          .from('order_items')
+          .insert(lineas.map((l) => ({ ...l, product_id: null, order_id: pedido.id })))
+
+        if (!sinVinculo) {
+          console.warn(
+            `[checkout] pedido ${pedido.order_number} guardado sin vínculo a products: ` +
+              'la tabla no tiene esos productos. Sembrar el catálogo con yarn catalog:seed.',
+          )
+          return { ok: true, id: pedido.id, orderNumber: String(pedido.order_number) }
+        }
+      }
+
       // El pedido quedó sin líneas: es peor que no tenerlo, así que se borra.
       await db.from('orders').delete().eq('id', pedido.id)
       return { ok: false, reason: `order_items: ${errorItems.message}` }

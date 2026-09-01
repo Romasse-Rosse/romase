@@ -44,6 +44,7 @@ async function probarSupabase(): Promise<{
   responde: boolean
   error?: string
   pedidos?: number
+  productos?: number
 }> {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -58,7 +59,16 @@ async function probarSupabase(): Promise<{
     const lineas = await db.from('order_items').select(COLUMNAS_LINEA, { head: true })
     if (lineas.error) return { responde: false, error: `order_items: ${motivo(lineas.error)}` }
 
-    return { responde: true, pedidos: pedidos.count ?? 0 }
+    // Cuántos productos hay sembrados. Importa porque order_items.product_id
+    // tiene clave ajena a products: con la tabla vacía, el insert de las
+    // líneas falla y el pedido no se guarda.
+    const productos = await db.from('products').select('id', { count: 'exact', head: true })
+
+    return {
+      responde: true,
+      pedidos: pedidos.count ?? 0,
+      productos: productos.error ? -1 : productos.count ?? 0,
+    }
   } catch (error) {
     return { responde: false, error: (error as Error).message }
   }
@@ -122,6 +132,10 @@ export async function GET() {
    * avisa a nadie. Queda registrado en la base, pero nadie lo mira.
    */
   const advertencias = [
+    supabase &&
+      prueba.responde &&
+      prueba.productos === 0 &&
+      'La tabla products de Supabase está vacía. Las líneas del pedido se guardan sin vínculo al producto; el nombre, el SKU y el precio sí quedan. Para vincularlas hay que sembrar el catálogo con yarn catalog:seed.',
     supabase &&
       !prueba.responde &&
       `Supabase está configurado pero la consulta falla: ${prueba.error}. Ningún ` +
