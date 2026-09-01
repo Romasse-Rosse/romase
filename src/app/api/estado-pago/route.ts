@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { origenDelSitio } from '@/lib/origen'
-import { webpayConfigurado, webpayEsIntegracion } from '@/lib/webpay'
+import { pagoEnLineaActivo, webpayConfigurado, webpayEsIntegracion } from '@/lib/webpay'
 
 /**
  * ¿Está el sitio en condiciones de cobrar?
@@ -47,8 +47,11 @@ export async function GET() {
     .filter((k) => /SUPABASE|WEBPAY|TRANSBANK|RESEND|LEADS/i.test(k))
     .sort()
 
-  // Webpay necesita guardar el pedido antes de cobrar: sin base no se ofrece.
-  const puedeCobrar = webpayConfigurado && supabase
+  // La respuesta la da la misma función que usa el checkout para decidir qué
+  // mostrar en el paso de pago. Si el diagnóstico lo calculara por su cuenta
+  // podría decir que se cobra mientras la pantalla dice otra cosa, que es
+  // justamente lo que pasó.
+  const puedeCobrar = pagoEnLineaActivo()
 
   const queFalta = [
     !webpayConfigurado && 'faltan WEBPAY_CODIGO_COMERCIO y WEBPAY_API_KEY',
@@ -57,6 +60,26 @@ export async function GET() {
       'falta SUPABASE_SERVICE_ROLE_KEY. Ojo: no es la anon key. La anon es ' +
         'pública y RLS le bloquea escribir en orders; para guardar el pedido ' +
         'hace falta la service_role, y esa nunca va con prefijo NEXT_PUBLIC_.',
+  ].filter(Boolean)
+
+  /**
+   * Cosas que no impiden cobrar pero que hay que resolver antes de vender.
+   *
+   * Van aparte de `queFalta` a propósito: con `puedeCobrar: true` y esta lista
+   * vacía uno da por hecho que está todo, y sin correo un pedido pagado no le
+   * avisa a nadie. Queda registrado en la base, pero nadie lo mira.
+   */
+  const advertencias = [
+    !variables.RESEND_API_KEY &&
+      'RESEND_API_KEY no está cargada: el pedido pagado se guarda en la base ' +
+        'pero no sale ningún correo. Nadie en el negocio se entera de la venta.',
+    webpayEsIntegracion &&
+      'Webpay apunta al ambiente de prueba de Transbank: no se cobra de verdad. ' +
+        'Para cobrar hacen falta WEBPAY_AMBIENTE=produccion y las credenciales ' +
+        'que Transbank entrega al terminar la homologación.',
+    !variables.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+      'NEXT_PUBLIC_SUPABASE_ANON_KEY no está cargada: el catálogo se sirve del ' +
+        'respaldo local y no refleja cambios hechos en Supabase.',
   ].filter(Boolean)
 
   return NextResponse.json(
@@ -75,6 +98,7 @@ export async function GET() {
       // Solo nombres, para cazar erratas de tipeo. Ningún valor.
       nombresCargados: nombresParecidos,
       queFalta,
+      advertencias,
     },
     { headers: { 'x-robots-tag': 'noindex', 'cache-control': 'no-store' } },
   )
