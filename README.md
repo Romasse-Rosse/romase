@@ -310,6 +310,66 @@ Falta la **homologación**: un formulario de validación, evidencia de las prueb
 transacción real el día de la puesta en producción. Recién ahí Transbank entrega la llave
 productiva. Y antes que eso, el cliente tiene que recuperar los accesos a Webpay.
 
+### El diagnóstico consulta, no mira variables
+
+`GET /api/estado-pago` responde si el sitio puede cobrar. Devuelve **solo booleanos, contadores
+y la URL pública**: ningún valor de ninguna credencial.
+
+Empezó comprobando que las variables de entorno existieran, y eso no alcanzó. Un pedido de
+prueba murió con «No pudimos registrar tu pedido» con el diagnóstico en verde: las tres
+variables cargadas, la tabla creada, y la escritura fallando por un motivo que solo quedaba en
+el log del servidor, que el plan gratuito de Render no deja leer.
+
+Ahora hace una consulta real y devuelve el error de Supabase tal cual, con código y `hint`.
+Pide **exactamente las columnas que el checkout escribe** en `orders` y en `order_items`, no un
+`id` genérico, porque una columna faltante es la otra forma en que esto se rompe. Es una
+lectura con `head`: cuenta filas sin traer ninguna.
+
+Separa dos cosas que no son lo mismo:
+
+- `queFalta` — lo que impide cobrar.
+- `advertencias` — lo que no lo impide pero hay que resolver antes de vender. Ahí aparecen el
+  correo sin configurar, que Webpay apunta a integración, y la tabla `products` vacía.
+
+### La venta no depende de que el catálogo esté sembrado
+
+`order_items.product_id` tiene clave ajena a `products`. Como el catálogo se sirve del respaldo
+local, esa tabla puede estar vacía en Supabase, y en ese caso el insert de las líneas viola la
+clave: el pedido se borra y **la venta se pierde**. Pasó en el primer pedido de prueba contra el
+sitio desplegado.
+
+La línea no necesita ese vínculo: el nombre, el SKU y el precio se congelan al comprar,
+justamente para que el pedido no dependa de que el catálogo no cambie. Ante un `23503` se
+reintenta sin la referencia y queda anotado en el log. Perder el vínculo es un inconveniente;
+perder la venta, no.
+
+Igual conviene sembrar (`yarn catalog:seed`): el diagnóstico avisa mientras `products` esté en
+cero.
+
+### El aviso al negocio se reconstruye desde el pedido, no se rearma a mano
+
+Con Webpay el correo ya no sale al enviar el formulario, sino a la vuelta del pago, y ahí del
+formulario no queda nada: solo la fila de la base. La primera versión de esa vuelta rearmaba el
+aviso a mano y quedó con el documento y la entrega fijos en «boleta» y «despacho», sin
+dirección. Un pedido pagado con factura y retiro llegaba al negocio mal y sin domicilio para
+despacharlo.
+
+Está en `src/lib/pedido-aviso.ts`, en una sola función. El tipo de documento, la razón social y
+la nota del cliente viajan en `shipping_address`, que ya es jsonb y ya guardaba el tipo de
+entrega: no hace falta migración. Se prefirió eso a deducir el documento leyendo el texto de
+`notes`, porque la prosa cambia y las claves no.
+
+### El checkout no se puede prerenderizar
+
+`/checkout` lleva `dynamic = 'force-dynamic'`. Sin eso Next lo prerenderiza y el estado del pago
+queda congelado con las variables de entorno que hubiera al compilar: el panel decía
+«Próximamente» con Webpay andando, y activar el pago en Render no tenía efecto hasta el
+siguiente despliegue.
+
+Quién decide si el pago está activo es `pagoEnLineaActivo()`, una sola función que usan el
+diagnóstico, el panel del checkout y la acción que abre la transacción. Estaba duplicada, y de
+ahí salió que la pantalla prometiera algo que el servidor no hacía.
+
 ---
 
 ## Analítica: el embudo de e-commerce
@@ -721,11 +781,23 @@ ninguno de los dos avisa en pantalla con el teléfono y el correo.
 
 ## Pendiente
 
-- **Integrar Transbank Webpay Plus REST.** Es la única pasarela del sitio actual y el único
-  paso que falta del flujo de compra: hoy el pedido se confirma y el pago se coordina a
-  mano. El lugar donde entra está marcado en `checkout-form.tsx` (bloque «Pago») y el
-  esquema ya tiene las columnas `webpay_token`, `webpay_buy_order` y `webpay_response`.
-  Requiere código de comercio de Transbank.
+- **Configurar `RESEND_API_KEY`.** Es lo más urgente. Hoy el pedido queda guardado en Supabase
+  pero **no sale ningún correo**: una venta puede entrar sin que nadie en el negocio se
+  entere. El diagnóstico lo avisa en `advertencias`.
+- **Sembrar el catálogo en Supabase** (`yarn catalog:seed`). Sin eso las líneas de cada pedido
+  quedan sin vínculo al producto —el nombre, el SKU y el precio sí quedan— y el catálogo se
+  sigue sirviendo del respaldo local.
+- **Homologación de Webpay.** El pago funciona contra integración. Para cobrar de verdad hacen
+  falta el formulario de validación de Transbank, la evidencia de las pruebas y una
+  transacción real el día de la puesta en producción; recién ahí entregan la llave
+  productiva, y con ella van `WEBPAY_AMBIENTE=produccion`, `WEBPAY_CODIGO_COMERCIO` y
+  `WEBPAY_API_KEY`.
+- **Decidir si el WooCommerce deja de vender.** Los dos sitios cobran contra el mismo stock y
+  no comparten inventario. Las órdenes de compra de este sitio van con prefijo `ROM-` para que
+  no choquen con las del viejo, pero eso resuelve los números, no el stock.
+- **Correo al cliente.** Hoy el aviso va solo al negocio, con el cliente en `reply_to`. Las
+  pantallas de confirmación ya no le prometen una copia que no llega. Si se quiere mandar,
+  hace falta dominio verificado en Resend y una plantilla propia.
 - **Conectar el contenedor de GTM.** El `dataLayer` ya emite todo el embudo; falta cargar
   `NEXT_PUBLIC_GTM_ID` y publicar las etiquetas de GA4 en el contenedor.
 - **Productos destacados.** La columna `featured` existe pero está en `false` para todos.
