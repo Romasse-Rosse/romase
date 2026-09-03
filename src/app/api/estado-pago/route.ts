@@ -74,6 +74,27 @@ async function probarSupabase(): Promise<{
   }
 }
 
+/**
+ * Qué clase de llave hay cargada, sin decir cuál.
+ *
+ * Solo el prefijo, que indica el tipo y no revela ningún carácter del secreto.
+ * Hace falta para dos cosas concretas:
+ *
+ *   · Confirmar que un cambio de llave en Render llegó de verdad al servidor
+ *     antes de desactivar la anterior. Que la base responda no alcanza: si el
+ *     redespliegue no terminó, el proceso viejo sigue con la llave vieja y
+ *     responde igual.
+ *   · Cazar la confusión de pegar la llave pública donde va la secreta. Esa
+ *     está cargada, tiene forma válida, y las escrituras fallan por RLS.
+ */
+function tipoDeLlave(valor: string | undefined): string {
+  if (!valor) return 'ninguna'
+  if (valor.startsWith('sb_secret_')) return 'secret api key'
+  if (valor.startsWith('sb_publishable_')) return 'publishable · ES LA PÚBLICA, no sirve para escribir'
+  if (valor.startsWith('ey')) return 'jwt legacy (anon o service_role)'
+  return 'formato desconocido'
+}
+
 function motivo(error: { message: string; hint?: string | null; code?: string }): string {
   return [error.message, error.code && `código ${error.code}`, error.hint].filter(Boolean).join(' · ')
 }
@@ -132,6 +153,10 @@ export async function GET() {
    * avisa a nadie. Queda registrado en la base, pero nadie lo mira.
    */
   const advertencias = [
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.startsWith('sb_publishable_') &&
+      'En SUPABASE_SERVICE_ROLE_KEY hay una llave publishable, que es la pública. ' +
+        'Las lecturas pueden andar y las escrituras las bloquea RLS: ningún pedido se ' +
+        'guardaría. Tiene que ir la secret key.',
     supabase &&
       prueba.responde &&
       prueba.productos === 0 &&
@@ -160,7 +185,11 @@ export async function GET() {
         ambiente: webpayEsIntegracion ? 'integracion' : 'produccion',
         urlDeRetorno: `${origen}/checkout/retorno`,
       },
-      supabase: { configurado: supabase, ...prueba },
+      supabase: {
+        configurado: supabase,
+        llave: tipoDeLlave(process.env.SUPABASE_SERVICE_ROLE_KEY),
+        ...prueba,
+      },
       correo: { configurado: variables.RESEND_API_KEY },
       // Si esto no es el dominio donde está el sitio, la vuelta de Webpay falla.
       origen,
