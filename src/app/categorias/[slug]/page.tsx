@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const description =
     content?.intro ||
     stripHtml(category.description) ||
-    `${name} para panaderías, pastelerías y cocinas profesionales. Despacho a todo Chile desde ${site.contact.city}.`
+    `${name} para panaderías, pastelerías y cocinas profesionales. Despacho desde ${site.contact.city} a la Región de Los Lagos y al sur.`
 
   return {
     title: `${name} · Equipamiento profesional`,

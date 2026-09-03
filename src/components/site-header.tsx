@@ -47,13 +47,20 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
           <div className="flex h-9 items-center justify-between text-xs">
             <p className="flex items-center gap-2">
               <Truck aria-hidden="true" className="size-3.5 text-brand-200" />
-              Despacho a todo Chile · Entrega sin costo en {site.contact.city}
+              Despacho desde {site.contact.city} a Los Lagos, Aysén y Magallanes
             </p>
             <div className="flex items-center gap-5">
-              <a href={site.contact.phoneHref} className="flex items-center gap-1.5 hover:text-white">
+              <span className="flex items-center gap-1.5">
                 <Phone aria-hidden="true" className="size-3.5" />
-                {site.contact.phone}
-              </a>
+                {site.contact.phones.map((t, i) => (
+                  <span key={t.href} className="flex items-center gap-1.5">
+                    {i > 0 && <span aria-hidden="true" className="text-brand-300">·</span>}
+                    <a href={t.href} className="hover:text-white">
+                      {t.numero}
+                    </a>
+                  </span>
+                ))}
+              </span>
               <a
                 href={`mailto:${site.contact.email}`}
                 className="flex items-center gap-1.5 hover:text-white"
@@ -296,13 +303,16 @@ function MobileMenu({
             <Link href="/contacto" className="flex min-h-11 items-center text-ink-700" onClick={onClose}>
               Contacto
             </Link>
-            <a
-              href={site.contact.phoneHref}
-              className="flex min-h-11 items-center gap-2 text-ink-700"
-            >
-              <Phone className="size-4" />
-              {site.contact.phone}
-            </a>
+            {site.contact.phones.map((t) => (
+              <a
+                key={t.href}
+                href={t.href}
+                className="flex min-h-11 items-center gap-2 text-ink-700"
+              >
+                <Phone className="size-4" />
+                {t.numero}
+              </a>
+            ))}
             <p className="flex items-start gap-2 pt-2 text-xs text-ink-500">
               <MapPin className="mt-0.5 size-4 shrink-0" />
               {site.contact.address}, {site.contact.city}

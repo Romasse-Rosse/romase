@@ -190,8 +190,8 @@ export default function CarritoPage() {
 
               <p className="mt-4 flex gap-2.5 text-xs leading-relaxed text-ink-500">
                 <Truck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-brand-500" />
-                Entrega sin costo en {site.contact.city}. A regiones cotizamos el flete según
-                volumen y destino.
+                Retiras en {site.contact.city} o despachamos a Los Lagos, Aysén y Magallanes con
+                el transporte que elijas. El envío va por pagar: el flete lo pagas al recibir.
               </p>
             </div>
           </aside>

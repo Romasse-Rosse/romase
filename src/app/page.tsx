@@ -223,7 +223,8 @@ export default async function HomePage() {
                 <p>
                   En <strong>{site.name}</strong> llevamos más de {site.yearsInBusiness} años
                   vendiendo maquinaria para panaderías, pastelerías, hoteles, restaurantes y
-                  supermercados. Trabajamos desde {site.contact.city} y despachamos a todo Chile.
+                  supermercados. Trabajamos desde {site.contact.city} y despachamos a la Región de
+                  Los Lagos, Aysén y Magallanes.
                 </p>
                 <p>
                   Lo que te conviene no es el equipo más caro: es el que rinde para tu producción

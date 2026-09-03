@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import { getCategoryTree } from '@/lib/catalog'
-import { site } from '@/lib/site'
+import { regionesVenta, site } from '@/lib/site'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { CartProvider } from '@/lib/cart'
@@ -54,8 +54,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     name: site.name,
     description: site.description,
     url: site.url,
-    telephone: site.contact.phone,
+    telephone: site.contact.phones.map((t) => t.numero),
     email: site.contact.email,
+    // Hasta dónde se vende. Google lo usa para las búsquedas con intención
+    // local, y decirlo mal trae consultas que después hay que rechazar.
+    areaServed: regionesVenta.map((nombre) => ({
+      '@type': 'AdministrativeArea',
+      name: nombre,
+    })),
     address: {
       '@type': 'PostalAddress',
       streetAddress: site.contact.address,

@@ -9,7 +9,7 @@ import { submitCheckout, type CheckoutState } from '@/app/checkout/actions'
 import { addPaymentInfo, addShippingInfo, beginCheckout, purchase } from '@/lib/analytics'
 import { aItemDeCarrito, useCart } from '@/lib/cart'
 import { formatPrice } from '@/lib/format'
-import { regionesChile, site } from '@/lib/site'
+import { regionesVenta, site } from '@/lib/site'
 import { cn } from '@/lib/cn'
 
 const estadoInicial: CheckoutState = { status: 'idle' }
@@ -252,12 +252,18 @@ export function CheckoutForm({
                 onChange={(e) => setValores((p) => ({ ...p, region: e.target.value }))}
                 className="h-11 w-full rounded-sm border border-ink-200 bg-white px-3 text-sm text-ink-900 transition-colors focus:border-ink-950 focus:outline-none"
               >
-                {regionesChile.map((r) => (
+                {regionesVenta.map((r) => (
                   <option key={r} value={r}>
                     {r}
                   </option>
                 ))}
               </select>
+              {/* El servidor comprueba la cobertura, así que su respuesta tiene
+                  que poder verse: si no, el comprador lee «faltan datos» y no
+                  sabe cuál. */}
+              {state.fieldErrors?.region && (
+                <p className="mt-1.5 text-xs text-red-600">{state.fieldErrors.region}</p>
+              )}
             </div>
 
             <Campo label="Teléfono" name="telefono" {...campo('telefono')} type="tel" required autoComplete="tel" error={state.fieldErrors?.telefono} />
@@ -306,7 +312,7 @@ export function CheckoutForm({
               onChange={() => setEntrega('despacho')}
               icono={Truck}
               titulo="Despacho"
-              detalle="A todo Chile, con la empresa de transporte que elijas."
+              detalle="A Los Lagos, Aysén y Magallanes, con el transporte que elijas. Envío por pagar."
             />
             <Opcion
               name="entrega"
@@ -315,7 +321,7 @@ export function CheckoutForm({
               onChange={() => setEntrega('retiro')}
               icono={Store}
               titulo="Retiro en el local"
-              detalle={`${site.contact.address}, ${site.contact.city}. Sin costo.`}
+              detalle={`${site.contact.address}, ${site.contact.city}. Sin costo de envío.`}
             />
           </div>
 
@@ -326,7 +332,7 @@ export function CheckoutForm({
               </p>
               <p className="mb-3 text-xs text-ink-500">Elige una.</p>
 
-              <div className="grid gap-2.5 sm:grid-cols-3">
+              <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
                 {site.carriers.map((c) => (
                   <Opcion
                     key={c.id}
@@ -343,9 +349,10 @@ export function CheckoutForm({
               )}
 
               <p className="mt-4 border-l-2 border-brand-300 pl-4 text-sm leading-relaxed text-ink-600">
-                Para ofrecerte el mejor servicio, un asesor te contactará muy pronto para
-                coordinar el medio de transporte de tu preferencia. Revisa que tu número
-                telefónico esté bien escrito para evitar demoras. ¡Gracias por tu confianza!
+                El envío va <strong className="font-semibold text-ink-800">por pagar</strong>: el
+                flete lo pagas al retirar en la empresa de transporte que elijas, según el volumen
+                y el destino. Un asesor te contacta para coordinar el despacho, así que revisa que
+                tu número telefónico esté bien escrito para evitar demoras.
               </p>
 
               <label className="mt-6 flex cursor-pointer items-center gap-2.5 text-sm text-ink-800">
@@ -381,12 +388,15 @@ export function CheckoutForm({
                       onChange={(e) => setValores((p) => ({ ...p, envioRegion: e.target.value }))}
                       className="h-11 w-full rounded-sm border border-ink-200 bg-white px-3 text-sm text-ink-900 focus:border-ink-950 focus:outline-none"
                     >
-                      {regionesChile.map((r) => (
+                      {regionesVenta.map((r) => (
                         <option key={r} value={r}>
                           {r}
                         </option>
                       ))}
                     </select>
+                    {state.fieldErrors?.envioRegion && (
+                      <p className="mt-1.5 text-xs text-red-600">{state.fieldErrors.envioRegion}</p>
+                    )}
                   </div>
                 </div>
               )}
@@ -518,9 +528,9 @@ export function CheckoutForm({
               <dt className="text-ink-600">Envío</dt>
               <dd className="text-right text-ink-500">
                 {entrega === 'retiro'
-                  ? 'Retiro sin costo'
+                  ? 'Retiras en el local'
                   : transportista
-                    ? `${site.carriers.find((c) => c.id === transportista)?.name} · a cotizar`
+                    ? `${site.carriers.find((c) => c.id === transportista)?.name} · por pagar`
                     : 'Elige la empresa despachadora'}
               </dd>
             </div>
@@ -530,7 +540,12 @@ export function CheckoutForm({
             <span className="font-medium text-ink-950">Total</span>
             <span className="text-2xl font-semibold text-ink-950">{formatPrice(subtotal)}</span>
           </div>
-          <p className="mt-1 text-xs text-ink-500">IVA incluido. El flete se suma al cotizarlo.</p>
+          <p className="mt-1 text-xs text-ink-500">
+            IVA incluido.{' '}
+            {entrega === 'retiro'
+              ? 'Retiras en el local, sin costo de envío.'
+              : 'El flete no va en este total: se paga al transporte al recibir.'}
+          </p>
 
           <BotonPedido etiqueta={pagoEnLinea ? 'Ir a pagar' : 'Realizar el pedido'} />
 

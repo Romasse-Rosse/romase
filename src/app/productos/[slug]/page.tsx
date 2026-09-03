@@ -38,7 +38,7 @@ export async function generateMetadata({
   const name = titleCase(product.name)
   const summary =
     truncate(stripHtml(product.shortDescription || product.description), 150) ||
-    `${name} disponible en ROMASE. Despacho a todo Chile.`
+    `${name} disponible en ROMASE. Despacho a la Región de Los Lagos y al sur.`
 
   return {
     title: name,
@@ -214,7 +214,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
             <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 border-t border-ink-200 pt-5 text-sm text-ink-700">
               <li className="flex items-center gap-2">
                 <Truck aria-hidden="true" className="size-4.5 shrink-0 text-brand-600" />
-                Despacho a todo Chile
+                Despacho al sur · retiro en local
               </li>
               <li className="flex items-center gap-2">
                 <Wrench aria-hidden="true" className="size-4.5 shrink-0 text-brand-600" />

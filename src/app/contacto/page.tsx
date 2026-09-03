@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: 'Contacto y cotizaciones',
   description:
     `Contacta a ROMASE en ${site.contact.city}. Cotizaciones de maquinaria para panadería, ` +
-    'pastelería y gastronomía, con despacho a todo Chile.',
+    'pastelería y gastronomía, con despacho a la Región de Los Lagos y al sur.',
   alternates: { canonical: '/contacto' },
 }
 
@@ -34,8 +34,12 @@ export default function ContactoPage() {
         </div>
 
         <div className="space-y-4">
-          <ContactRow icon={Phone} label="Teléfono" href={site.contact.phoneHref}>
-            {site.contact.phone}
+          <ContactRow icon={Phone} label="Teléfonos">
+            {site.contact.phones.map((t) => (
+              <a key={t.href} href={t.href} className="block hover:text-brand-700">
+                {t.numero}
+              </a>
+            ))}
           </ContactRow>
 
           <ContactRow icon={Mail} label="Correo" href={`mailto:${site.contact.email}`}>

@@ -61,11 +61,11 @@ export function faqsProducto(nombre: string, enStock: boolean): Faq[] {
       pregunta: '¿En cuánto tiempo llega el pedido?',
       respuesta: enStock
         ? `${nombre} está disponible en bodega: despachamos entre 24 y 72 horas hábiles desde ` +
-          `que se confirma el pedido. En ${site.contact.city} la entrega es sin costo; a ` +
-          `regiones sale por empresa de transporte y el flete se cotiza según volumen y destino.`
+          `que se confirma el pedido. Puedes retirarlo en ${site.contact.city} o enviarlo por la ` +
+          `empresa de transporte que elijas, con el flete por pagar al recibir.`
         : `${nombre} se trae bajo pedido. Al confirmar la compra te damos el plazo exacto, que ` +
-          `habitualmente va de 10 a 25 días hábiles según el fabricante. Despachamos a todo ` +
-          `Chile y en ${site.contact.city} la entrega es sin costo.`,
+          `habitualmente va de 10 a 25 días hábiles según el fabricante. Después lo retiras en ` +
+          `${site.contact.city} o lo despachamos a la Región de Los Lagos, Aysén o Magallanes.`,
     },
     {
       pregunta: '¿Qué garantía tiene y hay repuestos disponibles?',
@@ -93,11 +93,12 @@ export function faqsProducto(nombre: string, enStock: boolean): Faq[] {
 
 export const homeFaqs: Faq[] = [
   {
-    pregunta: '¿Hacen despacho a regiones?',
+    pregunta: '¿Hasta dónde despachan?',
     respuesta:
-      `Sí. Despachamos a todo Chile mediante empresas de transporte para equipos grandes y ` +
-      `encomienda para artículos menores. En ${site.contact.city} la entrega es sin costo. ` +
-      `El valor del flete se confirma al cotizar, según volumen y destino.`,
+      `Desde ${site.contact.city} hacia el sur: Región de Los Lagos, Aysén y Magallanes. Sale ` +
+      `por empresa de transporte —Cruz del Sur, Starken, Chilexpress o Blue Express, la que ` +
+      `prefieras— con el envío por pagar: el flete lo pagas al retirar, según volumen y ` +
+      `destino. También puedes retirar en el local sin costo de envío.`,
   },
   {
     pregunta: '¿Los equipos tienen garantía?',

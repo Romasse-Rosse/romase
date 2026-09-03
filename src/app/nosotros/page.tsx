@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: 'Sobre nosotros',
   description:
     `Más de ${site.yearsInBusiness} años entregando maquinaria y equipamiento gastronómico desde ` +
-    `${site.contact.city} a todo Chile. Conoce a ROMASE.`,
+    `${site.contact.city} a la Región de Los Lagos y al sur. Conoce a ROMASE.`,
   alternates: { canonical: '/nosotros' },
 }
 
@@ -84,8 +84,10 @@ export default async function NosotrosPage() {
             </p>
 
             <p>
-              Despachamos a todo Chile: en {site.contact.city} la entrega es sin costo y a regiones
-              coordinamos el transporte según el volumen del equipo.
+              Despachamos desde {site.contact.city} a la Región de Los Lagos, Aysén y Magallanes, con
+              la empresa de transporte que elijas: Cruz del Sur, Starken, Chilexpress o Blue
+              Express. El envío va por pagar, así que el flete lo pagas al recibir, según el
+              volumen del equipo y el destino. También puedes retirar en el local.
             </p>
           </div>
 

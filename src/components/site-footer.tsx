@@ -98,9 +98,13 @@ export async function SiteFooter() {
               </li>
               <li className="flex gap-2.5">
                 <Phone aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-brand-500" />
-                <a href={site.contact.phoneHref} className="hover:text-brand-400">
-                  {site.contact.phone}
-                </a>
+                <span className="flex flex-col gap-0.5">
+                  {site.contact.phones.map((t) => (
+                    <a key={t.href} href={t.href} className="hover:text-brand-400">
+                      {t.numero}
+                    </a>
+                  ))}
+                </span>
               </li>
               <li className="flex gap-2.5">
                 <Mail aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-brand-500" />

@@ -204,10 +204,34 @@ falta es cobrar en línea: ahí entra Webpay.
 - **Panel lateral** — se abre solo al agregar algo, con cantidades y subtotal.
 - **`/carrito`** — línea por línea, cantidades, subtotal.
 - **`/checkout`** — sigue el flujo del sitio actual: detalles de facturación (nombre y
-  apellidos separados, dirección, comuna, región como selector con las 16 regiones,
-  teléfono y correo), documento (boleta o factura con RUT y razón social), entrega
-  (despacho con empresa despachadora —BLUExpress, Chilexpress o Cruz del Sur— o retiro en
-  el local), envío a una dirección distinta, y pago.
+  apellidos separados, dirección, comuna, región, teléfono y correo), documento (boleta o
+  factura con RUT y razón social), entrega (retiro en el local, o despacho con la empresa de
+  transporte que elija el comprador —Cruz del Sur, Starken, Chilexpress o Blue Express—),
+  envío a una dirección distinta, y pago.
+
+### La cobertura se valida, no solo se esconde
+
+ROMASE vende **desde la Región de Los Lagos hacia el sur**: Los Lagos, Aysén y Magallanes. La
+lista está en `regionesVenta` (`src/lib/site.ts`) y de ahí la toman el selector del checkout, los
+datos estructurados del negocio y los textos.
+
+El selector ofrece solo esas tres, pero eso no alcanza: un formulario se puede mandar con
+cualquier valor. La validación del servidor comprueba la región —la de facturación y la de
+envío— y también que el transportista sea uno de los cuatro. Sin eso entra un pedido a una
+región donde no se despacha, y el problema aparece cuando hay que llamar al cliente para
+decirle que no se puede enviar.
+
+Ampliar la cobertura es agregar la región a esa lista: el checkout, el schema y la validación
+se enteran solos.
+
+### El envío va por pagar
+
+El flete lo paga quien recibe, directamente a la empresa de transporte. Por eso el pedido no
+lleva costo de envío y no hay nada que cotizar: `shipping_cost` es 0 y el total del checkout es
+el de los productos. Antes el sitio decía «flete a cotizar» y prometía entrega sin costo en
+Puerto Montt; las dos cosas se sacaron.
+
+El retiro en el local sí es sin costo de envío, que es distinto de despachar gratis.
 
 Al confirmar, el pedido se guarda en `orders` y `order_items` y se avisa por correo, con la
 misma regla que el formulario de contacto: basta con que uno de los dos canales funcione. Si

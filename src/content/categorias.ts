@@ -21,11 +21,12 @@ export type CategoryContent = {
 }
 
 const despachoFaq: Faq = {
-  pregunta: '¿Despachan a regiones?',
+  pregunta: '¿Hasta dónde despachan?',
   respuesta:
-    'Sí, despachamos a todo Chile. En Puerto Montt la entrega es sin costo. Para el resto del ' +
-    'país coordinamos con empresas de transporte y el flete se cotiza según el volumen del ' +
-    'equipo y el destino. Te confirmamos el valor antes de que compres.',
+    'Desde Puerto Montt hacia el sur: Región de Los Lagos, Aysén y Magallanes. Sale por la ' +
+    'empresa de transporte que elijas —Cruz del Sur, Starken, Chilexpress o Blue Express— con ' +
+    'el envío por pagar: el flete lo pagas al retirar, según el volumen del equipo y el ' +
+    'destino. También puedes retirar en el local sin costo de envío.',
 }
 
 const garantiaFaq: Faq = {
@@ -299,7 +300,8 @@ export const categoryContent: Record<string, CategoryContent> = {
       <p>En ROMASE trabajamos hace más de 24 años con cocinas profesionales del sur de Chile.
       Escríbenos con tu carta, tu proyección de cubiertos y el plano de la cocina, y te armamos una
       propuesta que considere el equipo, la instalación y la extracción como un conjunto. Despachamos
-      a todo Chile y en Puerto Montt entregamos sin costo.</p>
+      desde Puerto Montt a la Región de Los Lagos, Aysén y Magallanes, y también puedes retirar en
+      el local.</p>
     
       <h3>Distribución de la cocina y flujo de trabajo</h3>
 
@@ -389,7 +391,7 @@ export const categoryContent: Record<string, CategoryContent> = {
 
       <p>Cuéntanos qué vas a conservar, en qué volumen y en qué condiciones de ambiente, y te
       recomendamos el equipo que corresponde. Trabajamos hace más de 24 años con locales del sur de
-      Chile y sabemos qué aguanta la operación real. Despachamos a todo el país.</p>
+      Chile y sabemos qué aguanta la operación real. Despachamos desde Puerto Montt hacia el sur.</p>
     
       <h3>Registro de temperaturas y fiscalización</h3>
 
@@ -485,7 +487,8 @@ export const categoryContent: Record<string, CategoryContent> = {
       opacos anula la razón por la que la compraste.</p>
 
       <p>Cuéntanos qué producto vas a exhibir, cuánto frente de mostrador tienes disponible y en qué
-      volumen trabajas, y te recomendamos la vitrina adecuada. Despachamos a todo Chile.</p>
+      volumen trabajas, y te recomendamos la vitrina adecuada. Despachamos desde Puerto Montt a la
+      Región de Los Lagos, Aysén y Magallanes.</p>
     
       <h3>Rotación y reposición durante el día</h3>
 

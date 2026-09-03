@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import { loadCatalog } from '@/lib/catalog'
 import { sendOrderNotification, type OrderNotification } from '@/lib/email'
 import { titleCase } from '@/lib/format'
-import { site } from '@/lib/site'
+import { regionesVenta, site } from '@/lib/site'
 import { origenDelSitio } from '@/lib/origen'
 import { crearTransaccion, webpayConfigurado } from '@/lib/webpay'
 
@@ -92,11 +92,31 @@ function validar(datos: Datos): Record<string, string> {
     if (!datos.razonSocial) errores.razonSocial = 'Indica la razón social.'
   }
 
+  /**
+   * La cobertura se comprueba acá, no solo en el selector.
+   *
+   * El desplegable ya ofrece nada más que las regiones que se atienden, pero un
+   * formulario se puede mandar con cualquier valor. Si el servidor no lo
+   * comprueba, entra un pedido a una región donde no se despacha y el problema
+   * aparece cuando hay que decirle al cliente que no se puede enviar.
+   */
+  const cubierta = (region: string) => (regionesVenta as readonly string[]).includes(region)
+  const fueraDeCobertura =
+    'Por ahora despachamos desde la Región de Los Lagos hacia el sur. ' +
+    `Escríbenos a ${site.contact.email} y vemos cómo ayudarte.`
+
+  if (datos.region && !cubierta(datos.region)) errores.region = fueraDeCobertura
+
   if (datos.entrega === 'despacho') {
-    if (!datos.transportista) errores.transportista = 'Elige una empresa despachadora.'
+    const transportistaValido = site.carriers.some((c) => c.id === datos.transportista)
+    if (!transportistaValido) errores.transportista = 'Elige una empresa despachadora.'
+
     if (datos.otraDireccion) {
       if (!datos.envioDireccion) errores.envioDireccion = 'Indica la dirección de envío.'
       if (!datos.envioComuna) errores.envioComuna = 'Indica la comuna de envío.'
+      if (datos.envioRegion && !cubierta(datos.envioRegion)) {
+        errores.envioRegion = fueraDeCobertura
+      }
     }
   }
 
@@ -162,7 +182,8 @@ export async function submitCheckout(
   }
 
   const subtotal = lineas.reduce((n, l) => n + l.line_total, 0)
-  // El flete se cotiza aparte: no hay tarifas cargadas todavía.
+  // El despacho va por pagar: el flete lo cobra la empresa de transporte a
+  // quien recibe, así que el pedido no lleva costo de envío.
   const shippingCost = 0
 
   const nombreCompleto = `${datos.nombre} ${datos.apellidos}`.trim()
@@ -198,7 +219,7 @@ export async function submitCheckout(
     datos.documento === 'factura' ? `Factura · razón social: ${datos.razonSocial}` : 'Boleta',
     datos.entrega === 'retiro'
       ? 'Retira en el local'
-      : `Despacho por ${transportista ?? 'transportista sin definir'} · flete a cotizar`,
+      : `Despacho por ${transportista ?? 'transportista sin definir'} · envío por pagar`,
     datos.otraDireccion &&
       `Enviar a: ${datos.envioDireccion}, ${datos.envioComuna}, ${datos.envioRegion}`,
     datos.notas && `Nota del cliente: ${datos.notas}`,
