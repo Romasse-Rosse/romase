@@ -182,6 +182,99 @@ function buildOrderHtml(pedido: OrderNotification): string {
 export type EmailResult = { sent: boolean; reason?: string }
 
 /** Única salida a Resend. La usan tanto las consultas como los pedidos. */
+/**
+ * Remitente y destinatario, en un solo lugar.
+ *
+ * Están acá y no dentro de enviar() para que el diagnóstico pueda mirar lo mismo
+ * que se usa al enviar. Cuando cada uno lo calcula por su cuenta, el panel dice
+ * que el correo está configurado y los envíos fallan.
+ *
+ * **El remitente tiene que ser de un dominio verificado en Resend.** Mientras no
+ * lo haya, el único remitente que Resend acepta es onboarding@resend.dev, y solo
+ * deja mandar al correo de la cuenta de Resend.
+ */
+export function remitente(): string {
+  return process.env.RESEND_FROM ?? `${site.name} <web@romase.cl>`
+}
+
+export function destinatario(): string {
+  return process.env.LEADS_EMAIL ?? site.contact.email
+}
+
+function dominioDe(direccion: string): string {
+  return direccion.match(/@([^>s]+)/)?.[1] ?? '(sin dominio)'
+}
+
+/**
+ * ¿Puede salir un correo ahora mismo?
+ *
+ * Pregunta a Resend qué dominios tiene verificados y lo compara con el
+ * remitente configurado. Devuelve dominios y estados, nunca la API key.
+ *
+ * Si la API key es de tipo «sending access» no puede listar dominios; en ese
+ * caso se dice que no se pudo comprobar, que es distinto de decir que falla.
+ */
+export async function estadoDelCorreo(): Promise<{
+  configurado: boolean
+  remitente?: string
+  destinatarioPropio?: boolean
+  puedeEnviar?: boolean | null
+  dominiosVerificados?: string[]
+  detalle?: string
+}> {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) return { configurado: false }
+
+  const dominio = dominioDe(remitente())
+  const esRemitenteDePrueba = dominio === 'resend.dev'
+
+  if (esRemitenteDePrueba) {
+    return {
+      configurado: true,
+      remitente: dominio,
+      destinatarioPropio: Boolean(process.env.LEADS_EMAIL),
+      puedeEnviar: true,
+      detalle:
+        'Remitente de prueba de Resend. Solo puede enviar al correo de la cuenta de Resend.',
+    }
+  }
+
+  try {
+    const r = await fetch('https://api.resend.com/domains', {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      cache: 'no-store',
+    })
+    if (!r.ok) {
+      return {
+        configurado: true,
+        remitente: dominio,
+        destinatarioPropio: Boolean(process.env.LEADS_EMAIL),
+        puedeEnviar: null,
+        detalle: `No se pudo consultar los dominios (Resend respondió ${r.status}). ` +
+          'Puede ser una API key de solo envío.',
+      }
+    }
+    const cuerpo = (await r.json()) as { data?: { name: string; status: string }[] }
+    const verificados = (cuerpo.data ?? [])
+      .filter((d) => d.status === 'verified')
+      .map((d) => d.name)
+    return {
+      configurado: true,
+      remitente: dominio,
+      destinatarioPropio: Boolean(process.env.LEADS_EMAIL),
+      puedeEnviar: verificados.includes(dominio),
+      dominiosVerificados: verificados,
+    }
+  } catch (error) {
+    return {
+      configurado: true,
+      remitente: dominio,
+      puedeEnviar: null,
+      detalle: (error as Error).message,
+    }
+  }
+}
+
 async function enviar({
   subject,
   html,
@@ -194,9 +287,8 @@ async function enviar({
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) return { sent: false, reason: 'RESEND_API_KEY no configurada' }
 
-  // El remitente tiene que ser una dirección de un dominio verificado en Resend.
-  const from = process.env.RESEND_FROM ?? `${site.name} <web@romase.cl>`
-  const to = process.env.LEADS_EMAIL ?? site.contact.email
+  const from = remitente()
+  const to = destinatario()
 
   try {
     const res = await fetch('https://api.resend.com/emails', {

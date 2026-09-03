@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { estadoDelCorreo } from '@/lib/email'
 import { origenDelSitio } from '@/lib/origen'
 import { pagoEnLineaActivo, webpayConfigurado, webpayEsIntegracion } from '@/lib/webpay'
 
@@ -117,6 +118,7 @@ export async function GET() {
   const hayUrl = variables.SUPABASE_URL || variables.NEXT_PUBLIC_SUPABASE_URL
   const supabase = Boolean(hayUrl && variables.SUPABASE_SERVICE_ROLE_KEY)
   const prueba = await probarSupabase()
+  const correo = await estadoDelCorreo()
 
   /**
    * Nombres de variables cargadas que se parecen a las que necesitamos.
@@ -153,6 +155,15 @@ export async function GET() {
    * avisa a nadie. Queda registrado en la base, pero nadie lo mira.
    */
   const advertencias = [
+    correo.configurado &&
+      correo.puedeEnviar === false &&
+      `El remitente del correo es del dominio ${correo.remitente}, que no está ` +
+        `verificado en Resend${correo.dominiosVerificados?.length ? ` (verificados: ${correo.dominiosVerificados.join(', ')})` : ' (no hay ninguno verificado)'}` +
+        '. Resend va a rechazar el envío: un pedido pagado no le avisa a nadie. ' +
+        'Mientras no haya dominio, poner RESEND_FROM con onboarding@resend.dev.',
+    correo.configurado &&
+      correo.puedeEnviar === null &&
+      `No se pudo comprobar el dominio del remitente: ${correo.detalle}`,
     process.env.SUPABASE_SERVICE_ROLE_KEY?.startsWith('sb_publishable_') &&
       'En SUPABASE_SERVICE_ROLE_KEY hay una llave publishable, que es la pública. ' +
         'Las lecturas pueden andar y las escrituras las bloquea RLS: ningún pedido se ' +
@@ -190,7 +201,7 @@ export async function GET() {
         llave: tipoDeLlave(process.env.SUPABASE_SERVICE_ROLE_KEY),
         ...prueba,
       },
-      correo: { configurado: variables.RESEND_API_KEY },
+      correo,
       // Si esto no es el dominio donde está el sitio, la vuelta de Webpay falla.
       origen,
       variables,
