@@ -805,6 +805,13 @@ ninguno de los dos avisa en pantalla con el teléfono y el correo.
 
 ## Pendiente
 
+- **Rotar la `service_role` de Supabase.** El commit 9954fa6 dejó una llave real dentro de
+  `.env.example`, que es el único archivo de entorno que se versiona. Se sacó del archivo en
+  287b903, pero sigue en el historial de git: la única forma de desactivarla es rotarla en
+  *Project Settings → API* y actualizar la variable en Render. El repositorio es privado, así
+  que la exposición se limita a quien tenga acceso, y cuando pasó la base solo tenía pedidos
+  de prueba. Conviene hacerlo **antes de que haya ventas reales**: rotar con la tienda
+  vendiendo abre una ventana sin poder guardar pedidos hasta que Render redespliegue.
 - **Configurar `RESEND_API_KEY`.** Es lo más urgente. Hoy el pedido queda guardado en Supabase
   pero **no sale ningún correo**: una venta puede entrar sin que nadie en el negocio se
   entere. El diagnóstico lo avisa en `advertencias`.
