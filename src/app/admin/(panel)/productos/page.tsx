@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { AlertCircle, ImageOff, Search, Star } from 'lucide-react'
-import { clienteDelPanel } from '@/lib/panel'
+import { AlertCircle, ImageOff, Plus, Search, Star } from 'lucide-react'
+import { clienteDelPanel, sesionDelPanel } from '@/lib/panel'
 import { imagenServida } from '@/lib/catalog'
 import { formatPrice, titleCase } from '@/lib/format'
 import { cn } from '@/lib/cn'
@@ -28,6 +28,7 @@ export default async function ProductosPanel({ searchParams }: { searchParams: B
   const nroPagina = Math.max(1, Number(pagina) || 1)
   const desde = (nroPagina - 1) * POR_PAGINA
 
+  const sesion = await sesionDelPanel()
   const db = await clienteDelPanel()
 
   let consulta = db
@@ -71,12 +72,24 @@ export default async function ProductosPanel({ searchParams }: { searchParams: B
 
   return (
     <div>
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-950">Productos</h1>
-        <p className="text-sm text-ink-500">
-          {total} {total === 1 ? 'producto' : 'productos'}
-          {termino && ` que coinciden con «${termino}»`}
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink-950">Productos</h1>
+          <p className="mt-1 text-sm text-ink-500">
+            {total} {total === 1 ? 'producto' : 'productos'}
+            {termino && ` que coinciden con «${termino}»`}
+          </p>
+        </div>
+
+        {sesion?.puedeEscribir && (
+          <Link
+            href="/admin/productos/nuevo"
+            className="inline-flex h-10 items-center gap-1.5 rounded-sm bg-brand-500 px-4 text-sm font-medium text-white transition-colors hover:bg-brand-600"
+          >
+            <Plus aria-hidden="true" className="size-4" />
+            Producto nuevo
+          </Link>
+        )}
       </div>
 
       {/* Formulario con GET: la búsqueda queda en la URL y se puede compartir
