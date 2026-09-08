@@ -187,19 +187,30 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
               />
             </div>
 
-            <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+            {/*
+              Tres recuadros idénticos apilados se leen como una lista de cosas
+              iguales, y no lo son: comprar es la acción principal, cotizar por
+              WhatsApp es el canal por el que este negocio vende, y llamar es la
+              salida para quien no quiere escribir.
+
+              Así que WhatsApp va con su verde —la variante estaba en el sistema
+              de botones desde el principio y nunca se había usado— y llamar
+              queda como borde. Y las alturas se igualan: eran 52 px la
+              principal contra 44 px estas dos.
+            */}
+            <div className="mt-3 grid gap-3 sm:flex sm:flex-row">
               <a
                 href={cotizacion}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-sm border border-ink-300 px-5 text-sm font-medium text-ink-900 transition-colors hover:border-ink-950"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-sm bg-[#25D366] px-5 text-sm font-medium text-white transition-colors hover:bg-[#1eb855] sm:flex-1"
               >
-                <WhatsAppIcon className="size-4" />
+                <WhatsAppIcon className="size-4.5" />
                 Cotizar por WhatsApp
               </a>
               <a
                 href={site.contact.phoneHref}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-sm border border-ink-300 px-5 text-sm font-medium text-ink-900 transition-colors hover:border-ink-950"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-sm border border-ink-300 px-5 text-sm font-medium text-ink-900 transition-colors hover:border-ink-950"
               >
                 <Phone aria-hidden="true" className="size-4" />
                 Llamar
@@ -208,9 +219,9 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
 
             <a
               href={`mailto:${site.contact.email}?subject=${encodeURIComponent(`Consulta: ${name}`)}`}
-              className="mt-4 inline-flex items-center gap-2 text-sm text-ink-600 transition-colors hover:text-brand-600"
+              className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm break-all text-ink-600 transition-colors hover:text-brand-600 sm:mt-4 sm:min-h-0"
             >
-              <Mail aria-hidden="true" className="size-4" />
+              <Mail aria-hidden="true" className="size-4 shrink-0" />
               O escríbenos a {site.contact.email}
             </a>
 

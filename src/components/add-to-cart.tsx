@@ -61,13 +61,18 @@ export function AddToCartFull({ product, inStock }: { product: Producto; inStock
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
-      <div className="flex h-13 shrink-0 items-stretch border border-ink-300">
+      {/*
+        En móvil ocupa el ancho completo con el − y el + en los extremos, que es
+        donde llega el pulgar. Antes la caja se estiraba igual pero los tres
+        controles quedaban apretados a la izquierda, con media caja vacía.
+      */}
+      <div className="flex h-13 items-stretch border border-ink-300 sm:shrink-0">
         <button
           type="button"
           onClick={() => setCantidad((n) => Math.max(1, n - 1))}
           disabled={cantidad <= 1}
           aria-label="Quitar una unidad"
-          className="flex w-11 items-center justify-center text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-950 disabled:opacity-40 disabled:hover:bg-transparent"
+          className="flex w-16 items-center justify-center text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-950 disabled:opacity-40 disabled:hover:bg-transparent sm:w-11"
         >
           <Minus className="size-4" />
         </button>
@@ -82,7 +87,7 @@ export function AddToCartFull({ product, inStock }: { product: Producto; inStock
             setCantidad(Number.isFinite(n) ? Math.min(99, Math.max(1, Math.floor(n))) : 1)
           }}
           aria-label="Cantidad"
-          className="w-12 border-x border-ink-200 text-center text-sm font-medium text-ink-950 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          className="min-w-0 flex-1 border-x border-ink-200 text-center text-base font-medium text-ink-950 focus:outline-none sm:w-12 sm:flex-none sm:text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
         />
 
         <button
@@ -90,7 +95,7 @@ export function AddToCartFull({ product, inStock }: { product: Producto; inStock
           onClick={() => setCantidad((n) => Math.min(99, n + 1))}
           disabled={cantidad >= 99}
           aria-label="Agregar una unidad"
-          className="flex w-11 items-center justify-center text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-950 disabled:opacity-40 disabled:hover:bg-transparent"
+          className="flex w-16 items-center justify-center text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-950 disabled:opacity-40 disabled:hover:bg-transparent sm:w-11"
         >
           <Plus className="size-4" />
         </button>
@@ -99,7 +104,13 @@ export function AddToCartFull({ product, inStock }: { product: Producto; inStock
       <button
         type="button"
         onClick={() => add(product, cantidad)}
-        className="inline-flex h-13 flex-1 items-center justify-center gap-2 rounded-sm bg-brand-500 px-6 text-[15px] font-medium text-white transition-colors hover:bg-brand-600"
+        // flex-1 solo desde sm.
+                //
+                // El contenedor es una columna en móvil, y en una columna flex-1
+                // aplica al ALTO: con flex-basis en 0 el h-13 quedaba anulado y el
+                // botón se colapsaba a 23 px, la altura del texto. El botón principal
+                // de la tienda medía la mitad de los secundarios.
+                className="inline-flex h-13 items-center justify-center gap-2 rounded-sm bg-brand-500 px-6 text-[15px] font-medium text-white transition-colors hover:bg-brand-600 sm:flex-1"
       >
         <ShoppingBag aria-hidden="true" className="size-4.5" />
         {inStock ? 'Agregar al carrito' : 'Agregar (bajo pedido)'}
