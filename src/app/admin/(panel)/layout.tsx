@@ -32,7 +32,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
             {site.name}
           </Link>
 
-          <Navegacion />
+          <Navegacion esOwner={sesion.administraUsuarios} />
 
           <div className="ml-auto flex items-center gap-3">
             <Link

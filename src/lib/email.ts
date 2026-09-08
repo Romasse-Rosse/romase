@@ -216,6 +216,8 @@ function dominioDe(direccion: string): string {
  */
 export async function estadoDelCorreo(): Promise<{
   configurado: boolean
+  /** La dirección completa. No es un secreto: viaja en cada correo enviado. */
+  remitenteCompleto?: string
   remitente?: string
   destinatarioPropio?: boolean
   puedeEnviar?: boolean | null
@@ -231,6 +233,7 @@ export async function estadoDelCorreo(): Promise<{
   if (esRemitenteDePrueba) {
     return {
       configurado: true,
+      remitenteCompleto: remitente(),
       remitente: dominio,
       destinatarioPropio: Boolean(process.env.LEADS_EMAIL),
       puedeEnviar: true,
@@ -260,6 +263,7 @@ export async function estadoDelCorreo(): Promise<{
       .map((d) => d.name)
     return {
       configurado: true,
+      remitenteCompleto: remitente(),
       remitente: dominio,
       destinatarioPropio: Boolean(process.env.LEADS_EMAIL),
       puedeEnviar: verificados.includes(dominio),
@@ -268,6 +272,7 @@ export async function estadoDelCorreo(): Promise<{
   } catch (error) {
     return {
       configurado: true,
+      remitenteCompleto: remitente(),
       remitente: dominio,
       puedeEnviar: null,
       detalle: (error as Error).message,
