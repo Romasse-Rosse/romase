@@ -6,6 +6,7 @@ import { imagenServida } from '@/lib/catalog'
 import { titleCase } from '@/lib/format'
 import { EditorProducto } from './editor'
 import { Fotos } from './fotos'
+import { EliminarProducto } from './eliminar'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,6 +40,13 @@ export default async function EditarProducto({ params }: { params: Promise<{ id:
     .select('id, src, alt, position')
     .eq('product_id', productoId)
     .order('position')
+
+  // Cuántas líneas de pedido lo referencian. Es el dato que cambia la
+  // decisión de borrar, así que se muestra antes de ofrecer el botón.
+  const { count: enPedidos } = await db
+    .from('order_items')
+    .select('id', { count: 'exact', head: true })
+    .eq('product_id', productoId)
 
   const fotos = (imagenes ?? []).map((i) => ({
     id: i.id as number,
@@ -111,6 +119,16 @@ export default async function EditarProducto({ params }: { params: Promise<{ id:
           puedeBorrar={Boolean(sesion?.puedeBorrar)}
         />
       </div>
+
+      {sesion?.puedeEscribir && (
+        <EliminarProducto
+          productoId={producto.id}
+          slug={producto.slug}
+          nombre={titleCase(producto.name)}
+          enPedidos={enPedidos ?? 0}
+          puedeBorrar={Boolean(sesion?.puedeBorrar)}
+        />
+      )}
     </div>
   )
 }

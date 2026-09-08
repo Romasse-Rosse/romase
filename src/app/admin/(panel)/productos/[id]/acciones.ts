@@ -269,3 +269,60 @@ export async function permisos() {
     puedeBorrar: Boolean(sesion?.puedeBorrar),
   }
 }
+
+/**
+ * Borra un producto.
+ *
+ * Solo owner y admin, igual que la política de la base. Un editor puede
+ * despublicarlo —quitarle «disponible para comprar»—, que es reversible.
+ *
+ * Qué se lleva, según el esquema:
+ *
+ *   product_images      → se borran (cascade)
+ *   product_categories  → se borran (cascade)
+ *   promotions          → se borran (cascade)
+ *   order_items         → **se conservan**, con el vínculo en nulo (set null)
+ *
+ * Esa última línea es la que importa: el nombre, el SKU y el precio de cada
+ * línea de pedido se congelaron al comprar, justamente para que el historial de
+ * ventas no dependa del catálogo. Borrar un producto vendido no borra la venta.
+ *
+ * Aun así conviene despublicar antes que borrar: despublicar se deshace.
+ */
+export async function eliminarProducto(id: number, slug: string): Promise<EstadoGuardado> {
+  try {
+    const sesion = await exigirEscritura()
+    if (!sesion.puedeBorrar) {
+      return {
+        error:
+          'Tu rol puede editar y despublicar productos, pero no borrarlos. Pedile a un owner o ' +
+          'admin que lo haga.',
+      }
+    }
+
+    const db = await clienteDelPanel()
+
+    // Las categorías se leen antes de borrar: después no hay de dónde sacarlas
+    // para invalidar sus listados.
+    const { data: enCategorias } = await db
+      .from('product_categories')
+      .select('categories(slug)')
+      .eq('product_id', id)
+
+    const { error } = await db.from('products').delete().eq('id', id)
+    if (error) return { error: `No se pudo borrar: ${error.message}` }
+
+    olvidarCatalogo()
+    revalidatePath('/')
+    revalidatePath(`/productos/${slug}`)
+    revalidatePath('/admin/productos')
+    for (const fila of enCategorias ?? []) {
+      const categoria = fila.categories as { slug?: string } | null
+      if (categoria?.slug) revalidatePath(`/categorias/${categoria.slug}`)
+    }
+
+    return { ok: 'Producto borrado.' }
+  } catch (error) {
+    return { error: (error as Error).message }
+  }
+}
