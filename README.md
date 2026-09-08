@@ -396,6 +396,80 @@ ahí salió que la pantalla prometiera algo que el servidor no hacía.
 
 ---
 
+## Panel de administración
+
+En `/admin`. Sirve para que el cliente administre su tienda sin pedirnos nada: productos,
+precios, stock, destacados e imágenes.
+
+Está modelado sobre el panel de [Groner](https://github.com/GoPoint-Agency/groner), que ya
+resolvió el problema de roles y permisos. Lo que se copió es el modelo de fondo; lo que cambia
+es dónde se comprueba.
+
+### Quién puede qué se define en la base, no en la interfaz
+
+Un panel es código que se descarga. Cualquiera puede leerlo y llamar a la API de Supabase con
+la llave pública. Si el permiso viviera solo en la pantalla, esconder un botón sería toda la
+seguridad.
+
+Por eso el permiso está en Postgres. `migration/admin.sql` crea:
+
+- `admin_profiles` — quién administra, con rol `owner`, `admin`, `editor` o `viewer`. Tener cuenta
+  en Supabase Auth no alcanza: hay que estar en esta tabla y activo, así dar de baja a alguien
+  es cambiar una fila y no borrar una cuenta.
+- `app_private.has_admin_role()` — la función que usan todas las políticas.
+- Políticas de escritura sobre el catálogo, y de lectura sobre pedidos y consultas, que no
+  tienen lectura pública y así se quedan.
+- El bucket `romase-publico` de Storage, con lectura pública y escritura solo para el panel.
+
+Dos decisiones que conviene no revertir sin pensarlo:
+
+> **El panel escribe con la llave pública, con la sesión del usuario.** Nunca con la secreta. Si
+> escribiera con la secreta, todas las políticas quedarían de adorno y cualquier error de la
+> interfaz podría tocar lo que quisiera.
+
+> **Nadie borra un pedido desde el panel, ni `owner`.** Un pedido es un registro contable y su
+> línea es el respaldo de lo que se cobró. Si sobra, se anula cambiándole el estado. Borrar se
+> hace por SQL, a mano y a propósito.
+
+### La comprobación es en el servidor
+
+Groner es una SPA de Vite: descarga la aplicación completa y después decide qué mostrar.
+Funciona —la seguridad real está en Postgres— pero el código del panel es público y las reglas
+de sesión se pueden saltear desde el navegador.
+
+Acá el sitio es Next con App Router, así que las páginas de `(panel)` se renderizan en el
+servidor y quien no tiene permiso **se va redirigido antes de recibir una línea de HTML del
+panel**. Las escrituras pasan por server actions que vuelven a comprobar el rol con
+`exigirEscritura()`.
+
+Son dos capas y las dos hacen falta: el servidor decide qué se muestra, Postgres qué se puede
+escribir.
+
+### La tienda y el panel están separados
+
+El encabezado, el pie y el carrito estaban en el layout raíz, así que cualquier ruta nueva los
+heredaba. Las páginas de la tienda se movieron a `src/app/(tienda)/`: los paréntesis no
+aparecen en la URL —`/carrito` sigue siendo `/carrito`— y el layout raíz se queda con lo que sí
+es de todo el sitio.
+
+El layout raíz **no lee cabeceras ni cookies** a propósito: hacerlo obligaría a renderizar todo
+el árbol en cada visita, y las 64 categorías y 214 productos se generan estáticos.
+
+### Qué falta para que funcione
+
+1. Correr `migration/admin.sql` en el SQL Editor de Supabase.
+2. Crear el usuario en *Authentication → Users* y darle rol de `owner` con la consulta que está
+   al final de ese archivo.
+3. Cargar en Render `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` —la
+   publishable, no la secreta—. Sin esas dos el panel no puede autenticar a nadie y la pantalla
+   de ingreso lo dice en vez de fallar.
+
+Esas mismas dos variables hacen que **la tienda lea el catálogo desde Supabase** en vez del
+respaldo local. No es un efecto colateral: es lo que hace que editar en el panel se vea en la
+tienda. Si Supabase no responde, el sitio sigue con el respaldo.
+
+---
+
 ## Analítica: el embudo de e-commerce
 
 `src/lib/analytics.ts` empuja los eventos nativos de e-commerce a `window.dataLayer`, con la

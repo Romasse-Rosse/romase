@@ -206,6 +206,23 @@ async function loadFromSnapshot(): Promise<Catalog> {
 
 const local = imagenesLocales as Record<string, string>
 
+/**
+ * Traduce la URL original de una foto a la copia local.
+ *
+ * Las fotos llegaron del WordPress y `product_images.src` guarda esa URL. El
+ * sitio no la usa: sirve una copia ya bajada y redimensionada, y este mapa dice
+ * cuál. Lo que no está en el mapa se devuelve tal cual, y eso es lo que hace que
+ * una imagen nueva subida al panel —que vive en Supabase Storage— funcione sin
+ * tocar nada más.
+ *
+ * Se exporta para que el panel muestre exactamente la misma imagen que la
+ * tienda. Cuando cada uno resuelve la ruta por su cuenta, el panel enseña una
+ * foto y la tienda otra.
+ */
+export function imagenServida(src: string): string {
+  return local[src] ?? src
+}
+
 async function construirCatalogo(): Promise<Catalog> {
   let catalog: Catalog | null = null
 
@@ -234,7 +251,7 @@ async function construirCatalogo(): Promise<Catalog> {
       // redimensionadas por scripts/localize-product-images.mjs. Antes venían
       // de romase.cl pesando cientos de KB y se optimizaban en cada arranque
       // en frío, que era lo que hacía esperar segundos a la primera carga.
-      images: p.images.map((i) => ({ ...i, src: local[i.src] ?? i.src })),
+      images: p.images.map((i) => ({ ...i, src: imagenServida(i.src) })),
     })),
   }
 }
