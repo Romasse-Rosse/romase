@@ -297,6 +297,21 @@ export async function loadCatalog(): Promise<Catalog> {
 /** Deduplica además dentro de un mismo render. */
 export const getCatalog = cache(loadCatalog)
 
+/**
+ * Tira el catálogo guardado en memoria.
+ *
+ * La usa el panel después de guardar un cambio. Sin esto, el catálogo sigue en
+ * memoria hasta una hora y el cliente edita un precio, recarga la tienda y ve
+ * el precio viejo: el panel parece roto cuando en realidad guardó bien.
+ *
+ * No alcanza por sí sola. Las páginas de producto y categoría están generadas
+ * de antemano, así que además hay que invalidar sus rutas con revalidatePath.
+ * Las dos cosas, o el cambio no se ve.
+ */
+export function olvidarCatalogo(): void {
+  enMemoria = null
+}
+
 // ============================================================
 // Consultas derivadas
 // ============================================================
