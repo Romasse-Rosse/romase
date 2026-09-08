@@ -276,11 +276,13 @@ export async function permisos() {
  * Solo owner y admin, igual que la política de la base. Un editor puede
  * despublicarlo —quitarle «disponible para comprar»—, que es reversible.
  *
- * Qué se lleva, según el esquema:
+ * Qué se lleva, comprobado sobre la base y no solo leído del esquema:
  *
- *   product_images      → se borran (cascade)
- *   product_categories  → se borran (cascade)
- *   promotions          → se borran (cascade)
+ *   product_images      → se borran sus fotos (cascade)
+ *   product_categories  → se borra la fila que lo une a su categoría (cascade).
+ *                         **La categoría no se toca**: sigue con sus otros
+ *                         productos. Medido: 64 categorías antes y después.
+ *   promotions          → se borran las suyas (cascade)
  *   order_items         → **se conservan**, con el vínculo en nulo (set null)
  *
  * Esa última línea es la que importa: el nombre, el SKU y el precio de cada

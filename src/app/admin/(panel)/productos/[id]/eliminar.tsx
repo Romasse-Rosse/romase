@@ -64,8 +64,17 @@ export function EliminarProducto({
     <section className="mt-10 border border-red-200 bg-red-50/40 p-4 sm:p-6">
       <h2 className="text-sm font-semibold text-ink-950">Borrar este producto</h2>
 
+      {/*
+        La primera versión decía «se borran también sus fotos y su categoría», y
+        se entendía al revés: que desaparecía la categoría entera. Tamara lo
+        preguntó y estaba bien preguntado. Lo que se borra es la fila que une
+        este producto con su categoría; la categoría queda con todos sus otros
+        productos. Comprobado sobre la base: 64 categorías antes y después, y
+        COMPLEMENTARIOS conservó sus 47 productos.
+      */}
       <p className="mt-2 text-xs leading-relaxed text-ink-600">
-        Se borran también sus fotos y su categoría. No se puede deshacer.
+        Se borran sus fotos y <strong>sale de su categoría</strong> —la categoría queda como está,
+        con el resto de sus productos—. No se puede deshacer.
       </p>
 
       {enPedidos > 0 && (
