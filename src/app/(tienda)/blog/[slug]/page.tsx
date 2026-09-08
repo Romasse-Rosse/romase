@@ -11,7 +11,7 @@ import {
   fechaLarga,
   minutosDeLectura,
 } from '@/content/blog'
-import manifiestoBanner from '../../../../public/banner/manifiesto.json'
+import manifiestoBanner from '../../../../../public/banner/manifiesto.json'
 import { getCarouselProducts, getProductBySlug } from '@/lib/catalog'
 import { site } from '@/lib/site'
 import { titleCase } from '@/lib/format'

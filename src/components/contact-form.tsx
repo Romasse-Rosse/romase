@@ -3,7 +3,7 @@
 import { useActionState, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { AlertCircle, CheckCircle2, Send } from 'lucide-react'
-import { submitContact, type ContactState } from '@/app/contacto/actions'
+import { submitContact, type ContactState } from '@/app/(tienda)/contacto/actions'
 import { cn } from '@/lib/cn'
 
 const initialState: ContactState = { status: 'idle' }
