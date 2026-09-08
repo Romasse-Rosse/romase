@@ -7,6 +7,7 @@ import { nombreCategoria } from '@/content/nombres-categorias'
 import { categoriasDeProducto } from '@/content/productos-sin-categoria'
 import { portadasCategorias } from '@/content/portadas-categorias'
 import imagenesLocales from '../../migration/data/imagenes-locales.json'
+import { proximoCambio, resolverPrecio, type Promocion } from '@/lib/promociones'
 
 // ============================================================
 // Fuente de datos del catálogo.
@@ -62,6 +63,14 @@ export type Catalog = {
   products: Product[]
   categories: Category[]
   source: 'supabase' | 'snapshot'
+  /**
+   * Las promociones tal como están guardadas, sin aplicar.
+   *
+   * Los precios de `products` ya vienen con el descuento de vitrina, pero el
+   * checkout tiene que poder recalcularlos con una vigencia más larga: ver
+   * GRACIA_COBRO en lib/promociones. Por eso viajan también sin procesar.
+   */
+  promociones: Promocion[]
 }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -75,15 +84,30 @@ export const supabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY)
 async function loadFromSupabase(): Promise<Catalog> {
   const db = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, { auth: { persistSession: false } })
 
-  const [categories, products, images, links] = await Promise.all([
+  const [categories, products, images, links, promos] = await Promise.all([
     db.from('categories').select('*').order('position'),
     db.from('products').select('*').order('name'),
     db.from('product_images').select('product_id, src, alt, position').order('position'),
     db.from('product_categories').select('product_id, category_id'),
+    db
+      .from('promotions')
+      .select('id, scope, product_id, category_id, percent, label, starts_at, ends_at, is_active')
+      .eq('is_active', true),
   ])
 
   const failed = [categories, products, images, links].find((r) => r.error)
   if (failed?.error) throw new Error(failed.error.message)
+
+  /**
+   * Un error leyendo promociones no tira el catálogo abajo.
+   *
+   * Si la tabla todavía no existe —porque falta correr la migración— la tienda
+   * tiene que seguir vendiendo a precio de lista, no dejar de funcionar. Se
+   * anota y se sigue.
+   */
+  if (promos.error) {
+    console.warn(`[catalogo] no se pudieron leer las promociones: ${promos.error.message}`)
+  }
 
   const imagesByProduct = new Map<number, ProductImage[]>()
   for (const img of images.data ?? []) {
@@ -129,6 +153,17 @@ async function loadFromSupabase(): Promise<Catalog> {
       categoryIds: categoriesByProduct.get(p.id) ?? [],
       legacyPermalink: p.legacy_permalink ?? null,
     })),
+    promociones: (promos.data ?? []).map((r) => ({
+      id: r.id as number,
+      alcance: r.scope as 'producto' | 'categoria',
+      productoId: (r.product_id as number | null) ?? null,
+      categoriaId: (r.category_id as number | null) ?? null,
+      porcentaje: Number(r.percent),
+      etiqueta: (r.label as string | null) ?? null,
+      desde: Date.parse(r.starts_at as string),
+      hasta: r.ends_at ? Date.parse(r.ends_at as string) : null,
+      activa: Boolean(r.is_active),
+    })),
   }
 }
 
@@ -173,6 +208,10 @@ async function loadFromSnapshot(): Promise<Catalog> {
 
   return {
     source: 'snapshot',
+    // El respaldo local no tiene promociones. Es lo correcto: si Supabase no
+    // responde, no hay forma de saber qué descuentos están vigentes, y vender a
+    // precio de lista es el error seguro.
+    promociones: [],
     categories: wooCategories.map((c) => ({
       id: c.id,
       name: c.name,
@@ -239,20 +278,28 @@ async function construirCatalogo(): Promise<Catalog> {
 
   catalog ??= await loadFromSnapshot()
 
+  const ahora = Date.now()
+
   // Correcciones que valen para las dos fuentes: nombres de categoría con
   // tildes y productos que llegaron sin categoría asignada.
   return {
     ...catalog,
     categories: catalog.categories.map((c) => ({ ...c, name: nombreCategoria(c.slug, c.name) })),
-    products: catalog.products.map((p) => ({
-      ...p,
-      categoryIds: categoriasDeProducto(p.sku, p.categoryIds),
+    products: catalog.products.map((p) => {
+      const conCategorias = { ...p, categoryIds: categoriasDeProducto(p.sku, p.categoryIds) }
+      // El descuento de vitrina, sin gracia: la vitrina muestra la vigencia
+      // real y el cobro es el que la estira. Ver lib/promociones.
+      const precio = resolverPrecio(conCategorias, catalog.promociones, ahora)
+      return {
+        ...conCategorias,
+        ...precio,
       // Las fotos se sirven desde el propio sitio: ya bajadas y
       // redimensionadas por scripts/localize-product-images.mjs. Antes venían
       // de romase.cl pesando cientos de KB y se optimizaban en cada arranque
       // en frío, que era lo que hacía esperar segundos a la primera carga.
-      images: p.images.map((i) => ({ ...i, src: imagenServida(i.src) })),
-    })),
+        images: p.images.map((i) => ({ ...i, src: imagenServida(i.src) })),
+      }
+    }),
   }
 }
 
@@ -284,7 +331,19 @@ export async function loadCatalog(): Promise<Catalog> {
   // frío.
   cargaEnCurso ??= construirCatalogo()
     .then((datos) => {
-      enMemoria = { datos, expira: Date.now() + VIGENCIA }
+      /**
+       * La caché vence antes si una promoción cambia antes.
+       *
+       * Sin esto, un descuento configurado para las 15:00 podría aparecer a las
+       * 15:50, y uno que venció seguiría aplicándose casi una hora. Con la
+       * vigencia recortada al próximo cambio, el precio es correcto al minuto
+       * sin bajarle el tiempo de caché al resto del catálogo.
+       */
+      const ahora = Date.now()
+      const cambio = proximoCambio(datos.promociones, ahora)
+      const expira = Math.min(ahora + VIGENCIA, cambio ?? Number.POSITIVE_INFINITY)
+
+      enMemoria = { datos, expira }
       return datos
     })
     .finally(() => {

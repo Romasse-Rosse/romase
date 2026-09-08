@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { loadCatalog } from '@/lib/catalog'
+import { GRACIA_COBRO, resolverPrecio } from '@/lib/promociones'
 import { sendOrderNotification, type OrderNotification } from '@/lib/email'
 import { titleCase } from '@/lib/format'
 import { regionesVenta, site } from '@/lib/site'
@@ -156,20 +157,38 @@ export async function submitCheckout(
     return { status: 'error', message: 'Tu carrito está vacío.' }
   }
 
-  const { products } = await loadCatalog()
+  const { products, promociones } = await loadCatalog()
   const porId = new Map(products.map((p) => [p.id, p]))
+
+  /**
+   * El precio de cobro respeta las promociones un rato más que la vitrina.
+   *
+   * Las páginas de la tienda están generadas de antemano, así que una ficha
+   * puede seguir mostrando un descuento unos minutos después de que venció. Si
+   * acá se cobrara con la vigencia estricta, ese comprador vería $80.000 y
+   * pagaría $100.000. **A nadie se le cobra más de lo que vio.**
+   *
+   * GRACIA_COBRO es holgadamente mayor que lo que una página puede quedar
+   * desactualizada, así que ese caso no existe. El contrario —cobrar menos de
+   * lo mostrado en los últimos minutos— sí puede pasar, y es a favor de quien
+   * compra.
+   */
+  const ahora = Date.now()
 
   const lineas = lineasCliente.flatMap((linea) => {
     const producto = porId.get(linea.id)
     if (!producto) return []
+
+    const { price } = resolverPrecio(producto, promociones, ahora, GRACIA_COBRO)
+
     return [
       {
         product_id: producto.id,
         product_name: titleCase(producto.name),
         sku: producto.sku,
-        unit_price: producto.price,
+        unit_price: price,
         quantity: linea.quantity,
-        line_total: producto.price * linea.quantity,
+        line_total: price * linea.quantity,
       },
     ]
   })

@@ -19,7 +19,12 @@ import { ProductGrid } from '@/components/product-card'
 import { WhatsAppIcon } from '@/components/site-header'
 import { AddToCartFull, AddToCartSticky } from '@/components/add-to-cart'
 
-export const revalidate = 3600
+// Cinco minutos, no una hora: esta página muestra precios y una promoción
+// puede empezar o vencer en cualquier momento. El cobro respeta la
+// promoción bastante más tiempo que esto (GRACIA_COBRO), justamente para
+// que una página vieja no muestre un descuento que el checkout ya no
+// aplique. Ver src/lib/promociones.ts.
+export const revalidate = 300
 
 export async function generateStaticParams() {
   const slugs = await getAllProductSlugs()

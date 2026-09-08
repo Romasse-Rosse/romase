@@ -445,6 +445,52 @@ panel**. Las escrituras pasan por server actions que vuelven a comprobar el rol 
 Son dos capas y las dos hacen falta: el servidor decide qué se muestra, Postgres qué se puede
 escribir.
 
+### Promociones: la regla que no se puede romper
+
+Los descuentos se administran en `/admin/promociones`: por categoría —«Panadería al 20 %»— o por
+producto, con fecha de inicio y de término.
+
+**No se guardan como un precio nuevo.** Un descuento con vencimiento escrito en `sale_price`
+obliga a que alguien lo apague el día que termina; si se olvida, la tienda sigue vendiendo con
+descuento sin que nadie lo haya decidido. Y para una categoría habría que reescribir decenas de
+filas y después revertirlas una por una, perdiendo el precio original de las que ya tenían
+oferta propia.
+
+Acá la promoción es una regla con vigencia y el precio se calcula al leer el catálogo. Vencer es
+dejar de aplicarse.
+
+> **A nadie se le cobra más de lo que vio.**
+>
+> Las páginas de la tienda están generadas de antemano, así que una ficha puede seguir mostrando
+> un descuento unos minutos después de que venció. Si el checkout fuera estricto, ese comprador
+> vería $80.000 y pagaría $100.000.
+>
+> Por eso hay **dos vigencias**: la vitrina aplica la promoción hasta `ends_at`, y el cobro la
+> aplica hasta `ends_at` + `GRACIA_COBRO` (15 minutos). La gracia es holgadamente mayor que lo que
+> una página puede quedar desactualizada —`revalidate` de 5 minutos en las páginas que muestran
+> precio—, así que el caso «cobré más de lo que mostré» no existe. El contrario, cobrar menos en
+> los últimos minutos, sí puede pasar y es a favor de quien compra.
+
+Tres decisiones más, todas para que el precio no se vaya a un lugar que nadie pidió:
+
+- **El porcentaje se calcula sobre el precio normal**, no sobre el vigente. Si fuera sobre el
+  vigente, dos promociones sobre el mismo producto compondrían el descuento.
+- **Se toma el menor entre la oferta que ya tenía y la de la promoción.** Una promoción nunca le
+  sube el precio a nada.
+- **Gana la más específica**: una promoción de producto le pisa a la de su categoría. Eso permite
+  «Panadería al 20 %, pero esta amasadora al 5 %» sin listas de excepciones. Entre dos del mismo
+  alcance gana la de mayor descuento.
+
+La caché del catálogo **vence en el próximo cambio de precio** si eso pasa antes de la hora. Sin
+eso, un descuento configurado para las 15:00 podría aparecer a las 15:50.
+
+El cálculo está en `src/lib/promociones.ts` y tiene pruebas: `yarn promos:probar`. Vale la pena
+tenerlas porque ahí se decide cuánto se le cobra a alguien, y la regla de arriba no se ve
+mirando el código, solo probándola. Hoy pasan las 20.
+
+Si Supabase no responde y el catálogo cae al respaldo local, no hay promociones: se vende a
+precio de lista. Es el error seguro.
+
 ### La tienda y el panel están separados
 
 El encabezado, el pie y el carrito estaban en el layout raíz, así que cualquier ruta nueva los

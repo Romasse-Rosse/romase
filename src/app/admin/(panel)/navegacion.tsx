@@ -16,6 +16,7 @@ import { cn } from '@/lib/cn'
 const SECCIONES = [
   { href: '/admin', etiqueta: 'Inicio' },
   { href: '/admin/productos', etiqueta: 'Productos' },
+  { href: '/admin/promociones', etiqueta: 'Promociones' },
   { href: '/admin/usuarios', etiqueta: 'Usuarios', soloOwner: true },
   { href: '/admin/cuenta', etiqueta: 'Mi cuenta' },
 ]
