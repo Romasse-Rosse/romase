@@ -59,7 +59,7 @@ export default async function PanelInicio() {
         <Tarjeta titulo="Vendido y pagado" valor={formatPrice(vendido)} />
       </dl>
 
-      <div className="mt-8 border border-ink-200 bg-white p-6">
+      <div className="mt-8 border border-ink-200 bg-white p-4 sm:p-6">
         <h2 className="text-sm font-semibold text-ink-950">Qué se puede hacer hoy</h2>
         <ul className="mt-3 space-y-2 text-sm text-ink-600">
           <li>

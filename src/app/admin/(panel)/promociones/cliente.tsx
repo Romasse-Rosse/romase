@@ -127,7 +127,7 @@ export function ListaDePromociones({
                       type="button"
                       disabled={pendiente}
                       onClick={() => correr(() => terminarAhora(p.id))}
-                      className="rounded-sm border border-ink-200 px-3 py-1.5 text-xs text-ink-700 transition-colors hover:border-ink-400 disabled:opacity-50"
+                      className="min-h-10 rounded-sm border border-ink-200 px-4 text-xs text-ink-700 transition-colors hover:border-ink-400 disabled:opacity-50 sm:min-h-0 sm:px-3 sm:py-1.5"
                     >
                       Terminar ahora
                     </button>
@@ -136,7 +136,7 @@ export function ListaDePromociones({
                     type="button"
                     disabled={pendiente}
                     onClick={() => correr(() => cambiarEstadoPromocion(p.id, !p.activa))}
-                    className="rounded-sm border border-ink-200 px-3 py-1.5 text-xs text-ink-700 transition-colors hover:border-ink-400 disabled:opacity-50"
+                    className="min-h-10 rounded-sm border border-ink-200 px-4 text-xs text-ink-700 transition-colors hover:border-ink-400 disabled:opacity-50 sm:min-h-0 sm:px-3 sm:py-1.5"
                   >
                     {p.activa ? 'Apagar' : 'Encender'}
                   </button>
@@ -176,7 +176,7 @@ export function CrearPromocion({
   const opciones = alcance === 'categoria' ? categorias : productos
 
   return (
-    <aside className="border border-ink-200 bg-white p-6">
+    <aside className="border border-ink-200 bg-white p-4 sm:p-6">
       <h2 className="flex items-center gap-2 text-sm font-semibold text-ink-950">
         <Tag aria-hidden="true" className="size-4 text-brand-500" />
         Nueva promoción
@@ -348,7 +348,7 @@ function aIso(valorLocal: string): string {
 }
 
 const entrada =
-  'w-full rounded-sm border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 focus:border-ink-950 focus:outline-none disabled:bg-ink-50 disabled:text-ink-400'
+  'w-full rounded-sm border border-ink-200 bg-white px-3 py-3 text-sm text-ink-900 focus:border-ink-950 focus:outline-none sm:py-2 disabled:bg-ink-50 disabled:text-ink-400'
 
 function Campo({
   etiqueta,

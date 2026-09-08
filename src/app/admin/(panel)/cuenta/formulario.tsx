@@ -11,7 +11,7 @@ export function FormularioClave() {
   const [estado, accion] = useActionState(cambiarMiClave, inicial)
 
   return (
-    <form action={accion} className="border border-ink-200 bg-white p-6">
+    <form action={accion} className="border border-ink-200 bg-white p-4 sm:p-6">
       {estado.error && (
         <p
           role="alert"

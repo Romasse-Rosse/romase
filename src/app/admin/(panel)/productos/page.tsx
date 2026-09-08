@@ -84,7 +84,7 @@ export default async function ProductosPanel({ searchParams }: { searchParams: B
         {sesion?.puedeEscribir && (
           <Link
             href="/admin/productos/nuevo"
-            className="inline-flex h-10 items-center gap-1.5 rounded-sm bg-brand-500 px-4 text-sm font-medium text-white transition-colors hover:bg-brand-600"
+            className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-sm bg-brand-500 px-4 text-sm font-medium text-white transition-colors hover:bg-brand-600 sm:h-10 sm:w-auto"
           >
             <Plus aria-hidden="true" className="size-4" />
             Producto nuevo
@@ -94,8 +94,8 @@ export default async function ProductosPanel({ searchParams }: { searchParams: B
 
       {/* Formulario con GET: la búsqueda queda en la URL y se puede compartir
           o volver a ella con el historial del navegador. */}
-      <form method="get" className="mt-6 flex flex-wrap items-end gap-3">
-        <div className="min-w-56 flex-1">
+      <form method="get" className="mt-6 grid gap-3 sm:flex sm:flex-wrap sm:items-end">
+        <div className="sm:min-w-56 sm:flex-1">
           <label htmlFor="q" className="mb-1.5 block text-xs font-medium text-ink-600">
             Buscar por nombre o SKU
           </label>
@@ -109,7 +109,7 @@ export default async function ProductosPanel({ searchParams }: { searchParams: B
               name="q"
               defaultValue={termino}
               placeholder="amasadora, 19690…"
-              className="h-10 w-full rounded-sm border border-ink-200 bg-white pr-3 pl-9 text-sm text-ink-900 focus:border-ink-950 focus:outline-none"
+              className="h-11 w-full rounded-sm border border-ink-200 bg-white pr-3 pl-9 text-sm text-ink-900 focus:border-ink-950 focus:outline-none sm:h-10"
             />
           </div>
         </div>
@@ -122,7 +122,7 @@ export default async function ProductosPanel({ searchParams }: { searchParams: B
             id="estado"
             name="estado"
             defaultValue={estado}
-            className="h-10 rounded-sm border border-ink-200 bg-white px-3 text-sm text-ink-900 focus:border-ink-950 focus:outline-none"
+            className="h-11 w-full rounded-sm border border-ink-200 bg-white px-3 text-sm text-ink-900 focus:border-ink-950 focus:outline-none sm:h-10 sm:w-auto"
           >
             <option value="todos">Todos</option>
             <option value="sin-stock">Sin stock</option>
@@ -132,7 +132,7 @@ export default async function ProductosPanel({ searchParams }: { searchParams: B
 
         <button
           type="submit"
-          className="h-10 rounded-sm bg-ink-950 px-4 text-sm font-medium text-white transition-colors hover:bg-ink-800"
+          className="h-11 rounded-sm bg-ink-950 px-4 text-sm font-medium text-white transition-colors hover:bg-ink-800 sm:h-10"
         >
           Filtrar
         </button>
@@ -162,70 +162,143 @@ export default async function ProductosPanel({ searchParams }: { searchParams: B
         </p>
       )}
 
+      {/*
+        Dos presentaciones de la misma lista.
+
+        En un teléfono de 390 px la tabla mide 672: se desplazaba en horizontal
+        y dejaba fuera de la vista el precio, el stock y el destacado —o sea, lo
+        que uno viene a mirar—. Medido en el panel desplegado, no supuesto.
+
+        En móvil van tarjetas con todo a la vista. Desde 'sm' vuelve la tabla,
+        que en una pantalla ancha se recorre mejor.
+      */}
       {productos.length > 0 && (
-        <div className="mt-6 overflow-x-auto border border-ink-200 bg-white">
-          <table className="w-full min-w-[42rem] text-sm">
-            <thead>
-              <tr className="border-b border-ink-200 text-left text-xs tracking-wide text-ink-500 uppercase">
-                <th className="px-4 py-3 font-medium">Producto</th>
-                <th className="px-4 py-3 font-medium">SKU</th>
-                <th className="px-4 py-3 text-right font-medium">Precio</th>
-                <th className="px-4 py-3 font-medium">Stock</th>
-                <th className="px-4 py-3 font-medium">Destacado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {productos.map((p) => {
-                const foto = fotos.get(p.id)
-                return (
-                  <tr key={p.id} className="border-b border-ink-100 last:border-0 hover:bg-ink-50">
-                    <td className="px-4 py-3">
-                      <Link href={`/admin/productos/${p.id}`} className="flex items-center gap-3">
-                        <span className="flex size-11 shrink-0 items-center justify-center border border-ink-100 bg-ink-50">
-                          {foto ? (
-                            <Image
-                              src={foto.src}
-                              alt={foto.alt || titleCase(p.name)}
-                              width={44}
-                              height={44}
-                              className="size-11 object-contain"
-                            />
-                          ) : (
-                            <ImageOff aria-hidden="true" className="size-4 text-ink-300" />
-                          )}
-                        </span>
-                        <span className="font-medium text-ink-900 hover:text-brand-700">
+        <>
+          <ul className="mt-6 divide-y divide-ink-100 border border-ink-200 bg-white sm:hidden">
+            {productos.map((p) => {
+              const foto = fotos.get(p.id)
+              return (
+                <li key={p.id}>
+                  <Link href={`/admin/productos/${p.id}`} className="flex gap-3 p-3 active:bg-ink-50">
+                    <span className="flex size-14 shrink-0 items-center justify-center border border-ink-100 bg-ink-50">
+                      {foto ? (
+                        <Image
+                          src={foto.src}
+                          alt={foto.alt || titleCase(p.name)}
+                          width={56}
+                          height={56}
+                          className="size-14 object-contain"
+                        />
+                      ) : (
+                        <ImageOff aria-hidden="true" className="size-5 text-ink-300" />
+                      )}
+                    </span>
+
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-start justify-between gap-2">
+                        <span className="text-sm font-medium text-ink-900">
                           {titleCase(p.name)}
                         </span>
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-ink-500">{p.sku || '—'}</td>
-                    <td className="px-4 py-3 text-right font-medium text-ink-900">
-                      {p.price ? formatPrice(Number(p.price)) : '—'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={cn(
-                          'inline-flex rounded-full px-2 py-0.5 text-xs',
-                          p.in_stock ? 'bg-emerald-50 text-emerald-700' : 'bg-ink-100 text-ink-600',
+                        {p.featured && (
+                          <Star
+                            aria-label="Destacado"
+                            className="mt-0.5 size-4 shrink-0 fill-brand-500 text-brand-500"
+                          />
                         )}
-                      >
-                        {p.in_stock ? 'Disponible' : 'Sin stock'}
                       </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {p.featured ? (
-                        <Star aria-hidden="true" className="size-4 fill-brand-500 text-brand-500" />
-                      ) : (
-                        <span className="text-ink-300">—</span>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+
+                      <span className="mt-0.5 block text-xs text-ink-500">
+                        {p.sku ? `SKU ${p.sku}` : 'Sin SKU'}
+                      </span>
+
+                      <span className="mt-1.5 flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-semibold text-ink-950">
+                          {p.price ? formatPrice(Number(p.price)) : 'Sin precio'}
+                        </span>
+                        <span
+                          className={cn(
+                            'rounded-full px-2 py-0.5 text-xs',
+                            p.in_stock
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-ink-100 text-ink-600',
+                          )}
+                        >
+                          {p.in_stock ? 'Disponible' : 'Sin stock'}
+                        </span>
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+
+          <div className="mt-6 hidden overflow-x-auto border border-ink-200 bg-white sm:block">
+            <table className="w-full min-w-[42rem] text-sm">
+              <thead>
+                <tr className="border-b border-ink-200 text-left text-xs tracking-wide text-ink-500 uppercase">
+                  <th className="px-4 py-3 font-medium">Producto</th>
+                  <th className="px-4 py-3 font-medium">SKU</th>
+                  <th className="px-4 py-3 text-right font-medium">Precio</th>
+                  <th className="px-4 py-3 font-medium">Stock</th>
+                  <th className="px-4 py-3 font-medium">Destacado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {productos.map((p) => {
+                  const foto = fotos.get(p.id)
+                  return (
+                    <tr key={p.id} className="border-b border-ink-100 last:border-0 hover:bg-ink-50">
+                      <td className="px-4 py-3">
+                        <Link href={`/admin/productos/${p.id}`} className="flex items-center gap-3">
+                          <span className="flex size-11 shrink-0 items-center justify-center border border-ink-100 bg-ink-50">
+                            {foto ? (
+                              <Image
+                                src={foto.src}
+                                alt={foto.alt || titleCase(p.name)}
+                                width={44}
+                                height={44}
+                                className="size-11 object-contain"
+                              />
+                            ) : (
+                              <ImageOff aria-hidden="true" className="size-4 text-ink-300" />
+                            )}
+                          </span>
+                          <span className="font-medium text-ink-900 hover:text-brand-700">
+                            {titleCase(p.name)}
+                          </span>
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-ink-500">{p.sku || '—'}</td>
+                      <td className="px-4 py-3 text-right font-medium text-ink-900">
+                        {p.price ? formatPrice(Number(p.price)) : '—'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={cn(
+                            'inline-flex rounded-full px-2 py-0.5 text-xs',
+                            p.in_stock
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-ink-100 text-ink-600',
+                          )}
+                        >
+                          {p.in_stock ? 'Disponible' : 'Sin stock'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {p.featured ? (
+                          <Star aria-hidden="true" className="size-4 fill-brand-500 text-brand-500" />
+                        ) : (
+                          <span className="text-ink-300">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {paginas > 1 && (

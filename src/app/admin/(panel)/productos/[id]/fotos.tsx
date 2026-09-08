@@ -108,7 +108,7 @@ export function Fotos({
   }
 
   return (
-    <aside className="border border-ink-200 bg-white p-6">
+    <aside className="border border-ink-200 bg-white p-4 sm:p-6">
       <h2 className="text-sm font-semibold text-ink-950">
         Fotos {fotos.length > 0 && <span className="font-normal text-ink-500">({fotos.length})</span>}
       </h2>
@@ -157,14 +157,15 @@ export function Fotos({
 
       <ul className="mt-5 space-y-3">
         {fotos.map((foto, i) => (
-          <li key={foto.id} className="flex gap-3 border border-ink-100 p-3">
-            <span className="flex size-16 shrink-0 items-center justify-center bg-ink-50">
+          <li key={foto.id} className="border border-ink-100 p-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
+            <span className="flex size-20 shrink-0 items-center justify-center bg-ink-50 sm:size-16">
               <Image
                 src={foto.servida}
                 alt={foto.alt || nombre}
-                width={64}
-                height={64}
-                className="size-16 object-contain"
+                width={80}
+                height={80}
+                className="size-20 object-contain sm:size-16"
               />
             </span>
 
@@ -191,9 +192,12 @@ export function Fotos({
                     name="alt"
                     defaultValue={foto.alt}
                     placeholder="Qué se ve en la foto"
-                    className="w-full rounded-sm border border-ink-200 px-2 py-1 text-xs text-ink-900 focus:border-ink-950 focus:outline-none"
+                    className="h-10 w-full rounded-sm border border-ink-200 px-2.5 text-xs text-ink-900 focus:border-ink-950 focus:outline-none sm:h-8"
                   />
-                  <button type="submit" className="mt-1 text-[11px] text-brand-700 hover:underline">
+                  <button
+                    type="submit"
+                    className="mt-1.5 inline-flex min-h-9 items-center rounded-sm border border-ink-200 px-2.5 text-[11px] text-ink-700 transition-colors hover:border-ink-400 sm:mt-1 sm:min-h-0 sm:border-0 sm:px-0 sm:text-brand-700 sm:hover:underline"
+                  >
                     Guardar descripción
                   </button>
                 </form>
@@ -203,7 +207,7 @@ export function Fotos({
             </div>
 
             {puedeEscribir && (
-              <div className="flex shrink-0 flex-col items-center gap-1">
+              <div className="flex shrink-0 items-center gap-1 border-t border-ink-100 pt-2 sm:flex-col sm:border-0 sm:pt-0">
                 <BotonIcono
                   etiqueta="Subir en el orden"
                   desactivado={i === 0 || pendiente}
@@ -230,6 +234,7 @@ export function Fotos({
                 )}
               </div>
             )}
+            </div>
           </li>
         ))}
       </ul>
@@ -264,7 +269,7 @@ function BotonIcono({
       aria-label={etiqueta}
       title={etiqueta}
       className={
-        'inline-flex size-7 items-center justify-center rounded-sm transition-colors disabled:opacity-30 ' +
+        'inline-flex size-11 items-center justify-center rounded-sm transition-colors disabled:opacity-30 sm:size-7 ' +
         (peligro
           ? 'text-ink-400 hover:bg-red-50 hover:text-red-700'
           : 'text-ink-500 hover:bg-ink-100 hover:text-ink-900')

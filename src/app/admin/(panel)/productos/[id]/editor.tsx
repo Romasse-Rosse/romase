@@ -45,7 +45,7 @@ export function EditorProducto({
   const hayOferta = oferta !== '' && normal !== '' && Number(oferta) < Number(normal)
 
   return (
-    <form action={accion} className="border border-ink-200 bg-white p-6">
+    <form action={accion} className="border border-ink-200 bg-white p-4 sm:p-6">
       <input type="hidden" name="id" value={producto.id} />
       <input type="hidden" name="slug" value={producto.slug} />
 
@@ -212,7 +212,7 @@ export function EditorProducto({
 }
 
 const entrada =
-  'w-full rounded-sm border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 focus:border-ink-950 focus:outline-none disabled:bg-ink-50 disabled:text-ink-500'
+  'w-full rounded-sm border border-ink-200 bg-white px-3 py-3 text-sm text-ink-900 focus:border-ink-950 focus:outline-none sm:py-2 disabled:bg-ink-50 disabled:text-ink-500'
 
 function Campo({
   etiqueta,

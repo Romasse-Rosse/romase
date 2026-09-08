@@ -15,7 +15,7 @@ export function FormularioNuevo({ categorias }: { categorias: OpcionCategoria[] 
   const [precio, setPrecio] = useState('')
 
   return (
-    <form action={accion} className="border border-ink-200 bg-white p-6">
+    <form action={accion} className="border border-ink-200 bg-white p-4 sm:p-6">
       {estado.error && (
         <p
           role="alert"
@@ -106,7 +106,7 @@ export function FormularioNuevo({ categorias }: { categorias: OpcionCategoria[] 
 }
 
 const entrada =
-  'w-full rounded-sm border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 focus:border-ink-950 focus:outline-none'
+  'w-full rounded-sm border border-ink-200 bg-white px-3 py-3 text-sm text-ink-900 focus:border-ink-950 focus:outline-none sm:py-2'
 
 function Campo({
   etiqueta,

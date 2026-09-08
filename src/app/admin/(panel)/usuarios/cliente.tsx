@@ -61,7 +61,7 @@ export function ListaDePersonas({
 
       <ul className="divide-y divide-ink-100 border border-ink-200 bg-white">
         {personas.map((p) => (
-          <li key={p.userId} className="flex flex-wrap items-center gap-3 p-4">
+          <li key={p.userId} className="flex flex-wrap items-center gap-x-3 gap-y-2 p-4">
             <div className="min-w-40 flex-1">
               <p className="text-sm font-medium text-ink-950">
                 {p.nombre || p.email}
@@ -78,7 +78,7 @@ export function ListaDePersonas({
               value={p.rol}
               disabled={pendiente}
               onChange={(e) => correr(() => cambiarRol(p.userId, e.target.value))}
-              className="h-9 rounded-sm border border-ink-200 bg-white px-2 text-sm text-ink-900 focus:border-ink-950 focus:outline-none"
+              className="h-11 rounded-sm border border-ink-200 bg-white px-2 text-sm text-ink-900 focus:border-ink-950 focus:outline-none sm:h-9"
             >
               {Object.keys(quePuede).map((r) => (
                 <option key={r} value={r}>
@@ -92,7 +92,7 @@ export function ListaDePersonas({
               disabled={pendiente}
               onClick={() => correr(() => cambiarEstado(p.userId, !p.activo))}
               className={cn(
-                'rounded-sm px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50',
+                'inline-flex min-h-11 items-center rounded-sm px-4 text-xs font-medium transition-colors disabled:opacity-50 sm:min-h-0 sm:px-3 sm:py-1.5',
                 p.activo
                   ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                   : 'bg-ink-100 text-ink-600 hover:bg-ink-200',
@@ -126,7 +126,7 @@ export function AgregarPersona({ quePuede }: { quePuede: QuePuede }) {
   const [copiada, setCopiada] = useState(false)
 
   return (
-    <aside className="border border-ink-200 bg-white p-6">
+    <aside className="border border-ink-200 bg-white p-4 sm:p-6">
       <h2 className="flex items-center gap-2 text-sm font-semibold text-ink-950">
         <UserPlus aria-hidden="true" className="size-4 text-brand-500" />
         Agregar una persona
@@ -215,7 +215,7 @@ export function AgregarPersona({ quePuede }: { quePuede: QuePuede }) {
 }
 
 const entrada =
-  'w-full rounded-sm border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 focus:border-ink-950 focus:outline-none'
+  'w-full rounded-sm border border-ink-200 bg-white px-3 py-3 text-sm text-ink-900 focus:border-ink-950 focus:outline-none sm:py-2'
 
 function Campo({
   etiqueta,
