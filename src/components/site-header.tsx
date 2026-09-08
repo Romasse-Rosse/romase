@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { ChevronDown, Mail, MapPin, Menu, Phone, Truck, X } from 'lucide-react'
+import { ChevronDown, Mail, MapPin, Menu, Phone, Truck, Wrench, X } from 'lucide-react'
 import type { CategoryNode } from '@/lib/catalog'
 import { site } from '@/lib/site'
 import { titleCase } from '@/lib/format'
@@ -19,12 +19,31 @@ import { CartButton } from './cart-drawer'
  * institucionales: es lo que se acordó en el kick-off para que la
  * home lea como e-commerce y no como sitio de servicios.
  */
+/** La categoría que se destaca en el menú. Si cambia el slug, cambia acá. */
+const REPUESTOS_SLUG = 'repuestos'
+
 export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
   const pathname = usePathname()
   const [openCategory, setOpenCategory] = useState<number | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const openCategoryNode = categories.find((c) => c.id === openCategory) ?? null
+
+  /**
+   * Repuestos se dibuja aparte, al final y destacado.
+   *
+   * Es una categoría del catálogo, pero funciona como servicio de postventa: es
+   * lo que trae de vuelta a quien ya compró un equipo, y en una fila de nueve
+   * entradas grises se perdía como una más.
+   *
+   * Va al final y no al principio porque al principio desplazaría las
+   * categorías de producto y competiría con el logo y el buscador. Al final
+   * queda como lo último donde cae la vista al recorrer la fila, y está
+   * comprobado que la barra no necesita scroll en ningún ancho desde 1024px,
+   * así que no se esconde.
+   */
+  const repuestos = categories.find((c) => c.slug === REPUESTOS_SLUG) ?? null
+  const categoriasDeProducto = categories.filter((c) => c.slug !== REPUESTOS_SLUG)
 
   // Cualquier navegación cierra lo que esté abierto.
   useEffect(() => {
@@ -131,10 +150,13 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
         onMouseLeave={() => setOpenCategory(null)}
       >
         <Container>
-          {/* Son diez entradas y no siempre entran: en pantallas angostas la
-              barra se desplaza en horizontal en vez de recortar categorías. */}
-          <ul className="flex items-stretch gap-4 overflow-x-auto no-scrollbar xl:gap-6">
-            {categories.map((category) => {
+          {/* Nueve entradas más la píldora de repuestos. Si algún día no entran,
+              la barra se desplaza en horizontal en vez de recortar categorías,
+              pero conviene que no llegue a pasar: lo primero que se corta es lo
+              último de la fila, que es justamente lo que se quiere destacar. El
+              gap está medido para que entre todo desde 1024px. */}
+          <ul className="flex items-stretch gap-3 overflow-x-auto no-scrollbar xl:gap-6">
+            {categoriasDeProducto.map((category) => {
               const isOpen = openCategory === category.id
               const hasChildren = category.children.length > 0
 
@@ -164,6 +186,18 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
                 </li>
               )
             })}
+
+            {repuestos && (
+              <li className="flex items-center" onMouseEnter={() => setOpenCategory(null)}>
+                <Link
+                  href={`/categorias/${repuestos.slug}`}
+                  className="inline-flex items-center gap-1.5 rounded-sm bg-brand-500 px-3 py-1.5 text-[13px] font-medium whitespace-nowrap text-white transition-colors hover:bg-brand-600"
+                >
+                  <Wrench aria-hidden="true" className="size-3.5" />
+                  {nombreCortoCategoria(repuestos.slug, titleCase(repuestos.name))}
+                </Link>
+              </li>
+            )}
           </ul>
         </Container>
 
@@ -249,7 +283,9 @@ function MobileMenu({
 
         <div className="flex-1 overflow-y-auto">
           <nav className="py-2">
-          {categories.map((category) => (
+          {categories
+            .filter((category) => category.slug !== REPUESTOS_SLUG)
+            .map((category) => (
             <div key={category.id} className="border-t border-ink-100">
               <div className="flex items-stretch">
                 <Link
@@ -294,6 +330,21 @@ function MobileMenu({
               )}
             </div>
           ))}
+
+          {/* Mismo criterio que en escritorio: destacado y al final. */}
+          {categories
+            .filter((category) => category.slug === REPUESTOS_SLUG)
+            .map((repuestos) => (
+              <Link
+                key={repuestos.id}
+                href={`/categorias/${repuestos.slug}`}
+                onClick={onClose}
+                className="mt-2 flex min-h-12 items-center gap-2 bg-brand-500 px-4 py-3 text-sm font-semibold text-white"
+              >
+                <Wrench aria-hidden="true" className="size-4" />
+                {titleCase(repuestos.name)}
+              </Link>
+            ))}
           </nav>
 
           <div className="mt-4 space-y-1 border-t border-ink-200 p-4 text-sm">
