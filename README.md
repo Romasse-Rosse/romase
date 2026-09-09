@@ -516,6 +516,50 @@ tienda. Si Supabase no responde, el sitio sigue con el respaldo.
 
 ---
 
+## Búsqueda: tolerante a las faltas de ortografía
+
+Antes comparaba subcadenas exactas sobre el texto sin tildes. Con eso, quien escribía
+«amazador» buscando una amasadora recibía «no encontramos productos», y el sitio le decía que
+no existe algo que ROMASE sí tiene en stock. Lo encontró Tamara probando el buscador.
+
+Ahora hay dos mecanismos, en este orden, en `src/lib/busqueda.ts`:
+
+**1 · Equivalencia fonética.** En castellano de Chile la mayoría de las faltas no son errores
+de tecleo sino de escritura: s, z y c suenan igual, la h no suena, b y v no se distinguen, ll e
+y son el mismo sonido. Reduciendo las dos cadenas a cómo se pronuncian, «amazador» y
+«amasadora» empiezan igual. Es determinista, no tiene umbrales que ajustar y cuesta un puñado de
+reemplazos de texto.
+
+**2 · Distancia de edición.** Para lo que sí es tecleo —«amsadora», «balnza»—. Es más caro, así
+que solo corre cuando lo anterior no encontró nada, y el puntaje **baja con la distancia**: con
+un valor plano, «amsadora» devolvía «Asador de pollos» antes que «Amasadora», porque las dos
+entraban con el mismo puntaje y decidía el orden del catálogo.
+
+El puntaje mantiene la jerarquía: exacto (24 a 12) gana a fonético (10 a 6), que gana a
+aproximado (5 a 4), y la descripción suma 2 o 1. Esto último importa: buscar «cosina» devuelve
+los 81 productos que la mencionan en el texto —ninguno se llama así— pero ninguno puntúa como si
+fuera su nombre.
+
+Dos decisiones con su motivo:
+
+- **La x se mapea a s y no a ks.** Con ks coincidiría «inocsidable» y no «inosidable»; se eligió
+  al revés porque quien escribe mal «inoxidable» pone lo segundo. Hay 11 productos con «inox» en
+  el nombre y es un término que se busca seguido.
+- **En palabras de hasta cuatro letras no se tolera ninguna edición.** Una letra de diferencia
+  cambia el significado —«taza» y «tapa», «vaso» y «paso»— y para esas ya alcanza la
+  equivalencia fonética.
+
+Los campos preparados de cada producto se guardan en un `WeakMap` y no en un `Map`: cuando el
+catálogo se reconstruye, los productos son objetos nuevos y las entradas se van solas. Con un
+Map habría que acordarse de limpiarlo, y olvidarse significaría buscar contra nombres viejos.
+
+`yarn busqueda:probar` corre las pruebas **contra el catálogo real**, no contra ejemplos
+inventados: lo que importa es que «amazador» encuentre la amasadora que esta tienda tiene. Hoy
+pasan las 38, incluidas las que comprueban que no se vuelva permisiva de más —«bicicleta» no
+devuelve nada y «horno rotatorio» no devuelve todos los hornos—.
+
+---
+
 ## Google Merchant Center
 
 El feed de productos está en `/merchant.xml`. Se configura una sola vez en Merchant Center

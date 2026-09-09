@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { createClient } from '@supabase/supabase-js'
 import { normalize, stripHtml } from './format'
+import { camposDe, puntuar, type CamposDeBusqueda } from './busqueda'
 import { nombreCategoria } from '@/content/nombres-categorias'
 import { categoriasDeProducto } from '@/content/productos-sin-categoria'
 import { portadasCategorias } from '@/content/portadas-categorias'
@@ -495,21 +496,43 @@ export const getCategoryPath = cache(async (slug: string): Promise<Category[]> =
 // ------------------------------------------------------------
 // Búsqueda
 // ------------------------------------------------------------
-function scoreProduct(product: Product, terms: string[]): number {
-  const name = normalize(product.name)
-  const sku = normalize(product.sku ?? '')
-  const body = normalize(stripHtml(product.shortDescription) + ' ' + stripHtml(product.description))
+/**
+ * Campos preparados para buscar, memorizados por producto.
+ *
+ * Se calculan una vez por producto y no en cada búsqueda: la versión fonética
+ * de nombre, SKU y descripción sale de unos cuantos reemplazos de texto, y
+ * hacerlos para 214 productos en cada tecla escrita en el buscador se nota.
+ *
+ * Es un WeakMap a propósito. Cuando el catálogo se reconstruye —al vencer la
+ * caché o al guardar algo en el panel— los productos son objetos nuevos y estas
+ * entradas se van solas. Con un Map habría que acordarse de limpiarlo, y
+ * olvidarse significaría buscar contra nombres viejos.
+ */
+const camposPorProducto = new WeakMap<Product, CamposDeBusqueda>()
 
-  let score = 0
-  for (const term of terms) {
-    if (name.startsWith(term)) score += 12
-    else if (name.includes(term)) score += 8
-    if (sku.includes(term)) score += 6
-    if (body.includes(term)) score += 1
-    // Un término que no aparece en ningún lado descarta el producto.
-    if (!name.includes(term) && !sku.includes(term) && !body.includes(term)) return 0
-  }
-  return score
+function camposDeBusqueda(product: Product): CamposDeBusqueda {
+  const guardado = camposPorProducto.get(product)
+  if (guardado) return guardado
+
+  const campos = camposDe({
+    nombre: product.name,
+    sku: product.sku ?? '',
+    cuerpo: stripHtml(product.shortDescription) + ' ' + stripHtml(product.description),
+  })
+  camposPorProducto.set(product, campos)
+  return campos
+}
+
+/**
+ * Puntúa un producto contra los términos buscados.
+ *
+ * La lógica vive en lib/busqueda: tolera las faltas de ortografía del
+ * castellano —s/z/c, b/v, h, ll/y— y los errores de tecleo. Antes esto
+ * comparaba subcadenas exactas, así que buscar «amazador» no devolvía la
+ * amasadora que la tienda sí tiene.
+ */
+function scoreProduct(product: Product, terms: string[]): number {
+  return puntuar(camposDeBusqueda(product), terms).puntaje
 }
 
 export type SortKey = 'relevancia' | 'precio-asc' | 'precio-desc' | 'nombre' | 'novedades'
