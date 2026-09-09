@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { ChevronDown, Mail, MapPin, Menu, Phone, Truck, Wrench, X } from 'lucide-react'
+import { ChevronDown, MapPin, Menu, Phone, Truck, Wrench, X } from 'lucide-react'
 import type { CategoryNode } from '@/lib/catalog'
 import { site } from '@/lib/site'
 import { titleCase } from '@/lib/format'
@@ -80,13 +80,6 @@ export function SiteHeader({ categories }: { categories: CategoryNode[] }) {
                   </span>
                 ))}
               </span>
-              <a
-                href={`mailto:${site.contact.email}`}
-                className="flex items-center gap-1.5 hover:text-white"
-              >
-                <Mail aria-hidden="true" className="size-3.5" />
-                {site.contact.email}
-              </a>
             </div>
           </div>
         </Container>

@@ -516,6 +516,66 @@ tienda. Si Supabase no responde, el sitio sigue con el respaldo.
 
 ---
 
+## Google Merchant Center
+
+El feed de productos está en `/merchant.xml`. Se configura una sola vez en Merchant Center
+como *fetch* programado y Google lo va a buscar todos los días: no hay nada que empujar desde
+acá, ni credenciales que guardar ni rotar. Para 214 productos que cambian poco, la Content API
+—proyecto de Google Cloud, OAuth, un proceso que sincronice— no compra nada.
+
+`yarn merchant:auditar https://…` comprueba lo mismo que comprueba Google, antes de que Google
+lo rechace y quede un error permanente en su panel: ids repetidos, títulos de más de 150
+caracteres, enlaces o imágenes relativas, precios en cero, disponibilidad inválida, y que
+`sale_price` sea realmente menor que `price`. Además pide por HTTP una muestra de enlaces e
+imágenes: un feed con enlaces roto se desaprueba entero. Hoy: 213 productos, cero problemas.
+
+### Las decisiones del feed
+
+**Los enlaces usan el host que sirve el feed, no `site.url`.** El dominio canónico —romase.cl—
+todavía apunta al WordPress viejo. Con enlaces a romase.cl, Google entraría a fichas del sitio
+anterior, con otros precios, y desaprobaría los productos por no coincidir. Con el origen real
+el feed es coherente en los dos momentos: hoy servido desde Render apunta a Render, y cuando el
+dominio apunte acá apuntará a romase.cl, sin tocar nada. Mismo criterio que la URL de retorno de
+Webpay.
+
+**Un producto que Google rechazaría no se manda.** Sin foto o con precio en cero se excluye: es
+mejor un feed de 213 aprobados que uno de 214 con un error fijo en el panel. Hoy queda uno
+afuera, sin foto.
+
+**La marca se detecta del nombre, y si no hay se declara que no hay.** Los productos no tienen
+columna de marca, pero muchos la traen en el nombre —«Balanza 40 KG Ventus»—. Salió de contar el
+catálogo: Ventus en 33, Ecobeck en 20, Pareti en 7, Cousiño en 5. Los 143 sin marca reconocible
+van con `identifier_exists: no`, que es la forma documentada de decir «no hay marca ni GTIN ni
+MPN» en lugar de inventar una, que sí es motivo de rechazo.
+
+**`google_product_category` se omite a propósito.** Un id equivocado del árbol de Google es peor
+que ninguno: Google lo infiere solo, y con una categoría mal declarada la campaña compite en el
+lugar equivocado. Se manda `product_type`, que es nuestra taxonomía y es texto libre.
+
+**`price` lleva el precio de lista y `sale_price` el vigente.** Al revés, Shopping no muestra que
+hay oferta y se pierde justamente lo que hace clic. Las promociones del panel salen acá solas.
+
+### Lo que hay que resolver antes de la primera campaña
+
+> **70 de los 213 productos usan fotos generadas por IA**, heredadas del sitio anterior. El feed
+> pasa la validación igual, pero la política de Merchant Center pide que la imagen represente el
+> producto real, y mandarlas puede costar desaprobaciones por tergiversación —que escalan a la
+> cuenta, no solo al producto—. El auditor lo avisa en cada corrida. Es una decisión del negocio,
+> pero tiene que ser una decisión y no un descuido.
+
+Del lado de Google, y esto no se puede hacer desde el código:
+
+1. Verificar el dominio en Search Console y reclamarlo en Merchant Center.
+2. Cargar el feed: *Productos → Feeds → añadir feed → fetch programado*, con la URL de
+   `/merchant.xml`.
+3. Configurar **envío e impuestos en Merchant Center**, no en el feed. El despacho de ROMASE va
+   por pagar y el flete lo cobra el transporte, así que no hay un valor que declarar por
+   producto; eso se modela una vez en la configuración de la cuenta.
+4. El feed apunta a donde se sirve. Si se carga apuntando a Render y después el dominio cambia,
+   hay que actualizar la URL del feed en Merchant Center.
+
+---
+
 ## Analítica: el embudo de e-commerce
 
 `src/lib/analytics.ts` empuja los eventos nativos de e-commerce a `window.dataLayer`, con la

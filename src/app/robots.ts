@@ -9,7 +9,9 @@ export default function robots(): MetadataRoute.Robots {
       // Los resultados de búsqueda y las combinaciones de filtros generan
       // infinitas URLs sin contenido propio: no aportan al índice.
       // El blog está construido pero sin publicar: ver src/content/blog.ts.
-      disallow: ['/api/', '/buscar', '/blog'],
+      // El panel además lleva noindex en su metadata; esto evita que
+      // siquiera se intente rastrear.
+      disallow: ['/api/', '/buscar', '/blog', '/admin'],
     },
     sitemap: `${site.url}/sitemap.xml`,
   }

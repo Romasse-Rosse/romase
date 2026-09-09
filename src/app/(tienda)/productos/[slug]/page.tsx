@@ -95,7 +95,13 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
     name,
     sku: product.sku ?? undefined,
     description: truncate(stripHtml(description), 300),
-    image: product.images.map((i) => i.src),
+    // Absolutas: Google descarta las rutas relativas en datos
+    // estructurados, así que estas fotos no le llegaban a nadie. Se resuelven
+    // contra el dominio canónico, que es el mismo que declara el canonical de
+    // esta página.
+    image: product.images.map((i) =>
+      i.src.startsWith('http') ? i.src : `${site.url}${i.src}`,
+    ),
     brand: { '@type': 'Brand', name: site.name },
     offers: {
       '@type': 'Offer',

@@ -17,7 +17,8 @@
     "notas:auditar": "node scripts/auditar-notas.mjs",
     "webpay:probar": "node scripts/webpay-probar.mjs",
     "webpay:casos": "node scripts/webpay-casos-retorno.mjs",
-    "promos:probar": "node --experimental-strip-types scripts/probar-promociones.mjs"
+    "promos:probar": "node --experimental-strip-types scripts/probar-promociones.mjs",
+    "merchant:auditar": "node scripts/auditar-merchant.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
