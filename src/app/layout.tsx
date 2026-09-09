@@ -36,6 +36,21 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true },
   alternates: { canonical: '/' },
+
+  /**
+   * Verificación del dominio para Search Console y Merchant Center.
+   *
+   * Google ofrece varias formas de verificar un sitio; la del meta tag es la
+   * única que no depende del DNS, así que funciona igual mientras el dominio
+   * apunte al WordPress viejo.
+   *
+   * El código lo da Google en Search Console → «etiqueta HTML». Se carga como
+   * NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION en Render y aparece solo. Sin la
+   * variable no se emite ninguna etiqueta.
+   */
+  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+    : undefined,
 }
 
 /**
