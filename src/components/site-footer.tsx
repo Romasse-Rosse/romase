@@ -126,12 +126,30 @@ export async function SiteFooter() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-ink-800 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            © {new Date().getFullYear()} {site.legalName}. Todos los derechos reservados.
-          </p>
-          <p>
-            {site.tagline} en {site.contact.city}, Chile.
+        <div className="border-t border-ink-800 py-6 text-xs">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p>
+              © {new Date().getFullYear()} {site.legalName}. Todos los derechos reservados.
+            </p>
+            <p>
+              {site.tagline} en {site.contact.city}, Chile.
+            </p>
+          </div>
+
+          {/* El crédito va en su propia línea y un tono más apagado que el
+              resto del pie: pertenece al sitio pero no compite con los datos
+              del negocio, que es lo que la gente viene a buscar acá abajo. */}
+          <p className="mt-4 text-ink-500">
+            Sitio desarrollado por{' '}
+            <a
+              href="https://gopointagency.com"
+              target="_blank"
+              rel="noopener"
+              className="text-ink-400 underline underline-offset-2 transition-colors hover:text-brand-400"
+            >
+              GoPoint Agency
+            </a>
+            , Agencia de Marketing Digital
           </p>
         </div>
       </Container>
