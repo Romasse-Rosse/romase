@@ -19,7 +19,8 @@
     "webpay:casos": "node scripts/webpay-casos-retorno.mjs",
     "promos:probar": "node --experimental-strip-types scripts/probar-promociones.mjs",
     "merchant:auditar": "node scripts/auditar-merchant.mjs",
-    "busqueda:probar": "node --experimental-strip-types scripts/probar-busqueda.mjs"
+    "busqueda:probar": "node --experimental-strip-types scripts/probar-busqueda.mjs",
+    "categorias:probar": "node --experimental-strip-types scripts/probar-categorias.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

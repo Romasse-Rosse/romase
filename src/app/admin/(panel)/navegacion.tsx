@@ -19,6 +19,7 @@ import { salir } from '../acciones-sesion'
 const SECCIONES = [
   { href: '/admin', etiqueta: 'Inicio' },
   { href: '/admin/productos', etiqueta: 'Productos' },
+  { href: '/admin/categorias', etiqueta: 'Categorías' },
   { href: '/admin/promociones', etiqueta: 'Promociones' },
   { href: '/admin/usuarios', etiqueta: 'Usuarios', soloOwner: true },
   { href: '/admin/cuenta', etiqueta: 'Mi cuenta' },
