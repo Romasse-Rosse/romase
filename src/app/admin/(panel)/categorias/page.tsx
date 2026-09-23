@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { AlertCircle, ChevronRight, EyeOff, Plus } from 'lucide-react'
+import { AlertCircle, ArrowRight, ChevronRight, EyeOff, Plus } from 'lucide-react'
 import { clienteDelPanel, sesionDelPanel } from '@/lib/panel'
 import { titleCase } from '@/lib/format'
 import { arbolDelPanel, type NodoDelPanel } from '@/lib/categorias-panel'
@@ -12,10 +12,21 @@ export default async function CategoriasPanel() {
   const sesion = await sesionDelPanel()
   const db = await clienteDelPanel()
 
-  const [categorias, vinculos] = await Promise.all([
+  const [categorias, vinculos, productos] = await Promise.all([
     db.from('categories').select('id, name, slug, parent_id').order('name'),
     db.from('product_categories').select('product_id, category_id'),
+    db.from('products').select('id', { count: 'exact', head: true }),
   ])
+
+  /**
+   * Productos que no están en ninguna categoría.
+   *
+   * Tienen ficha y se pueden comprar, pero no aparecen en ningún listado: ni en
+   * el menú, ni en la portada, ni en una categoría. Es una lista que conviene
+   * que esté vacía, y hasta ahora no había forma de saber que no lo estaba.
+   */
+  const conCategoria = new Set((vinculos.data ?? []).map((v) => v.product_id as number))
+  const sinCategoria = Math.max(0, (productos.count ?? 0) - conCategoria.size)
 
   const faltaTabla = /does not exist|schema cache/i.test(categorias.error?.message ?? '')
 
@@ -68,6 +79,26 @@ export default async function CategoriasPanel() {
             ? 'No se encontró la tabla de categorías en Supabase.'
             : `No se pudieron leer las categorías: ${categorias.error.message}`}
         </p>
+      )}
+
+      {sinCategoria > 0 && sesion?.puedeEscribir && (
+        <Link
+          href="/admin/categorias/sin-categoria"
+          className="mt-6 flex items-start gap-2 border border-amber-300 bg-amber-50 p-4 text-sm text-ink-700 transition-colors hover:border-amber-500"
+        >
+          <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-amber-600" />
+          <span className="flex-1">
+            <strong>
+              {sinCategoria} {sinCategoria === 1 ? 'producto no está' : 'productos no están'} en
+              ninguna categoría
+            </strong>
+            <span className="mt-0.5 block text-xs leading-relaxed text-ink-600">
+              No aparecen en ningún listado de la tienda: solo se llega a ellos por el buscador o
+              por su dirección.
+            </span>
+          </span>
+          <ArrowRight aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-ink-400" />
+        </Link>
       )}
 
       {/*
