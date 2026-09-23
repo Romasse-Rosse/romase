@@ -491,6 +491,47 @@ mirando el código, solo probándola. Hoy pasan las 20.
 Si Supabase no responde y el catálogo cae al respaldo local, no hay promociones: se vende a
 precio de lista. Es el error seguro.
 
+### Categorías: lo que se puede romper sin que se vea
+
+El módulo está en `/admin/categorias`: crear, editar y decidir qué productos entran en cada una.
+Antes de escribirlo hubo que mirar qué toca una categoría en este sitio, y tres cosas cambiaron
+el diseño.
+
+**Una categoría sin productos no aparece en la tienda.** El árbol del catálogo filtra las vacías,
+así que crear una no ensucia el menú mientras se prepara. Está bien, pero sin decirlo parece que
+no se guardó: el panel las muestra igual, marcadas «sin productos», y explica cuándo aparecen.
+
+**`position` no ordena nada.** El menú se ordena por cantidad de productos, de mayor a menor. No
+se puso un control de orden porque sería un botón que no hace nada; el listado explica cómo se
+decide.
+
+**`description` es la metadescripción** de la página de categoría en Google, y eso sí se edita.
+`image_url`, `seo_content` y `faqs` existen en la tabla pero la tienda no los usa —las portadas
+salen de un producto real y el contenido largo vive en `src/content/categorias.ts`— así que no se
+muestran: un campo que no hace nada es peor que no tenerlo.
+
+> **El ciclo es lo que tumba la tienda.** `parent_id` es una clave ajena a la misma tabla y
+> Postgres acepta ciclos sin protestar. Si A cuelga de B y B de A, la función recursiva que arma
+> el árbol del catálogo no termina: no se rompe una categoría, se cae el sitio entero. Lo impide
+> el panel, en `src/lib/categorias-panel.ts`, con `yarn categorias:probar` — 26 pruebas, incluido
+> el ciclo indirecto a través de una nieta y una que comprueba que si los datos ya vinieran con
+> un ciclo el panel no se cuelgue. Si alguna vez se escriben categorías por fuera del panel, la
+> comprobación hay que hacerla igual.
+
+El borrado se niega mientras la categoría tenga subcategorías: `on delete set null` no las borra
+con ella, las **convierte en categorías principales y las mete en el menú del sitio**. Y cuando sí
+se puede, dice cuántos productos quedarían sin ninguna categoría.
+
+### Productos que no aparecen en ninguna parte
+
+Salió probando el módulo: **12 productos no estaban en ninguna categoría** —amasadoras, batidoras
+y sobadoras, de hasta $1.236.000—. Tienen ficha y se pueden comprar, pero no salen en el menú, ni
+en la portada, ni en un listado: solo por el buscador o escribiendo la dirección. No había forma
+de enterarse.
+
+El listado de categorías ahora lo avisa arriba de todo y lleva a `/admin/categorias/sin-categoria`,
+donde se ven y se asignan de a varios. Es la lista que conviene que esté vacía.
+
 ### La tienda y el panel están separados
 
 El encabezado, el pie y el carrito estaban en el layout raíz, así que cualquier ruta nueva los
@@ -503,9 +544,20 @@ el árbol en cada visita, y las 64 categorías y 214 productos se generan estát
 
 ### Qué falta para que funcione
 
-1. Correr `migration/admin.sql` en el SQL Editor de Supabase.
+1. Correr en el SQL Editor de Supabase, **en este orden**, los archivos de `migration/`:
+
+   | Archivo | Qué habilita | Si no se corre |
+   | --- | --- | --- |
+   | `admin.sql` | Entrar al panel, roles, editar productos | El panel no deja entrar a nadie |
+   | `admin-productos-nuevos.sql` | Crear productos desde cero | Solo se pueden editar los que ya están |
+   | `admin-promociones.sql` | Descuentos con fecha de término | La pantalla de promociones no guarda |
+   | `admin-categorias.sql` | **Crear** categorías nuevas | Editar y asignar funcionan; crear falla |
+
+   Cada uno avisa en pantalla si falta: el panel no se cae, dice qué archivo correr. Volver a
+   correr uno ya aplicado no rompe nada.
+
 2. Crear el usuario en *Authentication → Users* y darle rol de `owner` con la consulta que está
-   al final de ese archivo.
+   al final de `admin.sql`.
 3. Cargar en Render `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` —la
    publishable, no la secreta—. Sin esas dos el panel no puede autenticar a nadie y la pantalla
    de ingreso lo dice en vez de fallar.

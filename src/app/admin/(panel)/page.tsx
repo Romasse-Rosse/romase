@@ -54,7 +54,7 @@ export default async function PanelInicio() {
 
       <dl className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Tarjeta titulo="Productos" valor={productos.count ?? 0} href="/admin/productos" />
-        <Tarjeta titulo="Categorías" valor={categorias.count ?? 0} />
+        <Tarjeta titulo="Categorías" valor={categorias.count ?? 0} href="/admin/categorias" />
         <Tarjeta titulo="Pedidos" valor={pedidos.count ?? 0} />
         <Tarjeta titulo="Vendido y pagado" valor={formatPrice(vendido)} />
       </dl>
@@ -71,9 +71,26 @@ export default async function PanelInicio() {
             </Link>{' '}
             — precio, stock, descripción, destacados e imágenes.
           </li>
+          <li>
+            <Link
+              href="/admin/categorias"
+              className="inline-flex items-center gap-1.5 text-brand-700 hover:underline"
+            >
+              Organizar categorías <ArrowRight aria-hidden="true" className="size-3.5" />
+            </Link>{' '}
+            — crear, editar y decidir qué productos entran en cada una.
+          </li>
+          <li>
+            <Link
+              href="/admin/promociones"
+              className="inline-flex items-center gap-1.5 text-brand-700 hover:underline"
+            >
+              Poner descuentos <ArrowRight aria-hidden="true" className="size-3.5" />
+            </Link>{' '}
+            — por categoría o por producto, con fecha de término.
+          </li>
           <li className="text-ink-400">
-            Pedidos, categorías y blog: en construcción. Mientras tanto los pedidos se consultan en
-            Supabase.
+            Pedidos y blog: en construcción. Mientras tanto los pedidos se consultan en Supabase.
           </li>
         </ul>
         {consultas.count ? (
