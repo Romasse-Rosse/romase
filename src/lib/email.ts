@@ -202,7 +202,10 @@ export function destinatario(): string {
 }
 
 function dominioDe(direccion: string): string {
-  return direccion.match(/@([^>s]+)/)?.[1] ?? '(sin dominio)'
+  // El escape importa: [^>s] excluye la LETRA s, no el espacio, y
+  // corta romase.cl en «roma». Se perdió una barra invertida al escribir
+  // este archivo y el diagnóstico estuvo meses informando mal el remitente.
+  return direccion.match(/@([^>\s]+)/)?.[1] ?? '(sin dominio)'
 }
 
 /**
