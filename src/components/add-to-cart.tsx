@@ -9,15 +9,38 @@ import { cn } from '@/lib/cn'
 type Producto = Omit<CartItem, 'quantity'>
 
 /** Botón compacto, para las tarjetas de la grilla. */
+/**
+ * El botón de las tarjetas de listado.
+ *
+ * Recibe `inStock` como los botones de la ficha. No recibirlo fue un error
+ * con consecuencias: la ficha respetaba «Disponible para comprar» pero las
+ * tarjetas de la portada, las categorías y el buscador no, así que cualquier
+ * producto marcado como no disponible se podía agregar igual desde un listado.
+ */
 export function AddToCartCompact({
   product,
+  inStock,
   className,
 }: {
   product: Producto
+  inStock: boolean
   className?: string
 }) {
   const { add } = useCart()
   const [agregado, setAgregado] = useState(false)
+
+  if (!inStock) {
+    return (
+      <span
+        className={cn(
+          'inline-flex h-9 w-full items-center justify-center rounded-sm border border-ink-200 text-[13px] text-ink-500',
+          className,
+        )}
+      >
+        Consultar
+      </span>
+    )
+  }
 
   return (
     <button

@@ -18,6 +18,7 @@ import { ProductGallery } from '@/components/product-gallery'
 import { ProductGrid } from '@/components/product-card'
 import { WhatsAppIcon } from '@/components/site-header'
 import { AddToCartFull, AddToCartSticky } from '@/components/add-to-cart'
+import { esBajoPedido } from '@/lib/bajo-pedido'
 
 // Cinco minutos, no una hora: esta página muestra precios y una promoción
 // puede empezar o vencer en cualquier momento. El cobro respeta la
@@ -76,6 +77,9 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
 
   const name = titleCase(product.name)
   const description = product.description || product.shortDescription
+  // Sin precio publicado no se vende en línea: se cotiza. Ver src/lib/bajo-pedido.ts.
+  const bajoPedido = esBajoPedido(product.price)
+
   const discount =
     product.onSale && product.regularPrice && product.regularPrice > product.price
       ? Math.round((1 - product.price / product.regularPrice) * 100)
@@ -150,6 +154,18 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
               </p>
             )}
 
+            {bajoPedido ? (
+              <>
+                <div className="mt-6">
+                  <span className="text-3xl font-semibold text-ink-950">Bajo pedido</span>
+                </div>
+                <p className="mt-1 text-sm text-ink-500">
+                  Este equipo se cotiza según especificación y disponibilidad. Escríbenos y te
+                  pasamos el precio y el plazo de entrega.
+                </p>
+              </>
+            ) : (
+              <>
             <div className="mt-6 flex flex-wrap items-baseline gap-3">
               <span className="text-4xl font-semibold text-ink-950">
                 {formatPrice(product.price)}
@@ -164,7 +180,10 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
               )}
             </div>
             <p className="mt-1 text-sm text-ink-500">Precio con IVA incluido</p>
+              </>
+            )}
 
+            {!bajoPedido && (
             <p className="mt-5">
               {product.inStock ? (
                 <span className="inline-flex items-center gap-2 text-sm font-medium text-emerald-700">
@@ -178,8 +197,10 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
                 </span>
               )}
             </p>
+            )}
 
             <div id="comprar" className="mt-7">
+              {!bajoPedido && (
               <AddToCartFull
                 product={{
                   id: product.id,
@@ -191,6 +212,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
                 }}
                 inStock={product.inStock}
               />
+              )}
             </div>
 
             {/*
@@ -304,6 +326,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
 
       {/* En móvil la foto se come la pantalla y el botón queda siempre bajo
           el pliegue: esta barra lo trae de vuelta sin tener que subir. */}
+      {!bajoPedido && (
       <AddToCartSticky
         ancla="comprar"
         inStock={product.inStock}
@@ -316,6 +339,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
           sku: product.sku,
         }}
       />
+      )}
 
       <ViewItem product={product} categoria={deepest ? titleCase(deepest.name) : undefined} />
 

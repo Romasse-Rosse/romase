@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { loadCatalog } from '@/lib/catalog'
 import { GRACIA_COBRO, resolverPrecio } from '@/lib/promociones'
+import { esBajoPedido } from '@/lib/bajo-pedido'
 import { sendOrderNotification, type OrderNotification } from '@/lib/email'
 import { titleCase } from '@/lib/format'
 import { regionesVenta, site } from '@/lib/site'
@@ -174,6 +175,34 @@ export async function submitCheckout(
    * compra.
    */
   const ahora = Date.now()
+
+  /**
+   * Un producto sin precio publicado no se vende en línea: se cotiza.
+   *
+   * La vitrina ya no le pone botón de compra, pero eso vive en el navegador y
+   * el navegador no es de fiar. Acá es donde se decide si algo se cobra, así
+   * que acá tiene que estar la comprobación: sin ella, una petición armada a
+   * mano compra una cocina industrial por un peso.
+   *
+   * Ver src/lib/bajo-pedido.ts.
+   */
+  const noVendible = lineasCliente.find((linea) => {
+    const producto = porId.get(linea.id)
+    if (!producto) return false
+    if (!producto.inStock) return true
+    const { price } = resolverPrecio(producto, promociones, ahora, GRACIA_COBRO)
+    return esBajoPedido(price)
+  })
+
+  if (noVendible) {
+    const producto = porId.get(noVendible.id)
+    return {
+      status: 'error',
+      message:
+        (producto ? `«${titleCase(producto.name)}» se vende bajo pedido` : 'Hay un producto bajo pedido en tu carrito') +
+        ' y no se puede comprar en línea. Quítalo del carrito y escríbenos para cotizarlo.',
+    }
+  }
 
   const lineas = lineasCliente.flatMap((linea) => {
     const producto = porId.get(linea.id)

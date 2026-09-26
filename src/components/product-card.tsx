@@ -3,6 +3,7 @@ import type { Product } from '@/lib/catalog'
 import { formatPrice, titleCase } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { AddToCartCompact } from './add-to-cart'
+import { esBajoPedido } from '@/lib/bajo-pedido'
 import { SelectItemLink } from './analytics'
 
 export function ProductCard({
@@ -79,7 +80,7 @@ export function ProductCard({
               empujaban la página hacia el costado. */}
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <span className="text-[17px] font-medium text-ink-950">
-              {formatPrice(product.price)}
+              {esBajoPedido(product.price) ? 'Bajo pedido' : formatPrice(product.price)}
             </span>
             {discount > 0 && product.regularPrice && (
               <span className="text-[13px] text-ink-400 line-through">
@@ -89,7 +90,13 @@ export function ProductCard({
           </div>
 
           <div className="mt-3">
+            {esBajoPedido(product.price) ? (
+              <span className="inline-flex h-10 items-center text-sm text-ink-500">
+                Consulta precio y plazo
+              </span>
+            ) : (
             <AddToCartCompact
+              inStock={product.inStock}
               product={{
                 id: product.id,
                 slug: product.slug,
@@ -99,6 +106,7 @@ export function ProductCard({
                 sku: product.sku,
               }}
             />
+            )}
           </div>
         </div>
       </div>

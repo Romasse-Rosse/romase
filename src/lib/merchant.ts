@@ -1,4 +1,5 @@
 import type { Product } from '@/lib/catalog'
+import { esBajoPedido } from './bajo-pedido'
 
 /**
  * Feed de productos para Google Merchant Center.
@@ -71,7 +72,7 @@ export type MotivoDeExclusion = 'sin-imagen' | 'sin-precio'
 /** ¿Se puede listar en Merchant Center? */
 export function motivoDeExclusion(producto: Product): MotivoDeExclusion | null {
   if (producto.images.length === 0) return 'sin-imagen'
-  if (!producto.price || producto.price <= 0) return 'sin-precio'
+  if (esBajoPedido(producto.price)) return 'sin-precio'
   return null
 }
 
