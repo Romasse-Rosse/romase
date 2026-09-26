@@ -197,8 +197,25 @@ export function remitente(): string {
   return process.env.RESEND_FROM ?? `${site.name} <web@romase.cl>`
 }
 
+/**
+ * A quién le llegan las consultas y los avisos de pedido.
+ *
+ * LEADS_EMAIL admite varias direcciones separadas por coma: durante la
+ * entrega conviene que el aviso le llegue al negocio y a la agencia a la vez,
+ * y después se quita una sin tocar código.
+ */
+export function destinatarios(): string[] {
+  const crudo = process.env.LEADS_EMAIL ?? site.contact.email
+  const lista = crudo
+    .split(',')
+    .map((d) => d.trim())
+    .filter(Boolean)
+  return lista.length > 0 ? lista : [site.contact.email]
+}
+
+/** La primera dirección, para mostrar en diagnósticos. */
 export function destinatario(): string {
-  return process.env.LEADS_EMAIL ?? site.contact.email
+  return destinatarios()[0]
 }
 
 function dominioDe(direccion: string): string {
@@ -296,7 +313,7 @@ async function enviar({
   if (!apiKey) return { sent: false, reason: 'RESEND_API_KEY no configurada' }
 
   const from = remitente()
-  const to = destinatario()
+  const to = destinatarios()
 
   try {
     const res = await fetch('https://api.resend.com/emails', {
@@ -306,7 +323,7 @@ async function enviar({
         'Content-Type': 'application/json',
       },
       // reply_to apunta al cliente: así se le responde directo desde la bandeja.
-      body: JSON.stringify({ from, to: [to], reply_to: replyTo, subject, html }),
+      body: JSON.stringify({ from, to, reply_to: replyTo, subject, html }),
     })
 
     if (!res.ok) {
