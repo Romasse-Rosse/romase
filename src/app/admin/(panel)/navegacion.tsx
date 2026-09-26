@@ -18,6 +18,7 @@ import { salir } from '../acciones-sesion'
  */
 const SECCIONES = [
   { href: '/admin', etiqueta: 'Inicio' },
+  { href: '/admin/pedidos', etiqueta: 'Pedidos' },
   { href: '/admin/productos', etiqueta: 'Productos' },
   { href: '/admin/categorias', etiqueta: 'Categorías' },
   { href: '/admin/promociones', etiqueta: 'Promociones' },

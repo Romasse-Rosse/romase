@@ -93,7 +93,7 @@ export type OrderNotification = {
 
 const clp = (n: number) => '$' + Math.round(n).toLocaleString('es-CL')
 
-function buildOrderHtml(pedido: OrderNotification): string {
+export function buildOrderHtml(pedido: OrderNotification): string {
   const filas = pedido.lines
     .map(
       (l) => `

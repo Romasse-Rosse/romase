@@ -20,7 +20,8 @@
     "promos:probar": "node --experimental-strip-types scripts/probar-promociones.mjs",
     "merchant:auditar": "node scripts/auditar-merchant.mjs",
     "busqueda:probar": "node --experimental-strip-types scripts/probar-busqueda.mjs",
-    "categorias:probar": "node --experimental-strip-types scripts/probar-categorias.mjs"
+    "categorias:probar": "node --experimental-strip-types scripts/probar-categorias.mjs",
+    "pedidos:probar": "node --experimental-strip-types scripts/probar-pedidos.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

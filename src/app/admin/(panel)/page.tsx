@@ -55,8 +55,12 @@ export default async function PanelInicio() {
       <dl className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Tarjeta titulo="Productos" valor={productos.count ?? 0} href="/admin/productos" />
         <Tarjeta titulo="Categorías" valor={categorias.count ?? 0} href="/admin/categorias" />
-        <Tarjeta titulo="Pedidos" valor={pedidos.count ?? 0} />
-        <Tarjeta titulo="Vendido y pagado" valor={formatPrice(vendido)} />
+        <Tarjeta titulo="Pedidos" valor={pedidos.count ?? 0} href="/admin/pedidos" />
+        <Tarjeta
+          titulo="Vendido y pagado"
+          valor={formatPrice(vendido)}
+          href="/admin/pedidos?estado=pagado"
+        />
       </dl>
 
       <div className="mt-8 border border-ink-200 bg-white p-4 sm:p-6">
@@ -89,9 +93,16 @@ export default async function PanelInicio() {
             </Link>{' '}
             — por categoría o por producto, con fecha de término.
           </li>
-          <li className="text-ink-400">
-            Pedidos y blog: en construcción. Mientras tanto los pedidos se consultan en Supabase.
+          <li>
+            <Link
+              href="/admin/pedidos"
+              className="inline-flex items-center gap-1.5 text-brand-700 hover:underline"
+            >
+              Revisar pedidos <ArrowRight aria-hidden="true" className="size-3.5" />
+            </Link>{' '}
+            — quién compró, qué pidió y cómo pagó.
           </li>
+          <li className="text-ink-400">Blog: construido pero sin publicar.</li>
         </ul>
         {consultas.count ? (
           <p className="mt-4 text-xs text-ink-500">
