@@ -48,9 +48,7 @@ export const metadata: Metadata = {
    * NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION en Render y aparece solo. Sin la
    * variable no se emite ninguna etiqueta.
    */
-  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
-    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
-    : undefined,
+  verification: { google: '6nUJ0K6ckftGV9Yiw0BlacpqyE5WO5WyJLnwLmb_qDE' },
 }
 
 /**
