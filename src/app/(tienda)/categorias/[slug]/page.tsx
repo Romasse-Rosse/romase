@@ -57,6 +57,11 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default async function CategoriaPage({ params }: { params: Params }) {
   const { slug } = await params
 
+  // Categoría creada durante pruebas de catálogo. No tiene productos ni una
+  // intención de búsqueda válida, por lo que no debe responder como página
+  // indexable aunque todavía exista en la base de datos.
+  if (slug === 'test-categoria') notFound()
+
   const category = await getCategoryBySlug(slug)
   if (!category) notFound()
 

@@ -260,8 +260,9 @@ export default async function HomePage() {
                     html: `
                       <p>En una cocina el reparto es más simple de lo que parece: está lo que cocina
                       y lo que conserva. Hornos, freidoras y anafes de un lado —la
-                      <a href="/categorias/calor">línea de calor</a>—; freezers y frigobares del
-                      otro —la <a href="/categorias/frio-2">línea de frío</a>—.</p>
+                      <a href="/categorias/calor">línea de calor</a>—; freezers, frigobares y
+                      <a href="/categorias/visicooler">visicoolers</a> del otro —la
+                      <a href="/categorias/frio-2">línea de frío</a>—.</p>
 
                       <p>Entre las dos están las <a href="/categorias/vitrinas">vitrinas</a>, frías y
                       calientes, y son las que más se subestiman al presupuestar. Un producto bien
@@ -276,8 +277,9 @@ export default async function HomePage() {
                       es lo que permite trabajar limpio y rápido cuando el local está lleno.</p>
 
                       <p>Los <a href="/categorias/complementarios">equipos complementarios</a> son
-                      otra cosa: una máquina de café, una wafflera o una selladora al vacío amplían
-                      la carta sin obra y sin cambiar la cocina. Y aparte están los
+                      otra cosa: una máquina de café, una wafflera o una
+                      <a href="/categorias/selladoras-al-vacio">selladora al vacío</a> amplían la
+                      carta sin obra y sin cambiar la cocina. Y aparte están los
                       <a href="/categorias/repuestos">repuestos</a>, con stock propio. Esa es la
                       diferencia entre un equipo parado dos días y uno parado dos meses.</p>
                     `,

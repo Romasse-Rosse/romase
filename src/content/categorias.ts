@@ -816,6 +816,119 @@ export const categoryContent: Record<string, CategoryContent> = {
   },
 
   // ------------------------------------------------------------
+  visicooler: {
+    intro:
+      'Visicoolers para bebidas y productos refrigerados, desde modelos compactos hasta equipos de gran capacidad. Compara litros, número de puertas y espacio disponible antes de elegir.',
+    seoHtml: `
+      <h2>Visicooler para negocios: capacidad, puertas y uso</h2>
+
+      <p>Un <strong>visicooler</strong> permite conservar bebidas y otros productos refrigerados a
+      la vista del cliente. Esa combinación de frío y exhibición lo vuelve especialmente útil en
+      almacenes, cafeterías, minimarkets, restaurantes y locales con atención directa. En ROMASE
+      trabajamos con alternativas de distintos tamaños para que el equipo se ajuste al espacio y al
+      volumen real de venta.</p>
+
+      <h3>Qué capacidad elegir</h3>
+
+      <p>La capacidad en litros sirve para comparar modelos, pero no debería ser el único criterio.
+      También hay que revisar el ancho disponible, la apertura de la puerta y la forma en que se
+      ordenarán los productos. Un equipo compacto puede resolver la venta junto a una caja o barra;
+      uno de mayor capacidad permite exhibir más variedad y reducir la frecuencia de reposición.</p>
+
+      <p>Antes de comprar, mide el espacio completo y deja holgura para ventilación, limpieza y
+      apertura. Si el equipo queda encajonado o sin circulación de aire, trabajará más de lo
+      necesario. También conviene comprobar el ancho de puertas y pasillos por donde deberá entrar
+      al local.</p>
+
+      <h3>Una o dos puertas</h3>
+
+      <p>Los modelos de una puerta facilitan la instalación en espacios acotados. Los visicoolers de
+      dos puertas ofrecen mayor superficie de exhibición y permiten separar familias de productos,
+      algo útil cuando el local mantiene un surtido amplio. La decisión depende del flujo de venta:
+      comprar capacidad que no se utiliza ocupa espacio y consume energía sin mejorar la operación.</p>
+
+      <h3>Instalación y cuidado</h3>
+
+      <p>El visicooler debe instalarse nivelado, lejos de fuentes directas de calor y con la
+      ventilación indicada por el fabricante. La limpieza periódica del condensador, el buen estado
+      de los sellos de puerta y una carga que no bloquee la circulación interior ayudan a mantener
+      una temperatura estable y prolongar la vida útil del equipo.</p>
+
+      <p>Si necesitas ayuda para comparar modelos, indícanos cuánto espacio tienes, qué productos
+      vas a exhibir y cuántas unidades necesitas mantener frías. Con esos datos podemos recomendarte
+      una capacidad adecuada y confirmar despacho desde Puerto Montt hacia el sur de Chile.</p>
+    `,
+    faqs: [
+      {
+        pregunta: '¿Qué capacidad de visicooler necesito?',
+        respuesta:
+          'Depende del surtido, la rotación y el espacio disponible. Mide ancho, fondo y alto, y considera también la apertura de la puerta y la ventilación. Con esas medidas y una estimación de productos podemos ayudarte a comparar capacidades.',
+      },
+      {
+        pregunta: '¿Conviene un visicooler de una o dos puertas?',
+        respuesta:
+          'Una puerta ocupa menos frente y funciona bien en espacios acotados. Dos puertas entregan mayor exhibición y facilitan separar productos. La mejor opción es la que cubre la rotación real sin sobredimensionar el equipo.',
+      },
+      garantiaFaq,
+      despachoFaq,
+    ],
+  },
+
+  'selladoras-al-vacio': {
+    intro:
+      'Selladoras al vacío para cocinas profesionales y comercios. Revisa el tipo de producto, el volumen diario y el formato de bolsa antes de escoger tu equipo.',
+    seoHtml: `
+      <h2>Selladora al vacío para uso profesional</h2>
+
+      <p>Una <strong>selladora al vacío</strong> ayuda a ordenar la producción, proteger alimentos y
+      estandarizar porciones. Se utiliza en restaurantes, carnicerías, cocinas de producción,
+      hoteles y comercios que necesitan preparar, almacenar o transportar productos en bolsas
+      selladas. Para elegir bien hay que mirar el uso diario completo, no solo el precio del equipo.</p>
+
+      <h3>Qué productos vas a envasar</h3>
+
+      <p>El tamaño y la humedad del producto determinan el tipo de solución. Cortes de carne,
+      quesos, preparaciones porcionadas e ingredientes secos no exigen exactamente lo mismo. También
+      importa el ancho de la bolsa y la longitud efectiva de sellado: una barra demasiado corta
+      limita los formatos que podrás utilizar.</p>
+
+      <p>Si vas a trabajar varias horas al día, considera además la cantidad de ciclos, la facilidad
+      de limpieza y el espacio de apoyo. En una operación profesional, el equipo debe integrarse al
+      flujo de preparación sin bloquear mesones ni obligar a mover insumos entre cada ciclo.</p>
+
+      <h3>Máquina y consumibles compatibles</h3>
+
+      <p>No todas las bolsas funcionan con todos los sistemas. Antes de comprar, confirma qué
+      formato utiliza el modelo y si los consumibles están disponibles de manera regular. En ROMASE
+      también contamos con <a href="/categorias/rollos-gofrados">rollos gofrados</a>, por lo que
+      podemos ayudarte a revisar la compatibilidad entre la máquina y el material de envasado.</p>
+
+      <h3>Uso seguro y mantención</h3>
+
+      <p>La zona de sellado debe mantenerse limpia y libre de restos de alimento. Una bolsa húmeda o
+      mal posicionada puede producir un cierre incompleto. También es importante respetar los
+      tiempos de trabajo del fabricante y revisar periódicamente los componentes de desgaste.</p>
+
+      <p>Cuéntanos qué productos envasas, cuántas bolsas procesas por jornada y qué medidas utilizas.
+      Con esa información podemos orientarte entre los modelos disponibles y confirmar despacho
+      desde Puerto Montt hacia la Región de Los Lagos, Aysén y Magallanes.</p>
+    `,
+    faqs: [
+      {
+        pregunta: '¿Qué debo revisar antes de comprar una selladora al vacío?',
+        respuesta:
+          'Define el tipo y tamaño de producto, cuántas bolsas procesarás por día, el ancho máximo que necesitas y el formato de bolsa compatible. Esos datos permiten comparar equipos sin comprar capacidad insuficiente o innecesaria.',
+      },
+      {
+        pregunta: '¿Todas las bolsas sirven para cualquier selladora?',
+        respuesta:
+          'No. El formato depende del sistema de la máquina. Confirma siempre la compatibilidad indicada por el fabricante antes de comprar bolsas o rollos.',
+      },
+      garantiaFaq,
+      despachoFaq,
+    ],
+  },
+
   repuestos: {
     intro:
       'Repuestos para los equipos que comercializamos. Mantenemos stock porque una máquina ' +

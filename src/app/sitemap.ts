@@ -4,6 +4,11 @@ import { site } from '@/lib/site'
 
 export const revalidate = 3600
 
+// URLs técnicas o duplicadas que no deben reaparecer en el sitemap. Las dos
+// duplicadas tienen una redirección permanente en next.config.ts.
+const categoriasExcluidas = new Set(['test-categoria', 'barquillera'])
+const productosExcluidos = new Set(['conservadora-dual-100-lts'])
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [products, categories] = await Promise.all([getAllProductSlugs(), getAllCategorySlugs()])
   const now = new Date()
@@ -24,13 +29,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...estaticas,
     // Las categorías van con prioridad alta: son las páginas con contenido
     // propio y las que tienen que posicionar.
-    ...categories.map((slug) => ({
+    ...categories.filter((slug) => !categoriasExcluidas.has(slug)).map((slug) => ({
       url: `${site.url}/categorias/${slug}`,
       lastModified: now,
       changeFrequency: 'weekly' as const,
       priority: 0.8,
     })),
-    ...products.map((slug) => ({
+    ...products.filter((slug) => !productosExcluidos.has(slug)).map((slug) => ({
       url: `${site.url}/productos/${slug}`,
       lastModified: now,
       changeFrequency: 'weekly' as const,
