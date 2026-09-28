@@ -32,7 +32,28 @@ const nextConfig: NextConfig = {
       { source: '/8-2', destination: '/checkout', permanent: true },
       { source: '/tienda/:path*', destination: '/productos/:path*', permanent: true },
       { source: '/producto/:slug', destination: '/productos/:slug', permanent: true },
+      // WooCommerce anidaba las subcategorías bajo su categoría padre. La
+      // regla anterior solo cubría URLs de un nivel y dejaba 55 rutas
+      // históricas en 404, por ejemplo /categoria-producto/frio-2/visicooler.
+      // El destino actual es plano, así que se conserva únicamente el slug.
+      {
+        source: '/categoria-producto/:parent/:slug',
+        destination: '/categorias/:slug',
+        permanent: true,
+      },
       { source: '/categoria-producto/:slug', destination: '/categorias/:slug', permanent: true },
+      // Duplicados detectados en el catálogo migrado: una sola URL debe
+      // concentrar canonical, enlaces internos y señales de búsqueda.
+      {
+        source: '/categorias/barquillera',
+        destination: '/categorias/barquillera-2',
+        permanent: true,
+      },
+      {
+        source: '/productos/conservadora-dual-100-lts',
+        destination: '/productos/conservadora-dual-100-lts-maigas',
+        permanent: true,
+      },
       // Ya no hay página de catálogo completo: la navegación es por categoría.
       { source: '/productos', destination: '/', permanent: false },
     ]
