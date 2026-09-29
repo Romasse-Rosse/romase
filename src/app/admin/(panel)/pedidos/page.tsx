@@ -17,7 +17,8 @@ export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Pedidos' }
 
 type Fila = {
-  id: number
+  /** uuid, no correlativo: el número que se muestra es order_number. */
+  id: string
   order_number: number
   status: string
   customer_name: string | null

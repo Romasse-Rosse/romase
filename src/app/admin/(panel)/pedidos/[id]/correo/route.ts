@@ -26,11 +26,11 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   const db = await clienteDelPanel()
 
   const [{ data: pedido }, { data: lineas }] = await Promise.all([
-    db.from('orders').select('*').eq('id', Number(id)).maybeSingle(),
+    db.from('orders').select('*').eq('id', id).maybeSingle(),
     db
       .from('order_items')
       .select('product_name, sku, quantity, unit_price, line_total')
-      .eq('order_id', Number(id))
+      .eq('order_id', id)
       .order('id'),
   ])
 

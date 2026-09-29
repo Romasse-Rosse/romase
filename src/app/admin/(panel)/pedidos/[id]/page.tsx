@@ -32,12 +32,23 @@ export default async function PedidoDetalle({ params }: { params: Promise<{ id: 
   const { id } = await params
   const db = await clienteDelPanel()
 
+  /**
+   * El id del pedido es un uuid, no un correlativo.
+   *
+   * El número que se ve en pantalla es `order_number`, que sí es un entero,
+   * y confundirlos hace que la consulta mande NaN y Postgres devuelva un
+   * error de sintaxis en vez de un 404. Se comprueba la forma antes de
+   * consultar para que una dirección mal escrita no se vea como una falla de
+   * la base.
+   */
+  if (!/^[0-9a-f-]{32,36}$/i.test(id)) notFound()
+
   const [{ data: pedido, error }, { data: lineas }] = await Promise.all([
-    db.from('orders').select('*').eq('id', Number(id)).maybeSingle(),
+    db.from('orders').select('*').eq('id', id).maybeSingle(),
     db
       .from('order_items')
       .select('product_name, sku, unit_price, quantity, line_total')
-      .eq('order_id', Number(id))
+      .eq('order_id', id)
       .order('id'),
   ])
 

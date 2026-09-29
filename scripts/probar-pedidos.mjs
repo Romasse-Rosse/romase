@@ -150,6 +150,14 @@ if (env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY) {
   const pedidos = await r.json()
   comprobar('se leyeron pedidos', Array.isArray(pedidos) && pedidos.length > 0, `${pedidos.length ?? 0}`)
 
+  // El id es un uuid y el número que se ve en pantalla es order_number.
+  // Confundirlos manda NaN a la consulta y Postgres responde con un error de
+  // sintaxis en vez de un 404: le pasó a la ficha del pedido el 29/9/2026.
+  const esUuid = (v) => /^[0-9a-f-]{32,36}$/i.test(String(v))
+  comprobar('el id de los pedidos es uuid, no correlativo', pedidos.every((p) => esUuid(p.id)))
+  comprobar('order_number sí es un número', pedidos.every((p) => Number.isFinite(Number(p.order_number))))
+  comprobar('la comprobación de forma rechaza NaN', !esUuid('NaN') && !esUuid('5'))
+
   for (const p of pedidos) {
     const e = estadoDe(p.status)
     const d = despachoDe(p.shipping_address)
