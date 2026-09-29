@@ -68,8 +68,15 @@ export async function guardarProducto(
     const nombre = String(formData.get('name') ?? '').trim()
     if (nombre.length < 2) return { error: 'El nombre no puede quedar vacío.' }
 
+    const disponible = formData.get('in_stock') !== null
+
+    // Sin precio solo si tampoco se vende en línea; la columna no acepta NULL,
+    // así que un producto a cotizar se guarda en 0 y esBajoPedido() lo
+    // reconoce. Ver src/lib/bajo-pedido.ts.
     const precio = aNumero(formData.get('price'))
-    if (precio === null) return { error: 'El precio tiene que ser un número.' }
+    if (precio === null && disponible) {
+      return { error: 'Escribe el precio, o desmarca «Disponible para comprar» si se cotiza.' }
+    }
 
     const precioNormal = aNumero(formData.get('regular_price'))
     const precioOferta = aNumero(formData.get('sale_price'))
@@ -98,10 +105,10 @@ export async function guardarProducto(
         sku: String(formData.get('sku') ?? '').trim() || null,
         short_description: String(formData.get('short_description') ?? '').trim() || null,
         description: String(formData.get('description') ?? '').trim() || null,
-        price: precio,
-        regular_price: precioNormal ?? precio,
+        price: precio ?? 0,
+        regular_price: precioNormal ?? precio ?? 0,
         sale_price: precioOferta,
-        in_stock: formData.get('in_stock') !== null,
+        in_stock: disponible,
         featured: formData.get('featured') !== null,
       })
       .eq('id', id)

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Check, CircleDashed, Mail, Phone, Truck, Wrench } from 'lucide-react'
+import { Check, CircleDashed, Mail, MessageCircle, Phone, Truck, Wrench } from 'lucide-react'
 import {
   getAllProductSlugs,
   getCatalog,
@@ -18,7 +18,7 @@ import { ProductGallery } from '@/components/product-gallery'
 import { ProductGrid } from '@/components/product-card'
 import { WhatsAppIcon } from '@/components/site-header'
 import { AddToCartFull, AddToCartSticky } from '@/components/add-to-cart'
-import { esBajoPedido } from '@/lib/bajo-pedido'
+import { esBajoPedido, mensajeDeCotizacion } from '@/lib/bajo-pedido'
 
 // Cinco minutos, no una hora: esta página muestra precios y una promoción
 // puede empezar o vencer en cualquier momento. El cobro respeta la
@@ -88,10 +88,11 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
   // Única cotización por WhatsApp del sitio. El mensaje sale con el nombre
   // del equipo ya escrito, así quien atiende sabe de qué ficha viene.
   const cotizacion = whatsappUrl(
-    `Hola ROMASE, quiero cotizar: ${name}` +
-      (product.sku ? ` (SKU ${product.sku})` : '') +
-      `\n${site.url}/productos/${product.slug}`,
+    mensajeDeCotizacion(name, product.sku, `${site.url}/productos/${product.slug}`),
   )
+
+  // Sin precio publicado o sin stock no hay nada que agregar al carrito.
+  const sePuedeComprar = !bajoPedido && product.inStock
 
   const productSchema = {
     '@context': 'https://schema.org',
@@ -200,7 +201,23 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
             )}
 
             <div id="comprar" className="mt-7">
-              {!bajoPedido && (
+              {/*
+                Sin precio o sin stock no hay nada que agregar al carrito, pero
+                sí hay una venta posible: la acción principal pasa a ser pedir
+                la cotización, con el mismo peso visual que tendría comprar.
+              */}
+              {sePuedeComprar ? null : (
+                <a
+                  href={cotizacion}
+                  target="_blank"
+                  rel="noopener"
+                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-sm bg-brand-500 px-6 text-base font-medium text-white transition-colors hover:bg-brand-600 sm:w-auto"
+                >
+                  <MessageCircle aria-hidden="true" className="size-5" />
+                  Solicitar cotización
+                </a>
+              )}
+              {sePuedeComprar && (
               <AddToCartFull
                 product={{
                   id: product.id,
@@ -326,7 +343,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
 
       {/* En móvil la foto se come la pantalla y el botón queda siempre bajo
           el pliegue: esta barra lo trae de vuelta sin tener que subir. */}
-      {!bajoPedido && (
+      {sePuedeComprar && (
       <AddToCartSticky
         ancla="comprar"
         inStock={product.inStock}

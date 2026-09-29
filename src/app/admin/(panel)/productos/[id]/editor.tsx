@@ -36,6 +36,8 @@ export function EditorProducto({
   // El precio se muestra formateado mientras se escribe: un cero de más en
   // 1290000 es invisible, y en $12.900.000 salta a la vista.
   const [precio, setPrecio] = useState(producto.price)
+  // Igual que en el alta: sin venta en línea, el precio es opcional.
+  const [disponible, setDisponible] = useState(producto.inStock)
   const [oferta, setOferta] = useState(producto.salePrice)
   const [normal, setNormal] = useState(producto.regularPrice)
 
@@ -120,7 +122,7 @@ export function EditorProducto({
             value={precio}
             onChange={(e) => setPrecio(soloDigitos(e.target.value))}
             disabled={!puedeEscribir}
-            required
+            required={disponible}
             className={entrada}
           />
           <p className="mt-1.5 text-xs font-medium text-ink-700">{enPesos(precio)}</p>
@@ -164,10 +166,11 @@ export function EditorProducto({
       <div className="mt-6 space-y-3 border-y border-ink-100 py-5">
         <Casilla
           name="in_stock"
-          defaultChecked={producto.inStock}
+          checked={disponible}
+          onChange={setDisponible}
           disabled={!puedeEscribir}
           titulo="Disponible para comprar"
-          detalle="Sin esto, la ficha sigue visible pero no se puede agregar al carrito."
+          detalle="Sin esto la ficha sigue visible, no se puede agregar al carrito y el precio deja de ser obligatorio: el producto aparece como «Bajo pedido» con un botón para cotizar por WhatsApp."
         />
         <Casilla
           name="featured"
@@ -233,25 +236,40 @@ function Campo({
   )
 }
 
+/**
+ * Una casilla del formulario.
+ *
+ * Acepta las dos formas: sin control, con `defaultChecked`, para las que solo
+ * se leen al enviar; y controlada, con `checked` y `onChange`, para la de
+ * disponibilidad, porque de su valor depende que el precio sea obligatorio o
+ * no y eso hay que saberlo mientras se escribe, no al enviar.
+ */
 function Casilla({
   name,
   defaultChecked,
+  checked,
+  onChange,
   disabled,
   titulo,
   detalle,
 }: {
   name: string
-  defaultChecked: boolean
+  defaultChecked?: boolean
+  checked?: boolean
+  onChange?: (valor: boolean) => void
   disabled: boolean
   titulo: string
   detalle: string
 }) {
+  const controlada = checked !== undefined
   return (
     <label className="flex cursor-pointer items-start gap-3">
       <input
         type="checkbox"
         name={name}
-        defaultChecked={defaultChecked}
+        {...(controlada
+          ? { checked, onChange: (e) => onChange?.(e.target.checked) }
+          : { defaultChecked })}
         disabled={disabled}
         className="mt-0.5 size-4 rounded-sm border-ink-300 accent-brand-500"
       />

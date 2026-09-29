@@ -14,6 +14,15 @@ export function FormularioNuevo({ categorias }: { categorias: OpcionCategoria[] 
   const [estado, accion] = useActionState(crearProducto, inicial)
   const [precio, setPrecio] = useState('')
 
+  /**
+   * Un producto que no se puede comprar no necesita precio.
+   *
+   * Exigirlo igual es lo que llevó a que se cargaran 58 equipos con precio 1
+   * como marcador: la persona no tenía el precio, el formulario no la dejaba
+   * seguir, y el 1 era la salida más rápida.
+   */
+  const [disponible, setDisponible] = useState(true)
+
   return (
     <form action={accion} className="border border-ink-200 bg-white p-4 sm:p-6">
       {estado.error && (
@@ -40,7 +49,7 @@ export function FormularioNuevo({ categorias }: { categorias: OpcionCategoria[] 
             id="price"
             name="price"
             inputMode="numeric"
-            required
+            required={disponible}
             value={precio}
             onChange={(e) => setPrecio(e.target.value.replace(/[^\d]/g, ''))}
             className={entrada}
@@ -84,13 +93,16 @@ export function FormularioNuevo({ categorias }: { categorias: OpcionCategoria[] 
         <input
           type="checkbox"
           name="in_stock"
-          defaultChecked
+          checked={disponible}
+          onChange={(e) => setDisponible(e.target.checked)}
           className="mt-0.5 size-4 rounded-sm border-ink-300 accent-brand-500"
         />
         <span>
           <span className="block text-sm font-medium text-ink-900">Disponible para comprar</span>
           <span className="block text-xs text-ink-500">
-            Si lo dejás sin marcar, la ficha se ve pero no se puede agregar al carrito.
+            Si lo dejás sin marcar, la ficha se ve pero no se puede agregar al carrito, y{' '}
+            <strong className="font-medium">el precio deja de ser obligatorio</strong>: el producto
+            aparece como «Bajo pedido» con un botón para cotizar por WhatsApp.
           </span>
         </span>
       </label>

@@ -45,8 +45,20 @@ export async function crearProducto(
     const nombre = String(formData.get('name') ?? '').trim()
     if (nombre.length < 3) return { error: 'Escribe el nombre del producto.' }
 
+    const disponible = formData.get('in_stock') !== null
+
+    /**
+     * Sin precio solo si tampoco se puede comprar.
+     *
+     * La columna no acepta NULL, así que un producto a cotizar se guarda en 0.
+     * Eso no es un precio de un peso disfrazado: esBajoPedido() lo reconoce y
+     * la tienda muestra «Bajo pedido» en vez de una cifra. Ver
+     * src/lib/bajo-pedido.ts.
+     */
     const precio = aNumero(formData.get('price'))
-    if (precio === null) return { error: 'Escribe el precio.' }
+    if (precio === null && disponible) {
+      return { error: 'Escribe el precio, o desmarca «Disponible para comprar» si se cotiza.' }
+    }
 
     const categoriaId = Number(formData.get('categoria'))
     if (!Number.isFinite(categoriaId)) {
@@ -80,9 +92,9 @@ export async function crearProducto(
         slug,
         sku: String(formData.get('sku') ?? '').trim() || null,
         short_description: String(formData.get('short_description') ?? '').trim() || null,
-        price: precio,
-        regular_price: precio,
-        in_stock: formData.get('in_stock') !== null,
+        price: precio ?? 0,
+        regular_price: precio ?? 0,
+        in_stock: disponible,
         featured: false,
       })
       .select('id')

@@ -33,3 +33,21 @@ export function esBajoPedido(precio: number | null | undefined): boolean {
   if (!Number.isFinite(precio)) return true
   return precio <= UMBRAL_BAJO_PEDIDO
 }
+
+/**
+ * El mensaje con el que se abre WhatsApp para cotizar.
+ *
+ * Lleva el nombre del producto porque del otro lado hay una persona que
+ * atiende varias conversaciones a la vez: un «hola, quiero cotizar» suelto
+ * obliga a preguntar de qué, y esa ida y vuelta es donde se pierden las
+ * consultas.
+ */
+export function mensajeDeCotizacion(
+  nombre: string,
+  sku?: string | null,
+  url?: string,
+): string {
+  const referencia = sku ? ` (SKU ${sku})` : ''
+  const enlace = url ? `\n${url}` : ''
+  return `Hola ROMASE, quiero cotizar: ${nombre}${referencia}${enlace}`
+}

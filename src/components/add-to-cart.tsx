@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Check, Minus, Plus, ShoppingBag } from 'lucide-react'
+import { Check, MessageCircle, Minus, Plus, ShoppingBag } from 'lucide-react'
 import { useCart, type CartItem } from '@/lib/cart'
 import { formatPrice } from '@/lib/format'
 import { cn } from '@/lib/cn'
+import { whatsappUrl } from '@/lib/site'
+import { mensajeDeCotizacion } from '@/lib/bajo-pedido'
 
 type Producto = Omit<CartItem, 'quantity'>
 
@@ -29,16 +31,29 @@ export function AddToCartCompact({
   const { add } = useCart()
   const [agregado, setAgregado] = useState(false)
 
+  /*
+    Sin stock no hay nada que agregar, pero sí hay una venta posible. Un texto
+    muerto que dice «Consultar» deja al visitante sin saber a dónde ir; el
+    enlace abre WhatsApp con el equipo ya nombrado.
+  */
   if (!inStock) {
     return (
-      <span
+      <a
+        href={whatsappUrl(mensajeDeCotizacion(product.name, product.sku))}
+        target="_blank"
+        rel="noopener"
+        onClick={(event) => {
+          // La tarjeta entera es un enlace: hay que impedir que navegue.
+          event.stopPropagation()
+        }}
         className={cn(
-          'inline-flex h-9 w-full items-center justify-center rounded-sm border border-ink-200 text-[13px] text-ink-500',
+          'relative z-10 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-sm border border-brand-500 text-[13px] font-medium text-brand-700 transition-colors hover:bg-brand-50',
           className,
         )}
       >
-        Consultar
-      </span>
+        <MessageCircle aria-hidden="true" className="size-4" />
+        Solicitar cotización
+      </a>
     )
   }
 

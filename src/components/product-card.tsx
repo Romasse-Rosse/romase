@@ -90,13 +90,8 @@ export function ProductCard({
           </div>
 
           <div className="mt-3">
-            {esBajoPedido(product.price) ? (
-              <span className="inline-flex h-10 items-center text-sm text-ink-500">
-                Consulta precio y plazo
-              </span>
-            ) : (
             <AddToCartCompact
-              inStock={product.inStock}
+              inStock={product.inStock && !esBajoPedido(product.price)}
               product={{
                 id: product.id,
                 slug: product.slug,
@@ -106,7 +101,6 @@ export function ProductCard({
                 sku: product.sku,
               }}
             />
-            )}
           </div>
         </div>
       </div>
