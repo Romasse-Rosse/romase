@@ -1,4 +1,5 @@
 import { site } from './site'
+import { registrarEvento } from './integracion-eventos'
 
 /**
  * Aviso por correo de las consultas que entran por el formulario.
@@ -315,6 +316,25 @@ async function enviar({
   const from = remitente()
   const to = destinatarios()
 
+  /**
+   * Cada intento queda registrado.
+   *
+   * Es la única evidencia fiable de que el correo funciona. Preguntarle a
+   * Resend qué dominios verificó no sirve cuando la API key es de solo envío
+   * —que es la opción correcta por seguridad—: devuelve 401 y el panel termina
+   * informando «no se pudo comprobar» sobre una integración que anda perfecto.
+   *
+   * Un envío exitoso no se puede discutir.
+   */
+  const anotar = (estado: 'ok' | 'error', mensaje: string | null) =>
+    void registrarEvento({
+      plataforma: 'resend',
+      tipo: 'correo-enviado',
+      estado,
+      detalle: { asunto: subject, destinatarios: to.length, remitente: from },
+      mensaje,
+    })
+
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -328,12 +348,17 @@ async function enviar({
 
     if (!res.ok) {
       const detalle = await res.text()
-      return { sent: false, reason: `Resend respondió ${res.status}: ${detalle.slice(0, 200)}` }
+      const razon = `Resend respondió ${res.status}: ${detalle.slice(0, 200)}`
+      anotar('error', razon)
+      return { sent: false, reason: razon }
     }
 
+    anotar('ok', null)
     return { sent: true }
   } catch (error) {
-    return { sent: false, reason: (error as Error).message }
+    const razon = (error as Error).message
+    anotar('error', razon)
+    return { sent: false, reason: razon }
   }
 }
 

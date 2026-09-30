@@ -4,6 +4,7 @@ import { estadoDelCorreo, destinatarios, remitente } from './email'
 import { pagoEnLineaActivo, webpayConfigurado, webpayEsIntegracion } from './webpay'
 import { motivoDeExclusion, EXPLICACION_EXCLUSION, type MotivoDeExclusion } from './merchant'
 import { origenDelSitio } from './origen'
+import { ultimosEventos, type EventoDeIntegracion } from './integracion-eventos'
 
 /**
  * El estado real de lo que el sitio tiene conectado afuera.
@@ -102,12 +103,19 @@ export async function diagnosticoDelFeed(): Promise<DiagnosticoDelFeed> {
 // Todas
 // ============================================================
 
-export async function estadoDeLasIntegraciones(): Promise<Integracion[]> {
-  const [feed, correo, origen] = await Promise.all([
+/** Lo que hizo falta para leer el historial; el panel ya tiene un cliente. */
+type LectorDeEventos = { from: (tabla: string) => any }
+
+export async function estadoDeLasIntegraciones(db: LectorDeEventos): Promise<Integracion[]> {
+  const [feed, correo, origen, envios] = await Promise.all([
     diagnosticoDelFeed(),
     estadoDelCorreo(),
     origenDelSitio(),
+    ultimosEventos(db, 'resend', 5),
   ])
+
+  const ultimoEnvio: EventoDeIntegracion | null =
+    'eventos' in envios && envios.eventos.length > 0 ? envios.eventos[0] : null
 
   const integraciones: Integracion[] = []
 
@@ -174,36 +182,70 @@ export async function estadoDeLasIntegraciones(): Promise<Integracion[]> {
   // ---------------------------------------------------------
   const dominioDelRemitente = remitente().match(/@([^>\s]+)/)?.[1] ?? '(sin dominio)'
   const verificados = correo.dominiosVerificados ?? []
-  const estaVerificado = verificados.includes(dominioDelRemitente)
+
+  /**
+   * La salud sale de los envíos, no de lo que responda la API de dominios.
+   *
+   * Una API key de **solo envío** —la opción correcta por seguridad— no puede
+   * listar dominios: Resend contesta 401. Deducir de ahí que la integración
+   * está mal es castigarla por estar bien configurada, y el panel terminaba
+   * diciendo «requiere atención» sobre un correo que llega sin problemas.
+   *
+   * Un envío que salió bien es prueba directa; lo demás es inferencia.
+   */
+  const saludDelCorreo: Salud = !correo.configurado
+    ? 'apagada'
+    : ultimoEnvio
+      ? ultimoEnvio.estado === 'ok'
+        ? 'ok'
+        : 'error'
+      : correo.puedeEnviar === false
+        ? 'error'
+        : // Sin historial y sin poder consultar: se da por bueno. Una llave de
+          // solo envío no puede listar dominios, y marcar en ámbar algo que
+          // está correctamente configurado enseña a ignorar el ámbar.
+          'ok'
+
+  const cuando = ultimoEnvio
+    ? new Intl.DateTimeFormat('es-CL', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        timeZone: 'America/Santiago',
+      }).format(new Date(ultimoEnvio.creado_en))
+    : null
 
   integraciones.push({
     clave: 'resend',
     nombre: 'Resend',
     proposito: 'Manda los avisos de pedido y las consultas del formulario.',
-    salud: !correo.configurado
-      ? 'apagada'
-      : correo.puedeEnviar === false
-        ? 'error'
-        : correo.puedeEnviar === null
-          ? 'atencion'
-          : 'ok',
+    salud: saludDelCorreo,
     resumen: !correo.configurado
       ? 'Sin RESEND_API_KEY: no sale ningún correo.'
-      : correo.puedeEnviar === false
-        ? `El dominio ${dominioDelRemitente} no está verificado en Resend.`
-        : correo.puedeEnviar === null
-          ? 'No se pudo comprobar. La API key puede ser de solo envío, que igual sirve para enviar.'
-          : 'Enviando.',
+      : ultimoEnvio && ultimoEnvio.estado === 'ok'
+        ? `Enviando. El último correo salió el ${cuando}.`
+        : ultimoEnvio
+          ? `El último envío falló el ${cuando}.`
+          : correo.puedeEnviar === false
+            ? `El dominio ${dominioDelRemitente} no está verificado en Resend.`
+            : 'Configurado. La API key es de solo envío, así que el panel no puede confirmar la verificación por su cuenta: lo hará en cuanto salga el primer correo.',
     datos: [
       { etiqueta: 'Remitente', valor: remitente() },
       { etiqueta: 'Destinatarios', valor: destinatarios().join(', ') },
+      { etiqueta: 'Último envío', valor: cuando ?? 'sin registro todavía' },
       {
         etiqueta: 'Dominios verificados',
-        valor: verificados.length > 0 ? verificados.join(', ') : 'no se pudo consultar',
+        valor:
+          verificados.length > 0
+            ? verificados.join(', ')
+            : 'la API key es de solo envío y no puede consultarlos',
       },
-      { etiqueta: 'Dominio del remitente', valor: estaVerificado ? 'verificado' : dominioDelRemitente },
     ],
-    pendiente: correo.detalle,
+    pendiente:
+      ultimoEnvio?.estado === 'error'
+        ? (ultimoEnvio.mensaje ?? 'El último envío falló.')
+        : !correo.configurado
+          ? 'Falta RESEND_API_KEY.'
+          : undefined,
   })
 
   // ---------------------------------------------------------

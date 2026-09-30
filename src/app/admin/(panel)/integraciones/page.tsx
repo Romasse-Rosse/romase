@@ -25,7 +25,7 @@ export default async function IntegracionesPanel() {
   const db = await clienteDelPanel()
 
   const [integraciones, feed, historial] = await Promise.all([
-    estadoDeLasIntegraciones(),
+    estadoDeLasIntegraciones(db),
     diagnosticoDelFeed(),
     ultimosEventos(db, 'merchant-center', 20),
   ])
