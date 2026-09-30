@@ -117,7 +117,12 @@ export async function SiteFooter() {
                 <span>
                   {site.hours.map((h) => (
                     <span key={h.days} className="block">
-                      {h.days}: {h.time}
+                      <span className="block">{h.days}:</span>
+                      {h.time.split(' / ').map((time) => (
+                        <span key={time} className="block">
+                          {time}
+                        </span>
+                      ))}
                     </span>
                   ))}
                 </span>
