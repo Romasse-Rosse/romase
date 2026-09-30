@@ -22,6 +22,7 @@ const SECCIONES = [
   { href: '/admin/productos', etiqueta: 'Productos' },
   { href: '/admin/categorias', etiqueta: 'Categorías' },
   { href: '/admin/promociones', etiqueta: 'Promociones' },
+  { href: '/admin/integraciones', etiqueta: 'Integraciones' },
   { href: '/admin/usuarios', etiqueta: 'Usuarios', soloOwner: true },
   { href: '/admin/cuenta', etiqueta: 'Mi cuenta' },
 ]

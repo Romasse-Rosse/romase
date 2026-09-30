@@ -3,6 +3,7 @@ import { titleCase } from '@/lib/format'
 import { origenDelSitio } from '@/lib/origen'
 import { site } from '@/lib/site'
 import { construirFeed, motivoDeExclusion, type ItemDelFeed } from '@/lib/merchant'
+import { registrarEvento } from '@/lib/integracion-eventos'
 
 /**
  * Feed de productos para Google Merchant Center, en /merchant.xml
@@ -29,7 +30,7 @@ import { construirFeed, motivoDeExclusion, type ItemDelFeed } from '@/lib/mercha
 // y con esto un cambio de precio del panel llega al feed sin esperar.
 export const revalidate = 3600
 
-export async function GET() {
+export async function GET(request: Request) {
   const [{ products, categories }, origen] = await Promise.all([getCatalog(), origenDelSitio()])
 
   const porId = new Map(categories.map((c) => [c.id, c]))
@@ -46,11 +47,16 @@ export async function GET() {
   }
 
   const items: ItemDelFeed[] = []
+  const excluidos: Record<string, number> = {}
   for (const producto of products) {
     // Los que Merchant Center rechazaría no se mandan: es mejor un feed de 213
     // productos aprobados que uno de 214 con un error permanente en el panel de
     // Google. `yarn merchant:auditar` dice cuáles quedaron afuera y por qué.
-    if (motivoDeExclusion(producto)) continue
+    const motivo = motivoDeExclusion(producto)
+    if (motivo) {
+      excluidos[motivo] = (excluidos[motivo] ?? 0) + 1
+      continue
+    }
     items.push({
       producto,
       nombre: titleCase(producto.name),
@@ -63,6 +69,30 @@ export async function GET() {
     origen,
     nombreTienda: site.name,
     descripcionTienda: site.description,
+  })
+
+  /**
+   * Queda registrado cada acceso al feed.
+   *
+   * Esta ruta es dinámica aunque declare `revalidate`: `origenDelSitio()` lee
+   * las cabeceras y eso obliga a Next a ejecutarla en cada petición. Así que el
+   * historial sí cuenta visitas —cuándo vino Google y qué se llevó—, no solo
+   * reconstrucciones.
+   *
+   * No se espera el resultado: el feed no puede depender de que la base
+   * responda.
+   */
+  void registrarEvento({
+    plataforma: 'merchant-center',
+    tipo: 'feed-generado',
+    detalle: {
+      total: products.length,
+      incluidos: items.length,
+      excluidos: products.length - items.length,
+      motivos: excluidos,
+      origen,
+    },
+    agente: request.headers.get('user-agent'),
   })
 
   return new Response(xml, {
