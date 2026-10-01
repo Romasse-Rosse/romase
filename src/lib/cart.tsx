@@ -60,7 +60,9 @@ export function aItemDeCarrito(
   quantity = 1,
 ): ItemAnalytics {
   return {
-    item_id: item.sku ?? String(item.id),
+    // Coincide con <g:id> del feed de Merchant Center. El SKU se publica como
+    // <g:mpn> y no sirve como clave principal para remarketing dinámico.
+    item_id: String(item.id),
     item_name: item.name,
     price: item.price,
     item_brand: site.name,

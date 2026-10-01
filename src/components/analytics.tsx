@@ -14,7 +14,9 @@ export function aItemAnalytics(
   extra: Partial<ItemAnalytics> = {},
 ): ItemAnalytics {
   return {
-    item_id: product.sku ?? String(product.id),
+    // Merchant Center usa `products.id` como <g:id>. GA4 tiene que enviar el
+    // mismo identificador para que Ads pueda cruzar el evento con el feed.
+    item_id: String(product.id),
     item_name: titleCase(product.name),
     price: product.price,
     item_brand: site.name,

@@ -687,8 +687,8 @@ los disparan.
 | `remove_from_cart` | eliminar una línea o bajar la cantidad |
 | `view_cart` | al abrir el panel lateral y al entrar a `/carrito` |
 | `begin_checkout` | al cargar `/checkout` con productos |
-| `add_shipping_info` | al elegir retiro o despacho (y la empresa despachadora) |
-| `add_payment_info` | al enviar el pedido |
+| `add_shipping_info` | después de validar el checkout y confirmar el método de entrega |
+| `add_payment_info` | después de validar el checkout, justo antes de abrir Webpay |
 | `purchase` | pedido confirmado, con `transaction_id` |
 | `search` | búsqueda desde el encabezado |
 

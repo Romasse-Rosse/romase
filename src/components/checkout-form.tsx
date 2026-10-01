@@ -6,7 +6,7 @@ import { useActionState, useEffect, useRef, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { AlertCircle, CheckCircle2, Lock, ShoppingBag, Store, Truck } from 'lucide-react'
 import { submitCheckout, type CheckoutState } from '@/app/(tienda)/checkout/actions'
-import { addPaymentInfo, addShippingInfo, beginCheckout, purchase } from '@/lib/analytics'
+import { addPaymentInfo, addShippingInfo, beginCheckout } from '@/lib/analytics'
 import { aItemDeCarrito, useCart } from '@/lib/cart'
 import { formatPrice } from '@/lib/format'
 import { regionesVenta, site } from '@/lib/site'
@@ -74,17 +74,6 @@ export function CheckoutForm({
     beginCheckout(enGa4())
   }, [ready])
 
-  useEffect(() => {
-    if (!ready || lineas.current.length === 0) return
-    const modo =
-      entrega === 'retiro'
-        ? 'Retiro en tienda'
-        : transportista
-          ? `Despacho · ${transportista}`
-          : 'Despacho a domicilio'
-    addShippingInfo(enGa4(), modo)
-  }, [ready, entrega, transportista])
-
   // Con Webpay: se manda al comprador a Transbank con un POST. Tiene que ser
   // POST y el campo tiene que llamarse token_ws — así lo define Transbank.
   // El carrito NO se vacía acá: si el pago se rechaza hay que poder reintentar.
@@ -92,6 +81,17 @@ export function CheckoutForm({
   useEffect(() => {
     if (state.status !== 'pagar' || !state.webpay || enviadoAWebpay.current) return
     enviadoAWebpay.current = true
+
+    // Recién acá el servidor validó todos los datos y creó el pedido. Mandar
+    // estos eventos al cargar el checkout o al hacer clic en un formulario
+    // inválido infla artificialmente el embudo.
+    const lineasGa4 = enGa4()
+    const modo =
+      entrega === 'retiro'
+        ? 'Retiro en tienda'
+        : `Despacho · ${transportista}`
+    addShippingInfo(lineasGa4, modo)
+    addPaymentInfo(lineasGa4, 'Webpay Plus')
 
     const formulario = document.createElement('form')
     formulario.method = 'POST'
@@ -103,7 +103,7 @@ export function CheckoutForm({
     formulario.appendChild(campo)
     document.body.appendChild(formulario)
     formulario.submit()
-  }, [state.status, state.webpay])
+  }, [state.status, state.webpay, entrega, transportista])
 
   // ------------------------------------------------------------
   // React 19 hace form.reset() al terminar una acción de formulario, y eso
@@ -146,9 +146,8 @@ export function CheckoutForm({
 
   useEffect(() => {
     if (state.status === 'ok' && !confirmado) {
-      purchase(enGa4(), {
-        transactionId: state.orderNumber ? String(state.orderNumber) : 'sin-numero',
-      })
+      // `ok` es un pedido recibido sin pago confirmado. `purchase` se emite
+      // exclusivamente en /checkout/resultado después de que Webpay aprueba.
       setConfirmado({ total: subtotal, unidades: count })
       clear()
     }
@@ -194,8 +193,6 @@ export function CheckoutForm({
   return (
     <form
       action={formAction}
-      // El medio de pago hoy es uno solo: el evento se manda al enviar.
-      onSubmit={() => addPaymentInfo(enGa4(), 'Webpay Plus')}
       className="grid gap-10 lg:grid-cols-[1fr_22rem] lg:gap-14"
       noValidate
     >
