@@ -157,7 +157,22 @@ function item({ producto, nombre, rutaCategoria }: ItemDelFeed, origen: string):
         (i) =>
           `      <g:additional_image_link>${xml(absoluta(i.src, origen))}</g:additional_image_link>`,
       ),
-    `      <g:availability>${producto.inStock ? 'in_stock' : 'backorder'}</g:availability>`,
+    /*
+      Sin stock se declara out_of_stock, nunca backorder.
+
+      Para Google backorder no significa «no lo tengo»: significa «se puede
+      comprar ahora y se despacha en una fecha conocida», y por eso espera que
+      venga acompañado de g:availability_date. ROMASE no lleva fecha de
+      reposición de nada, así que no hay fecha honesta que mandar e inventar
+      una estimada sería prometerle al comprador algo que nadie puede sostener.
+
+      Si alguna vez se agrega una fecha de reposición al producto, acá va
+      backorder más g:availability_date, y solo para los que la tengan.
+
+      Volver a in_stock es automático: sale de la casilla «Disponible para
+      comprar» del panel, y el feed la refleja en la siguiente lectura.
+    */
+    `      <g:availability>${producto.inStock ? 'in_stock' : 'out_of_stock'}</g:availability>`,
     `      <g:condition>new</g:condition>`,
     `      <g:price>${normal} CLP</g:price>`,
     normal > producto.price ? `      <g:sale_price>${producto.price} CLP</g:sale_price>` : null,

@@ -50,6 +50,7 @@ for (const [i, item] of items.entries()) {
   const imagen = leer(item, 'image_link')
   const precio = leer(item, 'price')
   const disponibilidad = leer(item, 'availability')
+  const fechaDisponible = leer(item, 'availability_date')
   const descripcion = leer(item, 'description')
   const marca = leer(item, 'brand')
   const identificador = leer(item, 'identifier_exists')
@@ -79,6 +80,17 @@ for (const [i, item] of items.entries()) {
 
   if (!['in_stock', 'out_of_stock', 'backorder', 'preorder'].includes(disponibilidad ?? '')) {
     problemas.push(`${donde}: disponibilidad inválida (${disponibilidad})`)
+  } else if (
+    (disponibilidad === 'backorder' || disponibilidad === 'preorder') &&
+    !fechaDisponible
+  ) {
+    // Para Google, backorder y preorder no significan «no lo tengo»: significan
+    // «se puede comprar ahora y se despacha tal día», y esperan esa fecha. Sin
+    // fecha real hay que declarar out_of_stock. Inventar una estimada sería
+    // prometerle al comprador algo que nadie puede sostener.
+    problemas.push(
+      `${donde}: ${disponibilidad} sin g:availability_date. Sin fecha real de reposición va out_of_stock`,
+    )
   }
 
   // Marca o declaración de que no hay identificadores: una de las dos.
