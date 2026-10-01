@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
-import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Truck, XCircle } from 'lucide-react'
 import { formatPrice } from '@/lib/format'
 import { site } from '@/lib/site'
 import { Container } from '@/components/ui'
+import { despachoDe } from '@/lib/pedidos-panel'
 import {
   aprobada,
   fechaDeTransaccion,
@@ -73,6 +74,7 @@ export default async function ResultadoPage({ searchParams }: { searchParams: Se
 
   const r = pedido.webpay_response
   const ok = aprobada(r) && pedido.status === 'pagado'
+  const despacho = despachoDe(pedido.shipping_address)
   const tarjeta = r.card_detail?.card_number
 
   return (
@@ -140,6 +142,29 @@ export default async function ResultadoPage({ searchParams }: { searchParams: Se
               ))}
             </ul>
           </div>
+        )}
+
+        {/*
+          El flete se avisa acá porque es el último momento en que el comprador
+          mira la pantalla, y el único: no se le manda ningún correo. Sin esto
+          alguien paga, da el pedido por cerrado, y se entera del flete recién
+          cuando el transporte se lo cobra al retirar. Esa sorpresa es un
+          reclamo garantizado.
+
+          Solo para despacho: quien retira en tienda no paga flete y leerlo lo
+          confundiría.
+        */}
+        {ok && despacho.tipo === 'despacho' && (
+          <p className="mt-7 flex gap-2.5 border border-amber-300 bg-amber-50 p-4 text-left text-sm text-ink-700">
+            <Truck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-amber-600" />
+            <span>
+              <strong className="font-semibold text-ink-900">El flete se paga aparte.</strong> Lo
+              que pagaste cubre los productos.{' '}
+              {despacho.transportista
+                ? `El despacho va por pagar: cuando retires en ${despacho.transportista}, ellos te cobran el flete según el volumen y el destino.`
+                : 'El despacho va por pagar: el flete lo cobra la empresa de transporte al retirar, según el volumen y el destino.'}
+            </span>
+          </p>
         )}
 
         <div className="mt-9 flex flex-wrap justify-center gap-3">
@@ -242,6 +267,8 @@ type PedidoResuelto = {
   status: string
   currency: string | null
   webpay_response: RespuestaWebpay | null
+  /** Hace falta para saber si hay flete pendiente o si retira en tienda. */
+  shipping_address: unknown
   lineas: { product_name: string; sku: string | null; quantity: number; line_total: number }[]
 }
 
@@ -254,7 +281,7 @@ async function pedidoPorToken(token: string): Promise<PedidoResuelto | null> {
     const db = createClient(url, key, { auth: { persistSession: false } })
     const { data } = await db
       .from('orders')
-      .select('id, order_number, status, currency, webpay_response')
+      .select('id, order_number, status, currency, webpay_response, shipping_address')
       .eq('webpay_token', token)
       .maybeSingle()
 
@@ -270,6 +297,7 @@ async function pedidoPorToken(token: string): Promise<PedidoResuelto | null> {
       status: data.status,
       currency: data.currency,
       webpay_response: data.webpay_response as RespuestaWebpay | null,
+      shipping_address: data.shipping_address,
       lineas: lineas ?? [],
     }
   } catch {
