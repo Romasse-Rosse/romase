@@ -14,7 +14,9 @@ export function aItemAnalytics(
   extra: Partial<ItemAnalytics> = {},
 ): ItemAnalytics {
   return {
-    item_id: product.sku ?? String(product.id),
+    // El id, no el SKU: tiene que coincidir con el g:id del feed de Merchant
+    // Center. Ver aItemDeCarrito en src/lib/cart.tsx.
+    item_id: String(product.id),
     item_name: titleCase(product.name),
     price: product.price,
     item_brand: site.name,

@@ -74,16 +74,37 @@ export function CheckoutForm({
     beginCheckout(enGa4())
   }, [ready])
 
+  /**
+   * El despacho y el pago se anuncian cuando el pedido existe, no antes.
+   *
+   * Antes `add_shipping_info` salía al cargar `/checkout` —la forma de entrega
+   * tiene un valor por defecto, así que el efecto corría de entrada— y
+   * `add_payment_info` salía al apretar el botón, antes de validar nada. El
+   * embudo mostraba más gente eligiendo despacho que empezando el checkout, y
+   * contaba intentos fallidos como pagos iniciados.
+   *
+   * Ahora los dos salen cuando el servidor confirmó los datos y guardó el
+   * pedido: 'pagar' es el camino con Webpay y 'ok' el de pedido por correo.
+   *
+   * Va antes del efecto que manda a Transbank para que los eventos entren al
+   * dataLayer antes de que el navegador deje la página.
+   */
+  const embudoEnviado = useRef(false)
   useEffect(() => {
-    if (!ready || lineas.current.length === 0) return
+    if (state.status !== 'pagar' && state.status !== 'ok') return
+    if (embudoEnviado.current || lineas.current.length === 0) return
+    embudoEnviado.current = true
+
     const modo =
       entrega === 'retiro'
         ? 'Retiro en tienda'
         : transportista
           ? `Despacho · ${transportista}`
           : 'Despacho a domicilio'
+
     addShippingInfo(enGa4(), modo)
-  }, [ready, entrega, transportista])
+    addPaymentInfo(enGa4(), state.status === 'pagar' ? 'Webpay Plus' : 'Pedido por correo')
+  }, [state.status, entrega, transportista])
 
   // Con Webpay: se manda al comprador a Transbank con un POST. Tiene que ser
   // POST y el campo tiene que llamarse token_ws — así lo define Transbank.
@@ -194,8 +215,6 @@ export function CheckoutForm({
   return (
     <form
       action={formAction}
-      // El medio de pago hoy es uno solo: el evento se manda al enviar.
-      onSubmit={() => addPaymentInfo(enGa4(), 'Webpay Plus')}
       className="grid gap-10 lg:grid-cols-[1fr_22rem] lg:gap-14"
       noValidate
     >

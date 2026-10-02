@@ -60,7 +60,14 @@ export function aItemDeCarrito(
   quantity = 1,
 ): ItemAnalytics {
   return {
-    item_id: item.sku ?? String(item.id),
+    /**
+     * El id del producto, no el SKU.
+     *
+     * Tiene que coincidir con el `g:id` del feed de Merchant Center, que usa
+     * `products.id`. Mandando el SKU acá, GA4 y Merchant hablaban de productos
+     * distintos y Google no podía cruzar una venta con el anuncio que la trajo.
+     */
+    item_id: String(item.id),
     item_name: item.name,
     price: item.price,
     item_brand: site.name,

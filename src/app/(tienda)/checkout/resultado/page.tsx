@@ -199,7 +199,10 @@ export default async function ResultadoPage({ searchParams }: { searchParams: Se
         <CompraConfirmada
           transactionId={r.buy_order}
           items={pedido.lineas.map((l) => ({
-            item_id: l.sku ?? l.product_name,
+            // El id del producto, para que coincida con el g:id del feed. Las
+            // líneas viejas pueden no tenerlo —se guardaron antes, o el producto
+            // se borró después— y ahí se cae al SKU antes que al nombre.
+            item_id: l.product_id !== null ? String(l.product_id) : (l.sku ?? l.product_name),
             item_name: l.product_name,
             price: Number(l.line_total) / Math.max(1, l.quantity),
             item_brand: site.name,
@@ -269,7 +272,13 @@ type PedidoResuelto = {
   webpay_response: RespuestaWebpay | null
   /** Hace falta para saber si hay flete pendiente o si retira en tienda. */
   shipping_address: unknown
-  lineas: { product_name: string; sku: string | null; quantity: number; line_total: number }[]
+  lineas: {
+    product_id: number | null
+    product_name: string
+    sku: string | null
+    quantity: number
+    line_total: number
+  }[]
 }
 
 async function pedidoPorToken(token: string): Promise<PedidoResuelto | null> {
@@ -289,7 +298,7 @@ async function pedidoPorToken(token: string): Promise<PedidoResuelto | null> {
 
     const { data: lineas } = await db
       .from('order_items')
-      .select('product_name, sku, quantity, line_total')
+      .select('product_id, product_name, sku, quantity, line_total')
       .eq('order_id', data.id)
 
     return {
