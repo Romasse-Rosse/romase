@@ -6,7 +6,7 @@ import { useActionState, useEffect, useRef, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { AlertCircle, CheckCircle2, Lock, ShoppingBag, Store, Truck } from 'lucide-react'
 import { submitCheckout, type CheckoutState } from '@/app/(tienda)/checkout/actions'
-import { addPaymentInfo, addShippingInfo, beginCheckout, purchase } from '@/lib/analytics'
+import { addPaymentInfo, addShippingInfo, beginCheckout } from '@/lib/analytics'
 import { aItemDeCarrito, useCart } from '@/lib/cart'
 import { formatPrice } from '@/lib/format'
 import { regionesVenta, site } from '@/lib/site'
@@ -165,15 +165,26 @@ export function CheckoutForm({
     if (casilla) casilla.checked = otraDireccion
   }, [state, valores.region, valores.envioRegion, documento, entrega, transportista, otraDireccion])
 
+  /**
+   * Acá NO se anuncia `purchase`.
+   *
+   * `ok` es el camino sin pasarela: el pedido quedó registrado pero nadie
+   * aprobó ningún pago. Contarlo como compra metía en los ingresos de GA4
+   * pedidos que todavía no se cobraron, y esa cifra después no cuadra con
+   * nada.
+   *
+   * `purchase` sale en un solo lugar, `CompraConfirmada`, con la respuesta
+   * aprobada de Webpay en la mano. Ver src/components/compra-confirmada.tsx.
+   *
+   * Lo que sí corresponde acá es cerrar la pantalla y vaciar el carrito: el
+   * pedido existe y el comprador ya no tiene que volver a armarlo.
+   */
   useEffect(() => {
     if (state.status === 'ok' && !confirmado) {
-      purchase(enGa4(), {
-        transactionId: state.orderNumber ? String(state.orderNumber) : 'sin-numero',
-      })
       setConfirmado({ total: subtotal, unidades: count })
       clear()
     }
-  }, [state.status, state.orderNumber, confirmado, subtotal, count, clear])
+  }, [state.status, confirmado, subtotal, count, clear])
 
   if (state.status === 'pagar') {
     return (
