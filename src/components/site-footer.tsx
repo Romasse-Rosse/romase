@@ -78,6 +78,11 @@ export async function SiteFooter() {
                 </Link>
               </li>
               <li>
+                <Link href="/politica-de-devoluciones" className="hover:text-brand-400">
+                  Devoluciones y garantía
+                </Link>
+              </li>
+              <li>
                 <Link href="/politica-de-privacidad" className="hover:text-brand-400">
                   Política de privacidad
                 </Link>

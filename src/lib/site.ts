@@ -27,6 +27,8 @@ export const site = {
     email: 'rmspmontt@gmail.com',
     address: 'Avda. Cuarta Terraza 5082, Valle Volcanes',
     city: 'Puerto Montt',
+    /** Va en la política de devoluciones, que es un texto legal. */
+    postalCode: '5500846',
     region: 'Los Lagos',
     country: 'CL',
   },
