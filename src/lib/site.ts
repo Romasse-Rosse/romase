@@ -32,8 +32,7 @@ export const site = {
   },
 
   hours: [
-    { days: 'Lunes a viernes', time: '09:00 – 18:30' },
-    { days: 'Sábado', time: '10:00 – 14:00' },
+    { days: 'Lunes a viernes', time: '09:30 – 13:00 / 14:00 – 18:00' },
   ],
 
   social: [
