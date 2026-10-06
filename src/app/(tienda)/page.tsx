@@ -12,6 +12,7 @@ import { ProductCarousel } from '@/components/product-carousel'
 import { Accordion } from '@/components/accordion'
 import { Faqs, homeFaqs } from '@/components/faqs'
 import { ViewItemList } from '@/components/analytics'
+import { Resenas } from '@/components/resenas'
 
 // El catálogo cambia poco: se regenera una vez por hora.
 // Cinco minutos, no una hora: esta página muestra precios y una promoción
@@ -216,6 +217,8 @@ export default async function HomePage() {
           Contenido. Poco texto a la vista: dos párrafos y el resto dentro
           de las preguntas frecuentes, que es donde no hace ruido.
       --------------------------------------------------------------- */}
+      <Resenas />
+
       <section className="border-t border-ink-200 py-16 lg:py-20">
         <Container>
           <div className="grid gap-14 lg:grid-cols-[1fr_1.1fr]">

@@ -142,7 +142,7 @@ export default function PoliticaDevolucionesPage() {
         </Seccion>
 
         {/* Los datos salen de site.ts: si cambia el teléfono, cambia acá solo. */}
-        <section className="mt-10 border border-ink-200 bg-paper-50 p-5 sm:p-6">
+        <section className="mt-10 border border-ink-200 bg-ink-50 p-5 sm:p-6">
           <h2 className="text-lg font-semibold text-ink-950">Datos de contacto</h2>
           <dl className="mt-4 space-y-3 text-sm">
             <Contacto icono={MapPin} etiqueta="Dirección">
