@@ -114,7 +114,16 @@ export default async function CategoriaPage({ params }: { params: Params }) {
 
         <header className="mt-4 max-w-3xl">
           <h1 className="text-3xl font-semibold tracking-tight text-ink-950 sm:text-4xl">{name}</h1>
-          {content?.intro && <p className="mt-4 text-lg text-ink-600">{content.intro}</p>}
+          {content?.intro && (
+            <>
+              <p className="mt-4 text-lg text-ink-600">{content.intro}</p>
+              {slug === 'repuestos' && (
+                <p className="mt-3 text-base font-bold uppercase text-ink-950">
+                  LA VENTA DE REPUESTOS NO TIENEN DEVOLUCIÓN
+                </p>
+              )}
+            </>
+          )}
         </header>
 
         {subcategories.length > 0 && (
