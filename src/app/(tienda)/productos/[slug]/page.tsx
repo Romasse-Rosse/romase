@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { seoH1, seoMetadata } from '@/content/seo'
+import { productSchemaFor } from '@/lib/product-schema'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Check, CircleDashed, Mail, MessageCircle, Phone, Truck, Wrench } from 'lucide-react'
@@ -50,10 +52,12 @@ export async function generateMetadata({
     title: name,
     description: summary,
     alternates: { canonical: `/productos/${product.slug}` },
+    ...seoMetadata(`/productos/${product.slug}`),
     openGraph: {
       type: 'website',
       title: name,
       description: summary,
+      ...seoMetadata(`/productos/${product.slug}`).openGraph,
       images: product.images[0] ? [{ url: product.images[0].src }] : undefined,
     },
   }
@@ -94,31 +98,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
   // Sin precio publicado o sin stock no hay nada que agregar al carrito.
   const sePuedeComprar = !bajoPedido && product.inStock
 
-  const productSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name,
-    sku: product.sku ?? undefined,
-    description: truncate(stripHtml(description), 300),
-    // Absolutas: Google descarta las rutas relativas en datos
-    // estructurados, así que estas fotos no le llegaban a nadie. Se resuelven
-    // contra el dominio canónico, que es el mismo que declara el canonical de
-    // esta página.
-    image: product.images.map((i) =>
-      i.src.startsWith('http') ? i.src : `${site.url}${i.src}`,
-    ),
-    brand: { '@type': 'Brand', name: site.name },
-    offers: {
-      '@type': 'Offer',
-      price: product.price,
-      priceCurrency: 'CLP',
-      availability: product.inStock
-        ? 'https://schema.org/InStock'
-        : 'https://schema.org/BackOrder',
-      url: `${site.url}/productos/${product.slug}`,
-      seller: { '@type': 'Organization', name: site.name },
-    },
-  }
+  const productSchema = productSchemaFor(product, site.url)
 
   return (
     <>
@@ -147,7 +127,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
               </Link>
             )}
 
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink-950">{name}</h1>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink-950">{seoH1(`/productos/${product.slug}`, name)}</h1>
 
             {product.sku && (
               <p className="mt-2 text-sm text-ink-500">
@@ -360,10 +340,12 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
 
       <ViewItem product={product} categoria={deepest ? titleCase(deepest.name) : undefined} />
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
-      />
+      {productSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema).replace(/</g, '\\u003c') }}
+        />
+      )}
     </>
   )
 }

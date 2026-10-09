@@ -1,3 +1,5 @@
+import type { Metadata } from 'next'
+import { seoH1, seoMetadata } from '@/content/seo'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, BadgeCheck, Headset, ShieldCheck, Truck } from 'lucide-react'
@@ -21,6 +23,8 @@ import { Resenas } from '@/components/resenas'
 // que una página vieja no muestre un descuento que el checkout ya no
 // aplique. Ver src/lib/promociones.ts.
 export const revalidate = 300
+
+export const metadata: Metadata = { ...seoMetadata('/'), alternates: { canonical: '/' } }
 
 const trustIcons = [BadgeCheck, Truck, Headset, ShieldCheck]
 
@@ -54,7 +58,7 @@ export default async function HomePage() {
   return (
     <>
       <h1 className="sr-only">
-        Maquinaria y equipamiento para panadería, pastelería y gastronomía en Chile
+        {seoH1('/', 'Maquinaria y equipamiento para panadería, pastelería y gastronomía en Chile')}
       </h1>
 
       {/* ---------------------------------------------------------------

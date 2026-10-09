@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { seoH1, seoMetadata } from '@/content/seo'
 import { getCategoryTree } from '@/lib/catalog'
 import { site, trustPoints } from '@/lib/site'
 import { titleCase } from '@/lib/format'
@@ -7,10 +8,7 @@ import { Breadcrumbs, ButtonLink, Container } from '@/components/ui'
 export const revalidate = 3600
 
 export const metadata: Metadata = {
-  title: 'Sobre nosotros',
-  description:
-    `Más de ${site.yearsInBusiness} años entregando maquinaria y equipamiento gastronómico desde ` +
-    `${site.contact.city} a la Región de Los Lagos y al sur. Conoce a ROMASE.`,
+  ...seoMetadata('/nosotros'),
   alternates: { canonical: '/nosotros' },
 }
 
@@ -24,7 +22,7 @@ export default async function NosotrosPage() {
 
         <header className="mt-4 max-w-3xl">
           <h1 className="text-3xl font-semibold tracking-tight text-ink-950 sm:text-4xl">
-            {site.yearsInBusiness} años equipando cocinas en el sur de Chile
+            {seoH1('/nosotros', "Sobre nosotros")}
           </h1>
           <p className="mt-4 text-lg text-ink-600">
             ROMASE es una empresa familiar de {site.contact.city} dedicada a la venta de maquinaria y
@@ -79,7 +77,7 @@ export default async function NosotrosPage() {
 
             <p>
               Nuestro local está en {site.contact.address}, {site.contact.city}. Atendemos de lunes a
-              viernes de 9:00 a 18:30 y sábados de 10:00 a 14:00. Si vienes por un equipo puntual,
+              viernes de 09:30 a 13:00 y de 14:00 a 18:00. Si vienes por un equipo puntual,
               avísanos antes para asegurarnos de tenerlo disponible para que lo veas.
             </p>
 

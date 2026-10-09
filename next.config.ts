@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next'
+import { seoRedirects } from './src/content/seo-redirects'
 
 const nextConfig: NextConfig = {
   images: {
@@ -26,6 +27,7 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
+      ...seoRedirects,
       // El sitio viejo dejó URLs sin nombre: /9-2 era el carrito y /8-2 el
       // checkout. Ahora tienen destino propio con URL legible.
       { source: '/9-2', destination: '/carrito', permanent: true },

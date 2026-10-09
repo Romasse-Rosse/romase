@@ -5,6 +5,7 @@ import { pagoEnLineaActivo, webpayEsIntegracion } from '@/lib/webpay'
 
 export const metadata: Metadata = {
   title: 'Finalizar pedido',
+  alternates: { canonical: '/checkout' },
   // Un checkout no aporta nada al índice y no debería aparecer en búsquedas.
   robots: { index: false, follow: false },
 }

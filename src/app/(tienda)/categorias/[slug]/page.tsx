@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { seoH1, seoMetadata } from '@/content/seo'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import {
@@ -51,6 +52,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     description: truncate(description, 155),
     alternates: { canonical: `/categorias/${slug}` },
     openGraph: { type: 'website', title: `${name} · ${site.name}`, description: truncate(description, 155) },
+    ...seoMetadata(`/categorias/${slug}`),
+    ...(slug === 'test-categoria' ? { robots: { index: false, follow: true } } : {}),
   }
 }
 
@@ -113,7 +116,7 @@ export default async function CategoriaPage({ params }: { params: Params }) {
         />
 
         <header className="mt-4 max-w-3xl">
-          <h1 className="text-3xl font-semibold tracking-tight text-ink-950 sm:text-4xl">{name}</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-ink-950 sm:text-4xl">{seoH1(`/categorias/${slug}`, name)}</h1>
           {content?.intro && (
             <>
               <p className="mt-4 text-lg text-ink-600">{content.intro}</p>

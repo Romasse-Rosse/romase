@@ -37,6 +37,9 @@ export const site = {
     { days: 'Lunes a viernes', time: '09:30 – 13:00 / 14:00 – 18:00' },
   ],
 
+  // Mismo horario aprobado para el local, en el formato de datos estructurados.
+  schemaOpeningHours: ['Mo-Fr 09:30-13:00', 'Mo-Fr 14:00-18:00'],
+
   social: [
     { name: 'Instagram', url: 'https://www.instagram.com/romasepuertomontt/' },
     { name: 'Facebook', url: 'https://www.facebook.com/romase.puerto.montt/' },

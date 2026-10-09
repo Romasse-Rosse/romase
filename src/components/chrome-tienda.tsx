@@ -50,7 +50,7 @@ export async function ChromeTienda({ children }: { children: React.ReactNode }) 
       addressRegion: site.contact.region,
       addressCountry: site.contact.country,
     },
-    openingHours: ['Mo-Fr 09:00-18:30', 'Sa 10:00-14:00'],
+    openingHours: site.schemaOpeningHours,
     // Los perfiles sociales le permiten a Google vincular la ficha del negocio.
     sameAs: site.social.map((red) => red.url),
   }
