@@ -19,11 +19,12 @@ function load(relative, mocks = {}) {
     if (name.startsWith('@/')) return load('src/' + name.slice(2) + '.ts', mocks)
     if (name.startsWith('.')) {
       const base = path.resolve(path.dirname(filename), name)
+      if (name.endsWith('.json')) return JSON.parse(readFileSync(base, 'utf8'))
       return load(path.relative(root, base) + '.ts', mocks)
     }
     return require(name)
   }
-  vm.runInNewContext(code, { module, exports: module.exports, require: localRequire, process, URL, console, Intl }, { filename })
+  vm.runInNewContext(code, { module, exports: module.exports, require: localRequire, process: mocks.__process ?? process, URL, console, Intl, setTimeout: (callback) => queueMicrotask(callback) }, { filename })
   return module.exports
 }
 
@@ -101,5 +102,31 @@ assert.equal(crumb.itemListElement[0].item, 'https://romase.cl/')
 assert.equal(crumb.itemListElement[1].position, 2)
 assert.equal(crumb.itemListElement[1].name, 'Repuestos <test>')
 assert.ok(!serialized.includes('<test>'))
+
+// Un fallo transitorio no debe publicar un sitemap basado en el snapshot.
+function databaseMocks(failAttempts) {
+  let calls = 0
+  const createClient = () => {
+    calls++
+    const fail = calls <= failAttempts
+    const result = { data: fail ? null : [], error: fail ? new Error('lectura transitoria') : null }
+    const query = { order: async () => result, eq: async () => result }
+    return { from: () => ({ select: () => query }) }
+  }
+  return {
+    '@supabase/supabase-js': { createClient },
+    'react': { cache: (fn) => fn },
+    'node:fs/promises': { readFile: () => { throw new Error('No debe usar snapshot durante build') } },
+    __process: { env: { NEXT_PHASE: 'phase-production-build', NEXT_PUBLIC_SUPABASE_URL: 'https://example.invalid', NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test-only' } },
+    count: () => calls,
+  }
+}
+const recoverable = databaseMocks(1)
+const recovered = await load('src/lib/catalog.ts', recoverable).loadCatalog()
+assert.equal(recovered.source, 'supabase')
+assert.equal(recoverable.count(), 2)
+const permanent = databaseMocks(Infinity)
+await assert.rejects(load('src/lib/catalog.ts', permanent).loadCatalog(), /build cancelado/)
+assert.equal(permanent.count(), 3)
 
 console.log('SEO técnico: 28 metadatos, 65 redirecciones, schema, sitemap, noindex y breadcrumbs OK.')

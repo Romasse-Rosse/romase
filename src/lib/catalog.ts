@@ -267,12 +267,24 @@ async function construirCatalogo(): Promise<Catalog> {
   let catalog: Catalog | null = null
 
   if (supabaseConfigured) {
-    try {
-      catalog = await loadFromSupabase()
-    } catch (error) {
-      // No se cae el sitio si Supabase no responde: se sigue con el snapshot.
+    let ultimoError: unknown
+    for (let intento = 0; intento < 3; intento++) {
+      if (intento > 0) await new Promise((resolve) => setTimeout(resolve, intento * 300))
+      try {
+        catalog = await loadFromSupabase()
+        break
+      } catch (error) {
+        ultimoError = error
+      }
+    }
+    if (!catalog) {
+      // No publicar un sitemap incompleto ni 404 falsos por un fallo de lectura
+      // durante next build. En ejecución se conserva el respaldo existente.
+      if (process.env.NEXT_PHASE === 'phase-production-build') {
+        throw new Error('[catalogo] No se pudo leer el catálogo vigente tras 3 intentos; build cancelado.')
+      }
       console.warn(
-        `[catalogo] Supabase no respondió (${(error as Error).message}). Usando snapshot local.`,
+        `[catalogo] Supabase no respondió tras 3 intentos (${(ultimoError as Error).name}). Usando snapshot local.`,
       )
     }
   }
