@@ -2,6 +2,9 @@ import type { NextConfig } from 'next'
 import { seoRedirects } from './src/content/seo-redirects'
 
 const nextConfig: NextConfig = {
+  // El build lanzó 41 procesos y una lectura de Supabase falló: generó 404
+  // falsos para categorías existentes. Limitarlo protege el catálogo y el SEO.
+  experimental: { cpus: 2 },
   images: {
     remotePatterns: [
       // Las imágenes siguen alojadas en el WordPress actual mientras dura la
