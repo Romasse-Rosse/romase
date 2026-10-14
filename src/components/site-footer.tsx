@@ -150,16 +150,15 @@ export async function SiteFooter() {
               resto del pie: pertenece al sitio pero no compite con los datos
               del negocio, que es lo que la gente viene a buscar acá abajo. */}
           <p className="mt-4 text-ink-500">
-            Sitio desarrollado por{' '}
+            Sitio y Google Ads por{' '}
             <a
-              href="https://gopointagency.com"
+              href="https://gopointagency.com/servicios/campanas"
               target="_blank"
               rel="noopener"
               className="text-ink-400 underline underline-offset-2 transition-colors hover:text-brand-400"
             >
-              GoPoint Agency
+              GoPoint
             </a>
-            , Agencia de Marketing Digital
           </p>
         </div>
       </Container>
