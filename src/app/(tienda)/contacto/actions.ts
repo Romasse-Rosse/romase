@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { sendLeadNotification, type Lead } from '@/lib/email'
 import { site } from '@/lib/site'
+import { evaluar } from '@/lib/antispam'
 
 export type ContactState = {
   status: 'idle' | 'ok' | 'error'
@@ -12,6 +13,16 @@ export type ContactState = {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+/**
+ * Lo que se responde cuando la consulta entró.
+ *
+ * Es una constante y no dos literales porque al correo basura se le contesta
+ * exactamente lo mismo: decirle a un bot que lo detectaron solo sirve para
+ * que el siguiente venga mejor preparado. Dos textos separados se despegan
+ * con el tiempo y delatan el filtro.
+ */
+const CONFIRMACION = 'Recibimos tu consulta. Te respondemos dentro del día hábil.'
 
 export async function submitContact(
   _previous: ContactState,
@@ -47,6 +58,36 @@ export async function submitContact(
     productRef: productRef || undefined,
   }
 
+  /**
+   * ¿Es correo basura?
+   *
+   * Lo que se marca como basura **igual se guarda**, con estado 'spam', y lo
+   * único que no pasa es que suene el aviso por correo. Si el filtro se
+   * equivoca, la consulta sigue en la base y alguien puede encontrarla. Un
+   * filtro que descarta en silencio es peor que no tener filtro: un cliente
+   * perdido cuesta mucho más que un correo de más.
+   *
+   * Ver src/lib/antispam.ts.
+   */
+  const abiertoEn = Number(formData.get('abiertoEn'))
+  const veredicto = evaluar({
+    nombre: name,
+    email,
+    mensaje: message,
+    empresa: company || undefined,
+    demoraEnEnviar: Number.isFinite(abiertoEn) && abiertoEn > 0 ? Date.now() - abiertoEn : undefined,
+  })
+
+  if (veredicto.esBasura) {
+    console.warn(
+      '[contacto] marcado como basura (' + veredicto.puntos + ' pts): ' + veredicto.motivos.join(' · '),
+    )
+    await guardarEnSupabase(lead, 'spam')
+    // Se responde lo mismo que a una consulta buena: decirle a un bot que lo
+    // detectaron solo sirve para que el siguiente venga mejor preparado.
+    return { status: 'ok', message: CONFIRMACION }
+  }
+
   // Dos destinos con roles distintos: Supabase es el registro durable y el
   // correo es el aviso para que alguien lo lea el mismo día. Se intentan los
   // dos y basta con que uno funcione para no perder la consulta.
@@ -62,10 +103,7 @@ export async function submitContact(
     if (!enviado.sent) {
       console.warn('[contacto] no se pudo enviar el aviso por correo:', enviado.reason)
     }
-    return {
-      status: 'ok',
-      message: 'Recibimos tu consulta. Te respondemos dentro del día hábil.',
-    }
+    return { status: 'ok', message: CONFIRMACION }
   }
 
   // Falló todo. Se dice claramente en vez de simular que se envió: un
@@ -84,7 +122,10 @@ export async function submitContact(
   }
 }
 
-async function guardarEnSupabase(lead: Lead): Promise<{ ok: boolean; reason?: string }> {
+async function guardarEnSupabase(
+  lead: Lead,
+  estado: 'nuevo' | 'spam' = 'nuevo',
+): Promise<{ ok: boolean; reason?: string }> {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -100,6 +141,7 @@ async function guardarEnSupabase(lead: Lead): Promise<{ ok: boolean; reason?: st
       message: lead.message,
       product_ref: lead.productRef ?? null,
       source: lead.productRef ? 'consulta-producto' : 'formulario-contacto',
+      status: estado,
     })
 
     if (error) return { ok: false, reason: error.message }

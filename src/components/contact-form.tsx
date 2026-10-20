@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useRef, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { AlertCircle, CheckCircle2, Send } from 'lucide-react'
 import { submitContact, type ContactState } from '@/app/(tienda)/contacto/actions'
@@ -10,6 +10,18 @@ const initialState: ContactState = { status: 'idle' }
 
 export function ContactForm({ productRef }: { productRef?: string }) {
   const [state, formAction] = useActionState(submitContact, initialState)
+
+  /**
+   * Cuándo se abrió el formulario.
+   *
+   * El servidor compara contra el momento del envío: nadie lee los campos y
+   * escribe una consulta en menos de tres segundos, pero un bot sí. Es la
+   * señal más robusta que hay contra el spam, porque no depende de lo que
+   * diga el mensaje y sobrevive a que cambien el texto.
+   *
+   * Va en un ref y no en estado: no tiene que provocar un redibujado.
+   */
+  const abiertoEn = useRef(Date.now())
 
   // Controlados a propósito: React 19 resetea los inputs no controlados al
   // terminar una acción de formulario, y si la validación del servidor falla
@@ -39,6 +51,8 @@ export function ContactForm({ productRef }: { productRef?: string }) {
   return (
     <form action={formAction} className="space-y-4" noValidate>
       {productRef && <input type="hidden" name="productRef" value={productRef} />}
+
+      <input type="hidden" name="abiertoEn" value={abiertoEn.current} />
 
       {/* Trampa para bots: oculta y fuera del orden de tabulación. */}
       <div aria-hidden="true" className="absolute -left-[9999px]">
