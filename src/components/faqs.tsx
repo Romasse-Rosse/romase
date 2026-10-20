@@ -85,7 +85,7 @@ export function faqsProducto(nombre: string, enStock: boolean): Faq[] {
       pregunta: '¿Puedo verlo antes de comprar?',
       respuesta:
         `Sí. Te esperamos en ${site.contact.address}, ${site.contact.city}, de lunes a viernes ` +
-        `de 9:00 a 18:30 y sábados de 10:00 a 14:00. Avísanos antes de venir por este equipo en ` +
+        `de 09:30 a 13:00 y de 14:00 a 18:00. Avísanos antes de venir por este equipo en ` +
         `particular para asegurarnos de tenerlo en sala.`,
     },
   ]
@@ -111,7 +111,7 @@ export const homeFaqs: Faq[] = [
     pregunta: '¿Puedo ver los equipos antes de comprar?',
     respuesta:
       `Claro. Te esperamos en ${site.contact.address}, ${site.contact.city}, de lunes a viernes ` +
-      `de 9:00 a 18:30 y sábados de 10:00 a 14:00. Si vienes por un equipo puntual, avísanos ` +
+      `de 09:30 a 13:00 y de 14:00 a 18:00. Si vienes por un equipo puntual, avísanos ` +
       'antes para asegurarnos de tenerlo disponible en el local.',
   },
   {

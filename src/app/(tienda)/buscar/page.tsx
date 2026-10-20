@@ -9,6 +9,7 @@ import { ViewItemList } from '@/components/analytics'
 
 export const metadata: Metadata = {
   title: 'Buscar productos',
+  alternates: { canonical: '/buscar' },
   // Los resultados de búsqueda no aportan nada al índice.
   robots: { index: false, follow: true },
 }

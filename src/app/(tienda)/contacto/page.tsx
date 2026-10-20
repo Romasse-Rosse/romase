@@ -1,14 +1,12 @@
 import type { Metadata } from 'next'
+import { seoH1, seoMetadata } from '@/content/seo'
 import { Clock, Mail, MapPin, Phone } from 'lucide-react'
 import { site } from '@/lib/site'
 import { Breadcrumbs, Container } from '@/components/ui'
 import { ContactForm } from '@/components/contact-form'
 
 export const metadata: Metadata = {
-  title: 'Contacto y cotizaciones',
-  description:
-    `Contacta a ROMASE en ${site.contact.city}. Cotizaciones de maquinaria para panadería, ` +
-    'pastelería y gastronomía, con despacho a la Región de Los Lagos y al sur.',
+  ...seoMetadata('/contacto'),
   alternates: { canonical: '/contacto' },
 }
 
@@ -19,7 +17,7 @@ export default function ContactoPage() {
 
       <header className="mt-4 max-w-2xl">
         <h1 className="text-3xl font-semibold tracking-tight text-ink-950 sm:text-4xl">
-          Hablemos de tu proyecto
+          {seoH1('/contacto', "Contacto")}
         </h1>
         <p className="mt-4 text-lg text-ink-600">
           Cuéntanos qué necesitas equipar y te armamos una propuesta concreta. Respondemos en

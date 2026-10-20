@@ -9,21 +9,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // La categoría de pruebas no es una landing comercial. Se conserva en el
   // catálogo/panel, pero no debe proponerse a Google para indexación.
   const publicCategories = categories.filter((slug) => slug !== 'test-categoria')
-  const now = new Date()
+  // Sin fechas verificables de edición, se omite lastModified: regenerar la
+  // caché no significa que todas las páginas hayan cambiado.
 
   const estaticas: MetadataRoute.Sitemap = [
-    { url: site.url, lastModified: now, changeFrequency: 'weekly', priority: 1 },
-    { url: `${site.url}/nosotros`, lastModified: now, changeFrequency: 'yearly', priority: 0.5 },
-    { url: `${site.url}/contacto`, lastModified: now, changeFrequency: 'yearly', priority: 0.6 },
+    { url: site.url, changeFrequency: 'weekly', priority: 1 },
+    { url: `${site.url}/nosotros`, changeFrequency: 'yearly', priority: 0.5 },
+    { url: `${site.url}/contacto`, changeFrequency: 'yearly', priority: 0.6 },
     {
       url: `${site.url}/politica-de-devoluciones`,
-      lastModified: now,
       changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
       url: `${site.url}/politica-de-privacidad`,
-      lastModified: now,
       changeFrequency: 'yearly',
       priority: 0.2,
     },
@@ -31,17 +30,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...estaticas,
-    // Las categorías van con prioridad alta: son las páginas con contenido
-    // propio y las que tienen que posicionar.
+    // Solo destinos canónicos y públicos; la prioridad no afecta al ranking.
     ...publicCategories.map((slug) => ({
       url: `${site.url}/categorias/${slug}`,
-      lastModified: now,
       changeFrequency: 'weekly' as const,
       priority: 0.8,
     })),
     ...products.map((slug) => ({
       url: `${site.url}/productos/${slug}`,
-      lastModified: now,
       changeFrequency: 'weekly' as const,
       priority: 0.7,
     })),

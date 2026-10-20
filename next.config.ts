@@ -1,6 +1,10 @@
 import type { NextConfig } from 'next'
+import { seoRedirects } from './src/content/seo-redirects'
 
 const nextConfig: NextConfig = {
+  // El build lanzó 41 procesos y una lectura de Supabase falló: generó 404
+  // falsos para categorías existentes. Limitarlo protege el catálogo y el SEO.
+  experimental: { cpus: 2 },
   images: {
     remotePatterns: [
       // Las imágenes siguen alojadas en el WordPress actual mientras dura la
@@ -26,6 +30,7 @@ const nextConfig: NextConfig = {
 
   async redirects() {
     return [
+      ...seoRedirects,
       // El sitio viejo dejó URLs sin nombre: /9-2 era el carrito y /8-2 el
       // checkout. Ahora tienen destino propio con URL legible.
       { source: '/9-2', destination: '/carrito', permanent: true },

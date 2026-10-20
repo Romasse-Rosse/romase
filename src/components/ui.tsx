@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '@/lib/cn'
+import { site } from '@/lib/site'
 
 export function Container({
   className,
@@ -142,6 +143,16 @@ export function TextLink({ href, children }: { href: string; children: ReactNode
 }
 
 export function Breadcrumbs({ items }: { items: { label: string; href?: string }[] }) {
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.label,
+      ...(item.href ? { item: new URL(item.href, site.url).href } : {}),
+    })),
+  }
   return (
     <nav aria-label="Miga de pan" className="text-sm">
       <ol className="flex flex-wrap items-center gap-1.5 text-ink-500">
@@ -158,6 +169,12 @@ export function Breadcrumbs({ items }: { items: { label: string; href?: string }
           </li>
         ))}
       </ol>
+      {items.length >= 2 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }}
+        />
+      )}
     </nav>
   )
 }
