@@ -23,7 +23,8 @@
     "categorias:probar": "node --experimental-strip-types scripts/probar-categorias.mjs",
     "pedidos:probar": "node --experimental-strip-types scripts/probar-pedidos.mjs",
     "antispam:probar": "node --experimental-strip-types scripts/probar-antispam.mjs",
-    "seo:probar": "node --experimental-strip-types scripts/probar-seo.mjs"
+    "seo:probar": "node --experimental-strip-types scripts/probar-seo.mjs",
+    "stock:probar": "node scripts/probar-stock.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

@@ -19,6 +19,8 @@ export type ProductoEditable = {
   regularPrice: string
   salePrice: string
   inStock: boolean
+  /** Vacío = no se controla el stock de este producto. */
+  stockQuantity: string
   featured: boolean
 }
 
@@ -39,6 +41,7 @@ export function EditorProducto({
   // Igual que en el alta: sin venta en línea, el precio es opcional.
   const [disponible, setDisponible] = useState(producto.inStock)
   const [oferta, setOferta] = useState(producto.salePrice)
+  const [unidades, setUnidades] = useState(producto.stockQuantity)
   const [normal, setNormal] = useState(producto.regularPrice)
 
   const soloDigitos = (v: string) => v.replace(/[^\d]/g, '')
@@ -162,6 +165,31 @@ export function EditorProducto({
           La ficha va a mostrar {enPesos(oferta)} con {enPesos(normal)} tachado al lado.
         </p>
       )}
+
+      {/*
+        Las unidades viven al lado de la casilla de disponibilidad porque son
+        la misma decisión vista de dos maneras, y separarlas hacía que la gente
+        marcara «disponible» con cero unidades cargadas.
+      */}
+      <Campo etiqueta="Unidades en stock" htmlFor="stock_quantity">
+        <input
+          id="stock_quantity"
+          name="stock_quantity"
+          inputMode="numeric"
+          value={unidades}
+          onChange={(e) => setUnidades(soloDigitos(e.target.value))}
+          disabled={!puedeEscribir}
+          placeholder="Sin control de stock"
+          className={entrada + ' max-w-40'}
+        />
+        <p className="mt-1.5 text-xs leading-relaxed text-ink-500">
+          {unidades === ''
+            ? 'Vacío: no se lleva la cuenta. El producto se vende mientras esté marcado como disponible.'
+            : unidades === '0'
+              ? 'En cero: la ficha se ve pero no se puede comprar.'
+              : `Quedan ${unidades} ${unidades === '1' ? 'unidad' : 'unidades'}. Se descuenta sola con cada compra pagada, y al llegar a cero deja de venderse.`}
+        </p>
+      </Campo>
 
       <div className="mt-6 space-y-3 border-y border-ink-100 py-5">
         <Casilla

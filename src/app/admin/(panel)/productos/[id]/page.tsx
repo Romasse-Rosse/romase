@@ -28,7 +28,7 @@ export default async function EditarProducto({ params }: { params: Promise<{ id:
   const { data: producto } = await db
     .from('products')
     .select(
-      'id, name, slug, sku, description, short_description, price, regular_price, sale_price, in_stock, featured, updated_at',
+      'id, name, slug, sku, description, short_description, price, regular_price, sale_price, in_stock, stock_quantity, featured, updated_at',
     )
     .eq('id', productoId)
     .maybeSingle()
@@ -103,6 +103,10 @@ export default async function EditarProducto({ params }: { params: Promise<{ id:
             salePrice:
               producto.sale_price === null ? '' : String(Math.round(Number(producto.sale_price))),
             inStock: Boolean(producto.in_stock),
+            stockQuantity:
+              producto.stock_quantity === null || producto.stock_quantity === undefined
+                ? ''
+                : String(producto.stock_quantity),
             featured: Boolean(producto.featured),
           }}
           puedeEscribir={Boolean(sesion?.puedeEscribir)}

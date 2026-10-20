@@ -194,6 +194,34 @@ export async function submitCheckout(
     return esBajoPedido(price)
   })
 
+  /**
+   * No se puede comprar más de lo que hay.
+   *
+   * La vitrina ya limita la cantidad, pero eso vive en el navegador. Acá es
+   * donde se decide si el pedido existe, así que acá tiene que estar la
+   * comprobación: sin ella, dos personas compran a la vez el último horno y
+   * las dos pagan.
+   *
+   * Los productos con stockQuantity en null no se controlan y pasan derecho.
+   */
+  const sinUnidades = lineasCliente.find((linea) => {
+    const producto = porId.get(linea.id)
+    if (!producto || producto.stockQuantity === null) return false
+    return linea.quantity > producto.stockQuantity
+  })
+
+  if (sinUnidades) {
+    const producto = porId.get(sinUnidades.id)
+    const quedan = producto?.stockQuantity ?? 0
+    return {
+      status: 'error',
+      message:
+        quedan === 0
+          ? `Se agotó «${producto ? titleCase(producto.name) : 'un producto'}» mientras armabas el pedido. Quítalo del carrito para continuar.`
+          : `De «${producto ? titleCase(producto.name) : 'un producto'}» queda${quedan === 1 ? '' : 'n'} ${quedan} ${quedan === 1 ? 'unidad' : 'unidades'}. Ajusta la cantidad para continuar.`,
+    }
+  }
+
   if (noVendible) {
     const producto = porId.get(noVendible.id)
     return {

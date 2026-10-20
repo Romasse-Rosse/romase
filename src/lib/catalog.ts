@@ -54,6 +54,8 @@ export type Product = {
   salePrice: number | null
   onSale: boolean
   inStock: boolean
+  /** Unidades disponibles. null = no se controla el stock de este producto. */
+  stockQuantity: number | null
   featured: boolean
   images: ProductImage[]
   categoryIds: number[]
@@ -149,6 +151,10 @@ async function loadFromSupabase(): Promise<Catalog> {
       salePrice: p.sale_price === null ? null : Number(p.sale_price),
       onSale: p.sale_price !== null && Number(p.sale_price) < Number(p.regular_price),
       inStock: Boolean(p.in_stock),
+      stockQuantity:
+        p.stock_quantity === null || p.stock_quantity === undefined
+          ? null
+          : Number(p.stock_quantity),
       featured: Boolean(p.featured),
       images: imagesByProduct.get(p.id) ?? [],
       categoryIds: categoriesByProduct.get(p.id) ?? [],
@@ -236,6 +242,9 @@ async function loadFromSnapshot(): Promise<Catalog> {
       salePrice: p.on_sale ? Number(p.prices?.sale_price ?? 0) : null,
       onSale: Boolean(p.on_sale),
       inStock: Boolean(p.is_in_stock),
+      // El respaldo viene del WooCommerce y no trae unidades: se declara que
+      // no hay control de stock, que es distinto de decir que hay cero.
+      stockQuantity: null,
       featured: false,
       images: (p.images ?? []).map((i) => ({ src: i.src, alt: i.alt || p.name })),
       categoryIds: (p.categories ?? []).map((c) => c.id),

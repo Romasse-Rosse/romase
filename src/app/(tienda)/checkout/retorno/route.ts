@@ -166,6 +166,26 @@ async function resolver(token: string, respuesta: RespuestaWebpay, pedido: Pedid
 
   if (estado !== 'pagado' || !pedido) return
 
+  /**
+   * Descontar el stock.
+   *
+   * Va en una función de Postgres y no acá por dos razones. Una: dos compras
+   * simultáneas del último horno no pueden dejar el stock en -1, y eso solo se
+   * garantiza resolviéndolo en una sola operación de la base. Dos: recargar
+   * esta página volvería a descontar, así que la función marca el pedido y se
+   * va sin hacer nada si ya estaba marcado.
+   *
+   * No se espera el resultado de forma bloqueante para el aviso al negocio,
+   * pero sí se espera: si falla, se registra. Un descuento perdido se nota
+   * tarde y conviene tener el rastro. Ver migration/admin-stock.sql.
+   */
+  if (db) {
+    const { error } = await db.rpc('descontar_stock', { p_order_id: pedido.id })
+    if (error) {
+      console.error('[webpay] no se pudo descontar el stock del pedido', pedido.order_number, error.message)
+    }
+  }
+
   // El aviso al negocio sale recién con el pago confirmado: antes no hay nada
   // que preparar.
   const { data: lineas } = db

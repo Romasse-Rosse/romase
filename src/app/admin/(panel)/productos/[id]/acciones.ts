@@ -70,6 +70,12 @@ export async function guardarProducto(
 
     const disponible = formData.get('in_stock') !== null
 
+    const unidadesCrudo = String(formData.get('stock_quantity') ?? '').trim()
+    const unidades = unidadesCrudo === '' ? null : Number(unidadesCrudo)
+    if (unidades !== null && (!Number.isInteger(unidades) || unidades < 0)) {
+      return { error: 'Las unidades tienen que ser un número entero de cero para arriba.' }
+    }
+
     // Sin precio solo si tampoco se vende en línea; la columna no acepta NULL,
     // así que un producto a cotizar se guarda en 0 y esBajoPedido() lo
     // reconoce. Ver src/lib/bajo-pedido.ts.
@@ -109,6 +115,15 @@ export async function guardarProducto(
         regular_price: precioNormal ?? precio ?? 0,
         sale_price: precioOferta,
         in_stock: disponible,
+        /**
+         * Vacío guarda NULL, y NULL no es cero.
+         *
+         * NULL significa «no llevo la cuenta de este producto»; cero significa
+         * «se acabó». Confundirlos haría que vaciar el campo marcara el
+         * producto como agotado, que es lo contrario de lo que quiere quien lo
+         * vacía.
+         */
+        stock_quantity: unidades,
         featured: formData.get('featured') !== null,
       })
       .eq('id', id)
