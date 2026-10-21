@@ -21,7 +21,7 @@ export function productSchemaFor(product: Product, origin: string) {
       '@type': 'Offer',
       price: product.price,
       priceCurrency: 'CLP',
-      availability: product.inStock ? 'https://schema.org/InStock' : 'https://schema.org/BackOrder',
+      availability: product.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
       url: new URL('/productos/' + product.slug, origin).href,
       seller: { '@type': 'Organization', name: 'ROMASE' },
     },
