@@ -6,7 +6,7 @@ import { useActionState, useEffect, useRef, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { AlertCircle, CheckCircle2, Lock, ShoppingBag, Store, Truck } from 'lucide-react'
 import { submitCheckout, type CheckoutState } from '@/app/(tienda)/checkout/actions'
-import { addPaymentInfo, addShippingInfo, beginCheckout } from '@/lib/analytics'
+import { addPaymentInfo, addShippingInfo, beginCheckout, checkoutError } from '@/lib/analytics'
 import { aItemDeCarrito, useCart } from '@/lib/cart'
 import { formatPrice } from '@/lib/format'
 import { regionesVenta, site } from '@/lib/site'
@@ -51,7 +51,9 @@ export function CheckoutForm({
 
   const [entrega, setEntrega] = useState<'retiro' | 'despacho'>('despacho')
   const [documento, setDocumento] = useState<'boleta' | 'factura'>('boleta')
-  const [transportista, setTransportista] = useState<string>('')
+  // Preseleccionada: antes quedaba vacía y quien compraba con despacho sin elegir
+  // empresa recibía un error escondido más arriba, lejos del botón. Sigue pudiendo cambiarla.
+  const [transportista, setTransportista] = useState<string>(site.carriers[0].id)
   const [otraDireccion, setOtraDireccion] = useState(false)
 
   // Copia para poder mostrar el resumen en la confirmación, ya vaciado el carrito.
@@ -165,6 +167,23 @@ export function CheckoutForm({
     if (casilla) casilla.checked = otraDireccion
   }, [state, valores.region, valores.envioRegion, documento, entrega, transportista, otraDireccion])
 
+  // Cuando el servidor rechaza el formulario: (1) se avisa a GA4 qué campos fallaron, para
+  // poder medir dónde se traba la gente, y (2) se lleva la pantalla al primer error. En el
+  // celular el botón queda al final de la página y el aviso arriba, y sin este scroll quien
+  // compra no veía nada y volvía a tocar el botón o se iba.
+  const ultimoError = useRef<unknown>(null)
+  useEffect(() => {
+    if (state.status !== 'error' || ultimoError.current === state) return
+    ultimoError.current = state
+    checkoutError(Object.keys(state.fieldErrors ?? {}), state.message)
+    const primero =
+      document.querySelector<HTMLElement>('[aria-invalid="true"], [data-checkout-error]') ??
+      document.getElementById('checkout-aviso')
+    if (!primero) return
+    primero.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    if (primero instanceof HTMLInputElement) primero.focus({ preventScroll: true })
+  }, [state])
+
   /**
    * Acá NO se anuncia `purchase`.
    *
@@ -243,6 +262,7 @@ export function CheckoutForm({
       <div className="space-y-11">
         {state.status === 'error' && state.message && (
           <p
+            id="checkout-aviso"
             role="alert"
             className="flex items-start gap-2.5 border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"
           >
@@ -280,7 +300,7 @@ export function CheckoutForm({
                 name="region"
                 value={valores.region}
                 onChange={(e) => setValores((p) => ({ ...p, region: e.target.value }))}
-                className="h-11 w-full rounded-sm border border-ink-200 bg-white px-3 text-sm text-ink-900 transition-colors focus:border-ink-950 focus:outline-none"
+                className="h-11 w-full rounded-sm border border-ink-200 bg-white px-3 text-base text-ink-900 transition-colors focus:border-ink-950 focus:outline-none sm:text-sm"
               >
                 {regionesVenta.map((r) => (
                   <option key={r} value={r}>
@@ -292,7 +312,7 @@ export function CheckoutForm({
                   que poder verse: si no, el comprador lee «faltan datos» y no
                   sabe cuál. */}
               {state.fieldErrors?.region && (
-                <p className="mt-1.5 text-xs text-red-600">{state.fieldErrors.region}</p>
+                <p data-checkout-error className="mt-1.5 text-xs text-red-600">{state.fieldErrors.region}</p>
               )}
             </div>
 
@@ -375,7 +395,7 @@ export function CheckoutForm({
                 ))}
               </div>
               {state.fieldErrors?.transportista && (
-                <p className="mt-2 text-xs text-red-600">{state.fieldErrors.transportista}</p>
+                <p data-checkout-error className="mt-2 text-xs text-red-600">{state.fieldErrors.transportista}</p>
               )}
 
               <p className="mt-4 border-l-2 border-brand-300 pl-4 text-sm leading-relaxed text-ink-600">
@@ -416,7 +436,7 @@ export function CheckoutForm({
                       name="envioRegion"
                       value={valores.envioRegion}
                       onChange={(e) => setValores((p) => ({ ...p, envioRegion: e.target.value }))}
-                      className="h-11 w-full rounded-sm border border-ink-200 bg-white px-3 text-sm text-ink-900 focus:border-ink-950 focus:outline-none"
+                      className="h-11 w-full rounded-sm border border-ink-200 bg-white px-3 text-base text-ink-900 focus:border-ink-950 focus:outline-none sm:text-sm"
                     >
                       {regionesVenta.map((r) => (
                         <option key={r} value={r}>
@@ -425,7 +445,7 @@ export function CheckoutForm({
                       ))}
                     </select>
                     {state.fieldErrors?.envioRegion && (
-                      <p className="mt-1.5 text-xs text-red-600">{state.fieldErrors.envioRegion}</p>
+                      <p data-checkout-error className="mt-1.5 text-xs text-red-600">{state.fieldErrors.envioRegion}</p>
                     )}
                   </div>
                 </div>
@@ -510,7 +530,7 @@ export function CheckoutForm({
               value={valores.notas}
               onChange={(e) => setValores((p) => ({ ...p, notas: e.target.value }))}
               placeholder="Notas sobre tu pedido, por ejemplo, indicaciones especiales para la entrega."
-              className="w-full rounded-sm border border-ink-200 bg-white px-3.5 py-2.5 text-sm leading-relaxed text-ink-900 transition-colors placeholder:text-ink-400 focus:border-ink-950 focus:outline-none"
+              className="w-full rounded-sm border border-ink-200 bg-white px-3.5 py-2.5 text-base leading-relaxed text-ink-900 transition-colors placeholder:text-ink-400 focus:border-ink-950 focus:outline-none sm:text-sm"
             />
           </div>
         </Seccion>
@@ -785,7 +805,8 @@ function Campo({
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${name}-error` : undefined}
         className={cn(
-          'h-11 w-full rounded-sm border bg-white px-3.5 text-sm text-ink-900 transition-colors placeholder:text-ink-400 focus:outline-none',
+          // 16px en celular: con menos, Safari de iPhone hace zoom solo al tocar el campo.
+          'h-11 w-full rounded-sm border bg-white px-3.5 text-base text-ink-900 transition-colors placeholder:text-ink-400 focus:outline-none sm:text-sm',
           error ? 'border-red-400 focus:border-red-500' : 'border-ink-200 focus:border-ink-950',
         )}
       />
