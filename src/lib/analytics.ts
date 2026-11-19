@@ -101,6 +101,21 @@ export function addPaymentInfo(items: ItemAnalytics[], paymentType: string) {
   push('add_payment_info', { value: valorDe(items), payment_type: paymentType, items })
 }
 
+/**
+ * El servidor rechazó el formulario de pedido. Se manda qué campos fallaron (solo los
+ * nombres, nunca lo que escribió la persona) para ver en GA4 dónde se traba el checkout.
+ */
+export function checkoutError(campos: string[], mensaje?: string) {
+  if (typeof window === 'undefined') return
+  window.dataLayer = window.dataLayer ?? []
+  window.dataLayer.push({
+    event: 'checkout_error',
+    error_fields: campos.join(','),
+    error_count: campos.length,
+    error_message: mensaje ?? '',
+  })
+}
+
 /** Pedido confirmado. */
 export function purchase(
   items: ItemAnalytics[],
