@@ -37,6 +37,14 @@ const nextConfig: NextConfig = {
       { source: '/8-2', destination: '/checkout', permanent: true },
       { source: '/tienda/:path*', destination: '/productos/:path*', permanent: true },
       { source: '/producto/:slug', destination: '/productos/:slug', permanent: true },
+      // Duplicados del catálogo migrado: una sola URL debe concentrar canonical,
+      // enlaces internos y señales de búsqueda.
+      { source: '/categorias/barquillera', destination: '/categorias/barquillera-2', permanent: true },
+      {
+        source: '/productos/conservadora-dual-100-lts',
+        destination: '/productos/conservadora-dual-100-lts-maigas',
+        permanent: true,
+      },
       { source: '/categoria-producto/:slug', destination: '/categorias/:slug', permanent: true },
       // Ya no hay página de catálogo completo: la navegación es por categoría.
       { source: '/productos', destination: '/', permanent: false },

@@ -8,7 +8,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [products, categories] = await Promise.all([getAllProductSlugs(), getAllCategorySlugs()])
   // La categoría de pruebas no es una landing comercial. Se conserva en el
   // catálogo/panel, pero no debe proponerse a Google para indexación.
-  const publicCategories = categories.filter((slug) => slug !== 'test-categoria')
+  // Duplicados con redirección permanente en next.config.ts: no se proponen a Google.
+  const categoriasExcluidas = new Set(['test-categoria', 'barquillera'])
+  const productosExcluidos = new Set(['conservadora-dual-100-lts'])
+  const publicCategories = categories.filter((slug) => !categoriasExcluidas.has(slug))
   // Sin fechas verificables de edición, se omite lastModified: regenerar la
   // caché no significa que todas las páginas hayan cambiado.
 
@@ -36,7 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly' as const,
       priority: 0.8,
     })),
-    ...products.map((slug) => ({
+    ...products.filter((slug) => !productosExcluidos.has(slug)).map((slug) => ({
       url: `${site.url}/productos/${slug}`,
       changeFrequency: 'weekly' as const,
       priority: 0.7,
