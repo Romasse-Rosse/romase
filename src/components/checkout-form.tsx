@@ -245,7 +245,7 @@ export function CheckoutForm({
   return (
     <form
       action={formAction}
-      className="grid gap-10 lg:grid-cols-[1fr_22rem] lg:gap-14"
+      className="grid gap-10 pb-24 lg:grid-cols-[1fr_22rem] lg:gap-14 lg:pb-0"
       noValidate
     >
       {/* Las líneas viajan como ids y cantidades: el precio lo pone el servidor. */}
@@ -614,18 +614,35 @@ export function CheckoutForm({
           </p>
         </div>
       </aside>
+
+      {/*
+        En celular el botón de pago está al final de una página larga. Esta barra lo
+        deja siempre a la vista, con el total, y manda el mismo formulario.
+      */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-ink-200 bg-white px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:hidden">
+        <div className="mx-auto flex max-w-xl items-center gap-4">
+          <div className="min-w-0">
+            <p className="text-[11px] tracking-wide text-ink-500 uppercase">Total</p>
+            <p className="text-lg leading-tight font-semibold text-ink-950">{formatPrice(subtotal)}</p>
+          </div>
+          <BotonPedido fijo etiqueta={pagoEnLinea ? 'Ir a pagar' : 'Realizar el pedido'} />
+        </div>
+      </div>
     </form>
   )
 }
 
-function BotonPedido({ etiqueta }: { etiqueta: string }) {
+function BotonPedido({ etiqueta, fijo = false }: { etiqueta: string; fijo?: boolean }) {
   const { pending } = useFormStatus()
 
   return (
     <button
       type="submit"
       disabled={pending}
-      className="mt-6 flex h-13 w-full items-center justify-center rounded-sm bg-brand-500 text-[15px] font-medium tracking-wide text-white uppercase transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+      className={
+        (fijo ? 'h-12 flex-1 ' : 'mt-6 h-13 w-full ') +
+        'flex items-center justify-center rounded-sm bg-brand-500 text-[15px] font-medium tracking-wide text-white uppercase transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60'
+      }
     >
       {pending ? 'Procesando…' : etiqueta}
     </button>
